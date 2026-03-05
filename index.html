@@ -405,7 +405,7 @@ function todayStr() { return new Date().toISOString().split('T')[0]; }
 function formatDateDisplay(d) {
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const [y,m,day] = d.split('-');
-  return `${months[+m-1]} ${+day}, ${y}`;
+  return months[+m-1] + ' ' + (+day) + ', ' + y;
 }
 
 function showScreen(id) {
@@ -529,25 +529,24 @@ function renderPicks() {
   const filtered = currentSportFilter === 'ALL' ? picks : picks.filter(p => p.sport === currentSportFilter);
   const container = document.getElementById('picks-container');
   container.innerHTML = filtered.length === 0
-    ? `<div class="empty-state"><div class="icon">🎯</div>No picks for this date${currentSportFilter !== 'ALL' ? ' / sport' : ''}</div>`
+    ? '<div class="empty-state"><div class="icon">&#127919;</div>No picks for this date' + (currentSportFilter !== 'ALL' ? ' / sport' : '') + '</div>'
     : filtered.map(p => pickCardHTML(p, false)).join('');
 }
 
 function pickCardHTML(p, adminMode) {
-  const rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
-  return `
-    <div class="pick-card">
-      <div class="pick-sport-badge sport-${p.sport}">${p.sport}</div>
-      <div class="pick-teams">${p.away} @ ${p.home}<div class="matchup">${formatDateDisplay(p.date)}</div></div>
-      <div class="pick-type">${p.type}</div>
-      <div class="pick-selection">${p.selection}</div>
-      <div class="pick-odds">${p.odds || '—'}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-        <span class="pick-result ${rClass}">${p.result || 'PENDING'}</span>
-        ${adminMode ? `<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal('${p.id}')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick('${p.id}')">✕</button></div>` : ''}
-      </div>
-    </div>
-    ${p.notes ? `<div class="note-card"><div class="note-meta">${p.sport} · ${p.type} · ${p.units||1}u</div>${p.notes}</div>` : ''}`;
+  var rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
+  var actions = adminMode ? '<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal(\'' + p.id + '\')" >Result</button><button class="btn btn-danger btn-sm" onclick="deletePick(\'' + p.id + '\')">&#x2715;</button></div>' : '';
+  var notes = p.notes ? '<div class="note-card"><div class="note-meta">' + p.sport + ' &middot; ' + p.type + ' &middot; ' + (p.units||1) + 'u</div>' + p.notes + '</div>' : '';
+  return '<div class="pick-card">' +
+    '<div class="pick-sport-badge sport-' + p.sport + '">' + p.sport + '</div>' +
+    '<div class="pick-teams">' + p.away + ' @ ' + p.home + '<div class="matchup">' + formatDateDisplay(p.date) + '</div></div>' +
+    '<div class="pick-type">' + p.type + '</div>' +
+    '<div class="pick-selection">' + p.selection + '</div>' +
+    '<div class="pick-odds">' + (p.odds || '-') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+      '<span class="pick-result ' + rClass + '">' + (p.result || 'PENDING') + '</span>' +
+      actions +
+    '</div></div>' + notes;
 }
 
 let addPanelOpen = false;
@@ -582,16 +581,16 @@ async function fetchGames() {
   const resetBtn = label => { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; };
   const espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
   const espnPath = espnMap[sport];
-  if (!espnPath) { resetBtn('🔄 Try Again'); lastFetchKey = ''; grid.innerHTML = `<div class="games-empty">Sport not supported — enter teams manually.</div>`; return; }
+  if (!espnPath) { resetBtn('Try Again'); lastFetchKey = ''; grid.innerHTML = '<div class="games-empty">Sport not supported - enter teams manually.</div>'; return; }
   const espnDate = date.replace(/-/g, '');
-  const directUrl = `https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard?dates=${espnDate}`;
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+  var directUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + espnDate;
+  var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
   const tryFetch = async url => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
   try {
     let data;
     try { data = await tryFetch(directUrl); } catch(e) { data = await tryFetch(proxyUrl); }
     const events = data.events || [];
-    if (!events.length) { resetBtn('🔄 Refresh'); grid.innerHTML = `<div class="games-empty">No ${sport} games on ${dateLabel}. Enter teams manually.</div>`; return; }
+    if (!events.length) { resetBtn('Refresh'); grid.innerHTML = '<div class="games-empty">No ' + sport + ' games on ' + dateLabel + '. Enter teams manually.</div>'; return; }
     const upcoming = [], started = [];
     events.forEach(e => {
       const comp = e.competitions?.[0]; if (!comp) return;
@@ -605,18 +604,18 @@ async function fetchGames() {
     resetBtn('🔄 Refresh');
     let html = '';
     if (upcoming.length) {
-      html += upcoming.map(g => `<button class="game-pill" onclick="selectGame(this)" data-away="${g.away}" data-home="${g.home}"><span class="gp-sport">${sport}</span><strong>${g.away}</strong><span style="opacity:0.4;font-size:11px;">@</span><strong>${g.home}</strong><span class="gp-time">${g.time}</span></button>`).join('');
+      html += upcoming.map(function(g) { return '<button class="game-pill" onclick="selectGame(this)" data-away="' + g.away + '" data-home="' + g.home + '"><span class="gp-sport">' + sport + '</span><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span class="gp-time">' + g.time + '</span></button>'; }).join('');
     } else {
-      html += `<div class="games-empty">All ${sport} games today have already started.</div>`;
+      html += '<div class="games-empty">All ' + sport + ' games today have already started.</div>';
     }
     if (started.length) {
-      html += `<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${started.map(g => `<span class="game-pill" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><strong>${g.away}</strong><span style="opacity:0.4;">@</span><strong>${g.home}</strong><span style="color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;">LIVE</span></span>`).join('')}</div></div>`;
+      html += '<div style="width:100%;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"><div style="font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' + started.map(function(g) { return '<span class="game-pill" style="opacity:0.3;cursor:not-allowed;"><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span style="color:var(--danger);font-size:10px;"> LIVE</span></span>'; }).join('') + '</div></div>';
     }
     grid.innerHTML = html;
   } catch(err) {
     resetBtn('🔄 Try Again');
     lastFetchKey = '';
-    grid.innerHTML = `<div class="games-empty" style="color:var(--danger);">⚠ Could not load — enter teams manually. (${err.message})</div>`;
+    grid.innerHTML = '<div class="games-empty" style="color:var(--danger);">Could not load - enter teams manually. (' + err.message + ')</div>';
   }
 }
 
@@ -692,7 +691,7 @@ function renderHistory() {
   picks.sort((a,b) => b.date.localeCompare(a.date));
   const c = document.getElementById('history-container');
   c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon">📋</div>No picks match the filter</div>`
+    ? '<div class="empty-state"><div class="icon">&#128203;</div>No picks match the filter</div>'
     : picks.map(p => pickCardHTML(p, false)).join('');
 }
 
@@ -703,20 +702,20 @@ function renderStats() {
   const pushes = picks.filter(p => p.result === 'PUSH').length;
   const total = wins + losses;
   const pct = total > 0 ? Math.round((wins/total)*100) : 0;
-  document.getElementById('overall-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ${pct>=55?'green':pct<45&&total>0?'red':''}">${pct}%</div></div>
-    <div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">${picks.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">${wins}</div></div>
-    <div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">${losses}</div></div>
-    <div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">${pushes}</div></div>
-    <div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">${wins}-${losses}</div></div>`;
+  document.getElementById('overall-stats').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ' + (pct>=55?'green':pct<45&&total>0?'red':'') + '">' + pct + '%</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">' + picks.length + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">' + wins + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">' + losses + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">' + pushes + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">' + wins + '-' + losses + '</div></div>';
   const sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
   document.getElementById('sport-stats').innerHTML = sports.map(s => {
     const sp = picks.filter(p => p.sport === s);
     const sw = sp.filter(p => p.result === 'WIN').length;
     const sl = sp.filter(p => p.result === 'LOSS').length;
     const spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
-    return `<div class="stat-card" style="border-top:2px solid var(--${s.toLowerCase()});"><div class="stat-label">${s}</div><div class="stat-value" style="font-size:28px;">${sw}-${sl}</div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${spct}% · ${sp.length} picks</div></div>`;
+    return '<div class="stat-card" style="border-top:2px solid var(--' + s.toLowerCase() + ');"><div class="stat-label">' + s + '</div><div class="stat-value" style="font-size:28px;">' + sw + '-' + sl + '</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">' + spct + '% - ' + sp.length + ' picks</div></div>';
   }).join('');
 }
 
@@ -725,7 +724,7 @@ function renderAdminPicks() {
   const c = document.getElementById('admin-picks-container');
   if (!c) return;
   c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon">📋</div>No picks yet. Add your first pick!</div>`
+    ? '<div class="empty-state"><div class="icon">&#128203;</div>No picks yet. Add your first pick!</div>'
     : picks.map(p => pickCardHTML(p, true)).join('');
 }
 
@@ -738,9 +737,9 @@ function renderUsersTable() {
   if (!pendingTbody) return;
   if (pending.length > 0) {
     pendingSection.style.display = 'block';
-    pendingTbody.innerHTML = pending.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">✕ Reject</button></div></td></tr>`).join('');
+    pendingTbody.innerHTML = pending.map(function(u) { return '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser(\'' + u.id + '\')">&check; Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser(\'' + u.id + '\')">&times; Reject</button></div></td></tr>'; }).join('');
   } else { pendingSection.style.display = 'none'; }
-  document.getElementById('users-tbody').innerHTML = active.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td><span class="role-tag ${u.role!=='admin'?'user-role':''}">${u.role}</span></td><td><span class="pick-result ${u.status==='active'?'result-win':'result-loss'}">${u.status}</span></td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${u.username!=='admin'?`<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status==='active'?'Deactivate':'Activate'}</button><button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span style="color:var(--muted);font-size:11px;">Protected</span>'}</div></td></tr>`).join('');
+  document.getElementById('users-tbody').innerHTML = active.map(function(u) { var btns = u.username !== 'admin' ? '<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus(\'' + u.id + '\')">' + (u.status==='active'?'Deactivate':'Activate') + '</button> <button class="btn btn-secondary btn-sm" onclick="openEditUser(\'' + u.id + '\')" >Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\')" >Delete</button>' : '<span style="color:var(--muted);font-size:11px;">Protected</span>'; return '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td><span class="role-tag ' + (u.role!=='admin'?'user-role':'') + '">' + u.role + '</span></td><td><span class="pick-result ' + (u.status==='active'?'result-win':'result-loss') + '">' + u.status + '</span></td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">' + btns + '</div></td></tr>'; }).join('');
 }
 
 function approveUser(id) { const users = getData('ss_users',[]); const idx = users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status='active'; setData('ss_users',users); renderUsersTable(); updatePendingBadge(); }
@@ -824,15 +823,13 @@ function saveAbout() {
 </script>
 
   <div class="modal-overlay" id="about-modal">
-    <div class="modal">
-      <div class="modal-header"><span class="modal-title">Edit About Us</span>
-        <button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button></div>
+    <div class="modal"><div class="modal-header"><span class="modal-title">Edit About Us</span>
+      <button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button></div>
       <div style="display:grid;gap:12px;">
         <div class="field"><label>Description</label>
           <textarea id="ab-desc" rows="6" placeholder="Tell visitors about Sharp Selections..."></textarea></div>
         <button class="btn btn-primary" onclick="saveAbout()">Save</button>
-      </div>
-    </div>
+      </div></div>
   </div>
 </body>
 </html>
