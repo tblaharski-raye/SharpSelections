@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap">
 <script src="https://js.stripe.com/v3/">
 // ════════════════════════════════════════
 // STRIPE + CHECKOUT
@@ -248,9 +249,9 @@ renderUsersTable();
 </script>
 <title>Sharp Selections — Daily Selections</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
+color-scheme: dark;
 –bg: #0d0f0d;
 –surface: #0e120e;
 –surface2: #121812;
@@ -276,7 +277,9 @@ renderUsersTable();
 
 body {
 font-family: ‘DM Sans’, sans-serif;
+background: #0d0f0d;
 background: var(–bg);
+color: #ddffd0;
 color: var(–text);
 min-height: 100vh;
 overflow-x: hidden;
@@ -289,6 +292,7 @@ display: flex;
 align-items: center;
 justify-content: center;
 position: relative;
+background: #060806;
 background: radial-gradient(ellipse at 50% 40%, #0a1a00 0%, #060806 60%, #000 100%);
 }
 
@@ -302,6 +306,7 @@ pointer-events: none;
 }
 
 .auth-box {
+background: #0e120e;
 background: var(–surface);
 border: 1px solid var(–border);
 border-radius: 2px;
@@ -324,6 +329,7 @@ background: linear-gradient(90deg, transparent, var(–accent2), var(–accent),
 .auth-logo {
 font-family: ‘Pacifico’, cursive;
 font-size: 46px;
+color: #c8ff00;
 color: var(–accent);
 text-align: center;
 margin-bottom: 2px;
@@ -347,6 +353,7 @@ display: block;
 
 .auth-tagline {
 text-align: center;
+color: #c8ff00;
 color: var(–accent);
 font-size: 13px;
 letter-spacing: 3px;
@@ -386,8 +393,11 @@ margin-bottom: 8px;
 
 .field input, .field select, .field textarea {
 width: 100%;
+background: #0d0f0d;
 background: var(–bg);
-border: 1px solid var(–border);
+border: 1px solid #1c301c;
+border-color: var(–border);
+color: #ddffd0;
 color: var(–text);
 padding: 12px 16px;
 font-family: ‘DM Sans’, sans-serif;
@@ -413,7 +423,7 @@ font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
 font-weight: 500; transition: all 0.2s;
 }
 
-.btn-primary { background: var(–accent); color: #0a0c10; width: 100%; }
+.btn-primary { background: #c8ff00; background: var(–accent); color: #0a0c10; width: 100%; }
 .btn-primary:hover { background: #d8ff20; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,255,0,0.3); }
 
 .btn-secondary { background: var(–surface2); color: var(–text); border: 1px solid var(–border); }
