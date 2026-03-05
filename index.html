@@ -332,13 +332,10 @@
 ```
 
   <div class="page" id="page-about">
-    <div class="date-bar">
-      <div><div class="date-display">ABOUT US</div></div>
+    <div class="date-bar"><div><div class="date-display">ABOUT US</div></div>
       <button class="btn btn-secondary btn-sm admin-only" id="about-edit-btn" onclick="openAboutEditor()" style="display:none;">Edit</button>
     </div>
-    <div style="padding:24px;max-width:600px;margin:0 auto;">
-      <div id="about-display"></div>
-    </div>
+    <div style="padding:24px;max-width:600px;margin:0 auto;"><div id="about-display"></div></div>
   </div>
       <div id="pending-section" style="margin-bottom:28px;display:none;">
         <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
@@ -806,61 +803,33 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
-function getAbout() {
-  return getData('ss_about', { desc: '', twitter: '', instagram: '' });
-}
+function getAbout() { return getData('ss_about', { desc: '' }); }
 function renderAboutPage() {
   var el = document.getElementById('about-display');
   if (!el) return;
   var d = getAbout();
-  var h = '';
-  if (d.desc) {
-    h += '<p style="color:#ddffd0;font-size:15px;line-height:1.8;white-space:pre-wrap;margin:0 0 24px;">' + d.desc + '</p>';
-  }
-  if (d.twitter || d.instagram) {
-    h += '<div style="display:flex;gap:12px;flex-wrap:wrap;">';
-    if (d.twitter) {
-      h += '<a href="https://twitter.com/' + d.twitter.replace('@','') + '" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid #1c301c;border-radius:8px;color:#c8ff00;text-decoration:none;font-size:13px;font-weight:600;">X &nbsp;@' + d.twitter.replace('@','') + '</a>';
-    }
-    if (d.instagram) {
-      h += '<a href="https://instagram.com/' + d.instagram.replace('@','') + '" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid #1c301c;border-radius:8px;color:#c8ff00;text-decoration:none;font-size:13px;font-weight:600;">IG &nbsp;@' + d.instagram.replace('@','') + '</a>';
-    }
-    h += '</div>';
-  }
-  if (!h) {
-    h = '<p style="color:#3d5c3d;font-size:14px;">No info added yet.</p>';
-  }
-  el.innerHTML = h;
+  el.innerHTML = d.desc
+    ? '<p style="color:#ddffd0;font-size:15px;line-height:1.8;white-space:pre-wrap;margin:0;">' + d.desc + '</p>'
+    : '<p style="color:#3d5c3d;font-size:14px;">No info added yet.</p>';
 }
 function openAboutEditor() {
-  var d = getAbout();
-  document.getElementById('ab-desc').value      = d.desc || '';
-  document.getElementById('ab-twitter').value   = d.twitter || '';
-  document.getElementById('ab-instagram').value = d.instagram || '';
+  document.getElementById('ab-desc').value = getAbout().desc || '';
   document.getElementById('about-modal').classList.add('open');
 }
 function saveAbout() {
-  setData('ss_about', {
-    desc:      document.getElementById('ab-desc').value.trim(),
-    twitter:   document.getElementById('ab-twitter').value.trim(),
-    instagram: document.getElementById('ab-instagram').value.trim()
-  });
+  setData('ss_about', { desc: document.getElementById('ab-desc').value.trim() });
   closeModal('about-modal');
   renderAboutPage();
 }
-
 </script>
 
   <div class="modal-overlay" id="about-modal">
     <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">Edit About Us</span>
-        <button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button>
-      </div>
+      <div class="modal-header"><span class="modal-title">Edit About Us</span>
+        <button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button></div>
       <div style="display:grid;gap:12px;">
-        <div class="field"><label>Description</label><textarea id="ab-desc" rows="6" placeholder="Tell visitors about Sharp Selections..."></textarea></div>
-        <div class="field"><label>Twitter / X (handle only, e.g. SharpSelections)</label><input type="text" id="ab-twitter" placeholder="SharpSelections"></div>
-        <div class="field"><label>Instagram (handle only, e.g. SharpSelections)</label><input type="text" id="ab-instagram" placeholder="SharpSelections"></div>
+        <div class="field"><label>Description</label>
+          <textarea id="ab-desc" rows="6" placeholder="Tell visitors about Sharp Selections..."></textarea></div>
         <button class="btn btn-primary" onclick="saveAbout()">Save</button>
       </div>
     </div>
