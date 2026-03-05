@@ -4,254 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap">
-<script src="https://js.stripe.com/v3/">
-// ════════════════════════════════════════
-// STRIPE + CHECKOUT
-// ════════════════════════════════════════
-const DEMO_MODE = true; // SET TO false FOR LIVE STRIPE PAYMENTS
-const STRIPE_PK = 'pk_test_51T7ehMBzvE6XnDh4awB5SSouvjcTmjZGSUYsQ1oMDYWu5bhKsOYSsCqYoUrjRn10xcEyKCw0yq1vmwcC80kBdhwJ00k8isXmYT';
-let stripeInstance = null, stripeCardElement = null;
-let selectedPlan = 'monthly', appliedPromo = null, pendingRegData = null;
-
-function getSettings() { return getData(‘ss_settings’, { monthlyPrice: 15, lifetimePrice: 250 }); }
-function getPrices() { const s = getSettings(); return { monthly: parseFloat(s.monthlyPrice)||15, lifetime: parseFloat(s.lifetimePrice)||250 }; }
-
-function goToCheckout() {
-const first = document.getElementById(‘reg-first’).value.trim();
-const last  = document.getElementById(‘reg-last’).value.trim();
-const email = document.getElementById(‘reg-email’).value.trim();
-const user  = document.getElementById(‘reg-user’).value.trim();
-const pass  = document.getElementById(‘reg-pass’).value;
-const pass2 = document.getElementById(‘reg-pass2’).value;
-const msgEl = document.getElementById(‘reg-msg’);
-const show  = (txt, type) => { msgEl.textContent = txt; msgEl.className = ‘msg msg-’ + type; msgEl.style.display = ‘block’; };
-if (!first||!last||!email||!user||!pass) return show(‘All fields are required.’, ‘error’);
-if (pass.length < 6) return show(‘Password must be at least 6 characters.’, ‘error’);
-if (pass !== pass2) return show(‘Passwords do not match.’, ‘error’);
-if (!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)) return show(‘Please enter a valid email.’, ‘error’);
-const users = getData(‘ss_users’, []);
-if (users.find(u => u.username === user)) return show(‘Username already taken.’, ‘error’);
-if (users.find(u => u.email === email)) return show(‘Email already registered.’, ‘error’);
-pendingRegData = { first, last, email, user, pass };
-msgEl.style.display = ‘none’;
-appliedPromo = null;
-document.getElementById(‘promo-input’).value = ‘’;
-document.getElementById(‘promo-result’).innerHTML = ‘’;
-selectedPlan = ‘monthly’;
-updatePlanUI();
-showScreen(‘checkout-screen’);
-initStripe();
-}
-
-function initStripe() {
-const container = document.getElementById(‘stripe-card-element’);
-if (DEMO_MODE) {
-container.innerHTML = ‘<div style="padding:12px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;border:1px dashed rgba(200,255,0,0.3);border-radius:2px;text-align:center;">🧪 DEMO MODE — Card entry disabled</div>’;
-return;
-}
-if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
-const elements = stripeInstance.elements({ appearance: { theme: ‘night’ } });
-stripeCardElement = elements.create(‘card’, { style: { base: { color: ‘#ddffd0’, fontFamily: ‘“DM Mono”, monospace’, fontSize: ‘14px’ } } });
-container.innerHTML = ‘’;
-stripeCardElement.mount(’#stripe-card-element’);
-stripeCardElement.on(‘change’, e => { document.getElementById(‘stripe-card-errors’).textContent = e.error ? e.error.message : ‘’; });
-}
-
-function selectPlan(plan) { selectedPlan = plan; updatePlanUI(); }
-
-function updatePlanUI() {
-const prices = getPrices();
-document.getElementById(‘plan-monthly’).classList.toggle(‘selected’, selectedPlan === ‘monthly’);
-document.getElementById(‘plan-lifetime’).classList.toggle(‘selected’, selectedPlan === ‘lifetime’);
-const basePrice = selectedPlan === ‘monthly’ ? prices.monthly : prices.lifetime;
-let finalPrice = basePrice;
-if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
-document.getElementById(‘checkout-total’).textContent = ‘$’ + finalPrice.toFixed(2);
-document.getElementById(‘checkout-total-label’).textContent = (selectedPlan === ‘monthly’ ? ‘Monthly Plan · 30-day access’ : ‘Lifetime Plan · Unlimited access’) + (appliedPromo ? ’ · ’ + appliedPromo.pct + ‘% off’ : ‘’);
-document.getElementById(‘monthly-display’).textContent = ‘$’ + prices.monthly.toFixed(2);
-document.getElementById(‘lifetime-display’).textContent = ‘$’ + prices.lifetime.toFixed(2);
-document.getElementById(‘demo-notice’).style.display = DEMO_MODE ? ‘block’ : ‘none’;
-}
-
-function applyPromo() {
-const code = document.getElementById(‘promo-input’).value.trim().toUpperCase();
-const resultEl = document.getElementById(‘promo-result’);
-if (!code) return;
-const promos = getData(‘ss_promos’, []);
-const found = promos.find(p => p.code === code && p.active);
-if (!found) { resultEl.innerHTML = ‘<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">Invalid or expired code.</span>’; appliedPromo = null; updatePlanUI(); return; }
-if (found.expiry && new Date(found.expiry) < new Date()) { resultEl.innerHTML = ‘<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">This code has expired.</span>’; appliedPromo = null; updatePlanUI(); return; }
-appliedPromo = found;
-resultEl.innerHTML = `<span class="promo-code-tag">✓ ${found.code} — ${found.pct}% off applied!</span>`;
-updatePlanUI();
-}
-
-async function processPayment() {
-const btn = document.getElementById(‘pay-btn’);
-const msgEl = document.getElementById(‘checkout-msg’);
-const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = ‘msg msg-’ + type; msgEl.style.display = ‘block’; };
-if (!pendingRegData) { show(‘Session expired — go back and try again.’, ‘error’); return; }
-btn.disabled = true; btn.textContent = ‘⏳ Processing…’;
-try {
-const prices = getPrices();
-const basePrice = selectedPlan === ‘monthly’ ? prices.monthly : prices.lifetime;
-let finalPrice = basePrice;
-if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
-let paymentId = ‘demo_’ + Date.now(), paymentSuccess = false;
-if (DEMO_MODE) {
-paymentSuccess = true;
-} else {
-const { token, error } = await stripeInstance.createToken(stripeCardElement);
-if (error) { show(error.message, ‘error’); btn.disabled = false; btn.textContent = ‘Pay & Create Account →’; return; }
-paymentSuccess = true; paymentId = token.id;
-}
-if (paymentSuccess) {
-const now = new Date();
-const expiry = selectedPlan === ‘monthly’ ? new Date(now.getTime() + 30*24*60*60*1000).toISOString() : null;
-const users = getData(‘ss_users’, []);
-if (appliedPromo) {
-const promos = getData(‘ss_promos’, []);
-const idx = promos.findIndex(p => p.code === appliedPromo.code);
-if (idx !== -1) promos[idx].uses = (promos[idx].uses || 0) + 1;
-setData(‘ss_promos’, promos);
-}
-users.push({ id: ‘u’+Date.now(), username: pendingRegData.user, password: pendingRegData.pass, firstName: pendingRegData.first, lastName: pendingRegData.last, email: pendingRegData.email, role: ‘user’, status: ‘active’, subscribed: true, plan: selectedPlan, subscriptionExpiry: expiry, paymentId, promoUsed: appliedPromo ? appliedPromo.code : null, amountPaid: finalPrice.toFixed(2), created: now.toISOString() });
-setData(‘ss_users’, users);
-pendingRegData = null;
-showScreen(‘pending-screen’);
-document.querySelector(’.pending-title’).textContent = ‘PAYMENT RECEIVED!’;
-document.querySelector(’.pending-text’).textContent = ‘Your account is active. You can now sign in!’;
-}
-} catch(e) { show(’Payment error: ’ + e.message, ‘error’); }
-btn.disabled = false; btn.textContent = ‘Pay & Create Account →’;
-}
-
-// ════════════════════════════════════════
-// ABOUT PAGE
-// ════════════════════════════════════════
-function renderAboutPage() {
-const data = getData(‘ss_about’, { name:’$harp $elections’, title:‘Professional Sports Handicapper’, avatar:‘🎯’, bio:‘Welcome to $harp $elections.’, twitter:’’, instagram:’’, tiktok:’’, telegram:’’, ambassadors:[] });
-document.getElementById(‘about-name-display’).textContent = data.name || ‘$harp $elections’;
-document.getElementById(‘about-title-display’).textContent = data.title || ‘’;
-document.getElementById(‘about-avatar-display’).textContent = data.avatar || ‘🎯’;
-document.getElementById(‘about-bio-display’).textContent = data.bio || ‘’;
-const socials = document.getElementById(‘about-socials-display’);
-socials.innerHTML = ‘’;
-[[‘twitter’,‘𝕏 Twitter’],[‘instagram’,‘📸 Instagram’],[‘tiktok’,‘🎵 TikTok’],[‘telegram’,‘✈️ Telegram’]].forEach(([key,label]) => {
-if (data[key]) { const a = document.createElement(‘a’); a.className=‘social-link’; a.href=data[key]; a.target=’_blank’; a.rel=‘noopener’; a.textContent=label; socials.appendChild(a); }
-});
-const grid = document.getElementById(‘ambassadors-grid’);
-const amps = data.ambassadors || [];
-if (!amps.length) { grid.innerHTML = ‘<div class="empty-state"><div class="icon">🤝</div>No ambassadors yet</div>’; return; }
-grid.innerHTML = amps.map(a => `<div class="ambassador-card"> <div class="ambassador-avatar">${a.avatar||'⭐'}</div> <div class="ambassador-name">${a.name}</div> <div class="ambassador-role">${a.role||'Ambassador'}</div> <div class="ambassador-bio">${a.bio||''}</div> <div class="ambassador-links"> ${a.twitter ?`<a class="social-link" href="${a.twitter}" target="_blank">𝕏</a>`: ''} ${a.instagram ?`<a class="social-link" href="${a.instagram}" target="_blank">📸</a>`: ''} ${a.tiktok ?`<a class="social-link" href="${a.tiktok}" target="_blank">🎵</a>` : ''} </div> </div>`).join(’’);
-}
-
-function openAboutEditor() {
-const data = getData(‘ss_about’, {});
-document.getElementById(‘ae-name’).value = data.name||’’;
-document.getElementById(‘ae-title’).value = data.title||’’;
-document.getElementById(‘ae-avatar’).value = data.avatar||‘🎯’;
-document.getElementById(‘ae-bio’).value = data.bio||’’;
-document.getElementById(‘ae-twitter’).value = data.twitter||’’;
-document.getElementById(‘ae-instagram’).value = data.instagram||’’;
-document.getElementById(‘ae-tiktok’).value = data.tiktok||’’;
-document.getElementById(‘ae-telegram’).value = data.telegram||’’;
-document.getElementById(‘ambassador-editor-rows’).innerHTML = ‘’;
-(data.ambassadors||[]).forEach(a => addAmbassadorRow(a));
-openModal(‘modal-about-editor’);
-}
-
-function addAmbassadorRow(a) {
-a = a || {};
-const div = document.createElement(‘div’);
-div.className = ‘ambassador-row’;
-div.style.cssText = ‘background:var(–surface2);border:1px solid var(–border);border-radius:2px;padding:16px;margin-bottom:12px;position:relative;’;
-div.innerHTML = `<button onclick="this.closest('.ambassador-row').remove()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button> <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"> <div class="field" style="margin-bottom:0;"><label>Name</label><input type="text" class="amb-name" value="${a.name||''}" placeholder="Name"></div> <div class="field" style="margin-bottom:0;"><label>Role</label><input type="text" class="amb-role" value="${a.role||''}" placeholder="e.g. Brand Ambassador"></div> <div class="field" style="margin-bottom:0;"><label>Emoji</label><input type="text" class="amb-avatar" value="${a.avatar||'⭐'}" maxlength="4"></div> </div> <div class="field" style="margin-top:10px;margin-bottom:0;"><label>Bio</label><textarea class="amb-bio" rows="2">${a.bio||''}</textarea></div> <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;"> <div class="field" style="margin-bottom:0;"><label>Twitter</label><input type="text" class="amb-twitter" value="${a.twitter||''}" placeholder="URL"></div> <div class="field" style="margin-bottom:0;"><label>Instagram</label><input type="text" class="amb-instagram" value="${a.instagram||''}" placeholder="URL"></div> <div class="field" style="margin-bottom:0;"><label>TikTok</label><input type="text" class="amb-tiktok" value="${a.tiktok||''}" placeholder="URL"></div> </div>`;
-document.getElementById(‘ambassador-editor-rows’).appendChild(div);
-}
-
-function saveAboutPage() {
-const ambassadors = [];
-document.querySelectorAll(’.ambassador-row’).forEach(row => {
-const name = row.querySelector(’.amb-name’).value.trim();
-if (!name) return;
-ambassadors.push({ name, role:row.querySelector(’.amb-role’).value.trim(), avatar:row.querySelector(’.amb-avatar’).value.trim()||‘⭐’, bio:row.querySelector(’.amb-bio’).value.trim(), twitter:row.querySelector(’.amb-twitter’).value.trim(), instagram:row.querySelector(’.amb-instagram’).value.trim(), tiktok:row.querySelector(’.amb-tiktok’).value.trim() });
-});
-setData(‘ss_about’, { name:document.getElementById(‘ae-name’).value.trim(), title:document.getElementById(‘ae-title’).value.trim(), avatar:document.getElementById(‘ae-avatar’).value.trim()||‘🎯’, bio:document.getElementById(‘ae-bio’).value.trim(), twitter:document.getElementById(‘ae-twitter’).value.trim(), instagram:document.getElementById(‘ae-instagram’).value.trim(), tiktok:document.getElementById(‘ae-tiktok’).value.trim(), telegram:document.getElementById(‘ae-telegram’).value.trim(), ambassadors });
-closeModal(‘modal-about-editor’);
-renderAboutPage();
-}
-
-// ════════════════════════════════════════
-// PROMO CODES
-// ════════════════════════════════════════
-function openPromoManager() { renderPromoList(); openModal(‘modal-promos’); }
-function renderPromoList() {
-const promos = getData(‘ss_promos’, []);
-const el = document.getElementById(‘promo-list’);
-if (!promos.length) { el.innerHTML = ‘<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:12px;padding:12px 0;">No promo codes yet.</div>’; return; }
-el.innerHTML = promos.map((p,i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);flex:1;">${p.code}</span>
-<span style="font-family:'DM Mono',monospace;font-size:12px;">${p.pct}% off</span>
-<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${p.expiry?’Exp: ’+p.expiry:‘No expiry’}</span>
-<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Used: ${p.uses||0}x</span>
-<button class="btn btn-sm ${p.active?'btn-success':'btn-danger'}" onclick="togglePromo(${i})">${p.active?‘Active’:‘Disabled’}</button>
-<button class="btn btn-danger btn-sm" onclick="deletePromo(${i})">✕</button>
-
-  </div>`).join('');
-}
-function addPromoCode() {
-  const code = document.getElementById('new-promo-code').value.trim().toUpperCase();
-  const pct = parseInt(document.getElementById('new-promo-pct').value);
-  const expiry = document.getElementById('new-promo-expiry').value;
-  if (!code||!pct||pct<1||pct>100) return;
-  const promos = getData('ss_promos', []);
-  if (promos.find(p => p.code===code)) return alert('Code already exists.');
-  promos.push({ code, pct, expiry:expiry||null, active:true, uses:0, created:new Date().toISOString() });
-  setData('ss_promos', promos);
-  document.getElementById('new-promo-code').value=''; document.getElementById('new-promo-pct').value=''; document.getElementById('new-promo-expiry').value='';
-  renderPromoList();
-}
-function togglePromo(i) { const p=getData('ss_promos',[]); p[i].active=!p[i].active; setData('ss_promos',p); renderPromoList(); }
-function deletePromo(i) { if(!confirm('Delete this promo code?')) return; const p=getData('ss_promos',[]); p.splice(i,1); setData('ss_promos',p); renderPromoList(); }
-
-// ════════════════════════════════════════
-// PRICING EDITOR
-// ════════════════════════════════════════
-function openPricingEditor() {
-const s = getSettings();
-document.getElementById(‘price-monthly’).value = s.monthlyPrice||15;
-document.getElementById(‘price-lifetime’).value = s.lifetimePrice||250;
-document.getElementById(‘pricing-msg’).style.display=‘none’;
-openModal(‘modal-pricing’);
-}
-function savePricing() {
-const monthly = parseFloat(document.getElementById(‘price-monthly’).value);
-const lifetime = parseFloat(document.getElementById(‘price-lifetime’).value);
-if (!monthly||!lifetime) return;
-setData(‘ss_settings’, { monthlyPrice:monthly, lifetimePrice:lifetime });
-document.getElementById(‘pricing-msg’).style.display=‘block’;
-setTimeout(() => { document.getElementById(‘pricing-msg’).style.display=‘none’; closeModal(‘modal-pricing’); }, 1200);
-}
-
-// ════════════════════════════════════════
-// SUBSCRIPTION TOGGLE
-// ════════════════════════════════════════
-function toggleSubscription(id) {
-const users = getData(‘ss_users’,[]);
-const idx = users.findIndex(u => u.id===id);
-if (idx!==-1) users[idx].subscribed = !users[idx].subscribed;
-setData(‘ss_users’, users);
-renderUsersTable();
-}
-
-</script>
 <title>Sharp Selections — Daily Selections</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
-color-scheme: dark;
 –bg: #0d0f0d;
 –surface: #0e120e;
 –surface2: #121812;
@@ -277,9 +34,7 @@ color-scheme: dark;
 
 body {
 font-family: ‘DM Sans’, sans-serif;
-background: #0d0f0d;
 background: var(–bg);
-color: #ddffd0;
 color: var(–text);
 min-height: 100vh;
 overflow-x: hidden;
@@ -292,7 +47,6 @@ display: flex;
 align-items: center;
 justify-content: center;
 position: relative;
-background: #060806;
 background: radial-gradient(ellipse at 50% 40%, #0a1a00 0%, #060806 60%, #000 100%);
 }
 
@@ -306,7 +60,6 @@ pointer-events: none;
 }
 
 .auth-box {
-background: #0e120e;
 background: var(–surface);
 border: 1px solid var(–border);
 border-radius: 2px;
@@ -323,22 +76,21 @@ content: ‘’;
 position: absolute;
 top: 0; left: 0; right: 0;
 height: 2px;
-background: linear-gradient(90deg, transparent, #1a56ff, #c8ff00, #1a56ff, transparent);
+background: linear-gradient(90deg, transparent, var(–accent2), var(–accent), var(–accent2), transparent);
 }
 
 .auth-logo {
 font-family: ‘Pacifico’, cursive;
 font-size: 46px;
-color: #c8ff00;
 color: var(–accent);
 text-align: center;
 margin-bottom: 2px;
 line-height: 1.1;
 text-shadow:
--2px -2px 0 #1a56ff,
-2px -2px 0 #1a56ff,
--2px  2px 0 #1a56ff,
-2px  2px 0 #1a56ff,
+-2px -2px 0 var(–accent2),
+2px -2px 0 var(–accent2),
+-2px  2px 0 var(–accent2),
+2px  2px 0 var(–accent2),
 0    0  18px rgba(26,86,255,0.7),
 0    0  35px rgba(200,255,0,0.25);
 letter-spacing: 1px;
@@ -353,7 +105,6 @@ display: block;
 
 .auth-tagline {
 text-align: center;
-color: #c8ff00;
 color: var(–accent);
 font-size: 13px;
 letter-spacing: 3px;
@@ -368,12 +119,10 @@ text-shadow: 0 0 10px rgba(200,255,0,0.4);
 text-align: center;
 margin-top: 20px;
 font-size: 13px;
-color: #3d5c3d;
 color: var(–muted);
 }
 
 .auth-toggle a {
-color: #c8ff00;
 color: var(–accent);
 cursor: pointer;
 text-decoration: none;
@@ -395,11 +144,8 @@ margin-bottom: 8px;
 
 .field input, .field select, .field textarea {
 width: 100%;
-background: #0d0f0d;
 background: var(–bg);
-border: 1px solid #1c301c;
-border-color: var(–border);
-color: #ddffd0;
+border: 1px solid var(–border);
 color: var(–text);
 padding: 12px 16px;
 font-family: ‘DM Sans’, sans-serif;
@@ -410,7 +156,6 @@ transition: border-color 0.2s;
 }
 
 .field input:focus, .field select:focus, .field textarea:focus {
-border-color: #c8ff00;
 border-color: var(–accent);
 box-shadow: 0 0 0 2px rgba(200,255,0,0.1);
 }
@@ -426,7 +171,7 @@ font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
 font-weight: 500; transition: all 0.2s;
 }
 
-.btn-primary { background: #c8ff00; background: var(–accent); color: #0a0c10; width: 100%; }
+.btn-primary { background: var(–accent); color: #0a0c10; width: 100%; }
 .btn-primary:hover { background: #d8ff20; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,255,0,0.3); }
 
 .btn-secondary { background: var(–surface2); color: var(–text); border: 1px solid var(–border); }
@@ -476,14 +221,13 @@ position: sticky; top: 0; z-index: 100;
 .topbar-logo {
 font-family: ‘Pacifico’, cursive;
 font-size: 22px;
-color: #c8ff00;
 color: var(–accent);
 letter-spacing: 1px;
 text-shadow:
--1px -1px 0 #1a56ff,
-1px -1px 0 #1a56ff,
--1px  1px 0 #1a56ff,
-1px  1px 0 #1a56ff,
+-1px -1px 0 var(–accent2),
+1px -1px 0 var(–accent2),
+-1px  1px 0 var(–accent2),
+1px  1px 0 var(–accent2),
 0    0  10px rgba(26,86,255,0.6),
 0    0  20px rgba(200,255,0,0.2);
 }
@@ -773,44 +517,6 @@ border: 1px dashed var(–border); border-radius: 2px;
 .strength-bar.weak { background: var(–danger); width: 33%; }
 .strength-bar.medium { background: var(–warning); width: 66%; }
 .strength-bar.strong { background: var(–success); width: 100%; }
-
-/* ─── CHECKOUT / PLANS ─── */
-.plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-.plan-card { border: 2px solid var(–border); border-radius: 4px; padding: 20px 16px; cursor: pointer; transition: all 0.2s; background: var(–surface2); text-align: center; position: relative; }
-.plan-card:hover { border-color: var(–accent); }
-.plan-card.selected { border-color: var(–accent); background: rgba(200,255,0,0.06); }
-.plan-card .plan-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 22px; letter-spacing: 2px; color: var(–text); }
-.plan-card .plan-price { font-family: ‘DM Mono’, monospace; font-size: 28px; color: var(–accent); margin: 4px 0; }
-.plan-card .plan-desc { font-size: 11px; color: var(–muted); font-family: ‘DM Mono’, monospace; letter-spacing: 1px; }
-.plan-card .plan-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(–accent2); color: #fff; font-size: 9px; font-family: ‘DM Mono’, monospace; letter-spacing: 1px; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
-#stripe-card-element { background: var(–bg); border: 1px solid var(–border); border-radius: 2px; padding: 12px 14px; margin-top: 6px; }
-.promo-row { display: flex; gap: 8px; }
-.promo-row input { flex: 1; }
-.promo-row button { flex-shrink: 0; }
-#checkout-total { font-family: ‘Bebas Neue’, sans-serif; font-size: 28px; color: var(–accent); text-align: center; margin: 12px 0 4px; }
-#checkout-total-label { text-align: center; font-family: ‘DM Mono’, monospace; font-size: 11px; color: var(–muted); margin-bottom: 16px; }
-.promo-code-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(200,255,0,0.08); border: 1px solid rgba(200,255,0,0.25); color: var(–accent); font-family: ‘DM Mono’, monospace; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
-/* ─── ABOUT PAGE ─── */
-.about-hero { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; padding: 40px; margin-bottom: 24px; position: relative; overflow: hidden; }
-.about-hero::before { content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(–accent2), var(–accent), var(–accent2), transparent); }
-.about-bio { font-size: 14px; line-height: 1.8; color: var(–text); opacity: 0.85; margin-top: 16px; white-space: pre-wrap; }
-.social-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-.social-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 2px; border: 1px solid var(–border); background: var(–surface2); color: var(–muted); font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 1px; text-decoration: none; transition: all 0.2s; }
-.social-link:hover { border-color: var(–accent); color: var(–accent); }
-.ambassador-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.ambassador-card { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; padding: 24px; transition: border-color 0.2s; }
-.ambassador-card:hover { border-color: rgba(200,255,0,0.2); }
-.ambassador-avatar { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(–accent2); background: var(–surface2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; margin-bottom: 12px; }
-.ambassador-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 22px; letter-spacing: 1px; color: var(–text); line-height: 1; }
-.ambassador-role { font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–accent2); margin-top: 4px; }
-.ambassador-bio { font-size: 13px; color: var(–muted); margin-top: 8px; line-height: 1.6; }
-.ambassador-links { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.about-section-title { font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–muted); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(–border); }
-.about-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 36px; letter-spacing: 2px; color: var(–accent); line-height: 1; }
-.about-title-tag { font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–accent2); margin-top: 4px; }
-.sub-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-family: ‘DM Mono’, monospace; letter-spacing: 1px; text-transform: uppercase; }
-.sub-active { background: rgba(200,255,0,0.08); color: var(–accent); border: 1px solid rgba(200,255,0,0.25); }
-.sub-inactive { background: rgba(239,68,68,0.08); color: var(–danger); border: 1px solid rgba(239,68,68,0.2); }
 </style>
 
 </head>
@@ -855,7 +561,7 @@ border: 1px dashed var(–border); border-radius: 2px;
 </div>
 
 <!-- ═══════════════════════════════════
-     REGISTER SCREEN — STEP 1
+     REGISTER SCREEN
 ════════════════════════════════════ -->
 
 <div class="auth-screen" id="register-screen" style="display:none;">
@@ -865,87 +571,48 @@ border: 1px dashed var(–border); border-radius: 2px;
     <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
+      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
+      <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
     </svg>
     <div class="auth-tagline">Create Your Account</div>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:20px;">STEP 1 OF 2 — ACCOUNT INFO</div>
-    <div class="form-grid" style="margin-bottom:0;">
-      <div class="field"><label>First Name</label><input type="text" id="reg-first" placeholder="John"></div>
-      <div class="field"><label>Last Name</label><input type="text" id="reg-last" placeholder="Smith"></div>
-    </div>
-    <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="Choose a username" autocomplete="off"></div>
-    <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min. 6 characters" oninput="checkStrength(this.value)"><div class="strength-bar" id="strength-bar"></div></div>
-    <div class="field"><label>Confirm Password</label><input type="password" id="reg-pass2" placeholder="Repeat password"></div>
-    <button class="btn btn-primary" onclick="goToCheckout()">Next: Choose Plan →</button>
-    <div id="reg-msg" class="msg" style="display:none;"></div>
-    <div class="auth-toggle">Already have an account? <a onclick="showScreen('login-screen')">Sign in</a></div>
+
+```
+<div class="form-grid" style="margin-bottom:0;">
+  <div class="field">
+    <label>First Name</label>
+    <input type="text" id="reg-first" placeholder="John">
+  </div>
+  <div class="field">
+    <label>Last Name</label>
+    <input type="text" id="reg-last" placeholder="Smith">
   </div>
 </div>
-
-<!-- ═══════════════════════════════════
-     CHECKOUT SCREEN — STEP 2
-════════════════════════════════════ -->
-
-<div class="auth-screen" id="checkout-screen" style="display:none;">
-  <div class="auth-grid-bg"></div>
-  <div class="auth-box" style="max-width:500px;">
-    <div class="auth-logo">$harp $elections</div>
-    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
-    </svg>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px;">STEP 2 OF 2 — SELECT PLAN & PAYMENT</div>
-    <div class="plan-grid">
-      <div class="plan-card selected" id="plan-monthly" onclick="selectPlan('monthly')">
-        <div class="plan-name">Monthly</div>
-        <div class="plan-price" id="monthly-display">$15</div>
-        <div class="plan-desc">30-day access</div>
-      </div>
-      <div class="plan-card" id="plan-lifetime" onclick="selectPlan('lifetime')">
-        <div class="plan-badge">BEST VALUE</div>
-        <div class="plan-name">Lifetime</div>
-        <div class="plan-price" id="lifetime-display">$250</div>
-        <div class="plan-desc">Unlimited access</div>
-      </div>
-    </div>
-    <div class="field">
-      <label>Promo Code <span style="color:var(--muted);font-size:10px;">(optional)</span></label>
-      <div class="promo-row">
-        <input type="text" id="promo-input" placeholder="Enter code" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-        <button class="btn btn-secondary btn-sm" onclick="applyPromo()">Apply</button>
-      </div>
-      <div id="promo-result" style="margin-top:6px;"></div>
-    </div>
-    <div id="checkout-total">$15.00</div>
-    <div id="checkout-total-label">Monthly Plan · 30-day access</div>
-    <div class="field"><label>Card Details</label><div id="stripe-card-element"></div><div id="stripe-card-errors" style="color:var(--danger);font-size:12px;font-family:'DM Mono',monospace;margin-top:6px;"></div></div>
-    <button class="btn btn-primary" id="pay-btn" onclick="processPayment()">Pay & Create Account →</button>
-    <div id="demo-notice" style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;margin-top:8px;opacity:0.7;">🧪 DEMO MODE — no real charge</div>
-    <div id="checkout-msg" class="msg" style="display:none;margin-top:10px;"></div>
-    <div class="auth-toggle"><a onclick="showScreen('register-screen')" style="color:var(--muted);">← Back</a></div>
-  </div>
+<div class="field">
+  <label>Email Address</label>
+  <input type="email" id="reg-email" placeholder="you@example.com">
+</div>
+<div class="field">
+  <label>Username</label>
+  <input type="text" id="reg-user" placeholder="Choose a username" autocomplete="off">
+</div>
+<div class="field">
+  <label>Password</label>
+  <input type="password" id="reg-pass" placeholder="Min. 6 characters" oninput="checkStrength(this.value)">
+  <div class="strength-bar" id="strength-bar"></div>
+</div>
+<div class="field">
+  <label>Confirm Password</label>
+  <input type="password" id="reg-pass2" placeholder="Repeat password">
 </div>
 
-<!-- ═══════════════════════════════════
-     SUBSCRIPTION REQUIRED SCREEN
-════════════════════════════════════ -->
+<button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+<div id="reg-msg" class="msg" style="display:none;"></div>
 
-<div class="auth-screen" id="subscription-screen" style="display:none;">
-  <div class="auth-grid-bg"></div>
-  <div class="auth-box" style="text-align:center;">
-    <div class="auth-logo">$harp $elections</div>
-    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
-    </svg>
-    <hr class="divider">
-    <div class="pending-icon">🔒</div>
-    <div class="pending-title">SUBSCRIPTION REQUIRED</div>
-    <p class="pending-text">Your account does not have an active subscription.<br><br>Contact us to subscribe and unlock access to all picks.</p>
-    <button class="btn btn-secondary" onclick="doLogout()" style="width:100%;">← Sign Out</button>
+<div class="auth-toggle">
+  Already have an account? <a onclick="showScreen('login-screen')">Sign in</a>
+</div>
+```
+
   </div>
 </div>
 
@@ -1000,7 +667,6 @@ border: 1px dashed var(–border); border-radius: 2px;
     <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
     <button class="nav-tab" onclick="showPage('history', this)">History</button>
     <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
-    <button class="nav-tab" onclick="showPage('about', this)">About</button>
     <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
     <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">
       User Management <span class="pending-badge" id="pending-count" style="display:none;"></span>
@@ -1191,11 +857,7 @@ border: 1px dashed var(–border); border-radius: 2px;
 <div class="page" id="page-users">
   <div class="date-bar">
     <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-secondary btn-sm" onclick="openPromoManager()">🎟 Promo Codes</button>
-      <button class="btn btn-secondary btn-sm" onclick="openPricingEditor()">💲 Pricing</button>
-      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
-    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
   </div>
 
   <!-- Pending registrations -->
@@ -1228,30 +890,6 @@ border: 1px dashed var(–border); border-radius: 2px;
       </thead>
       <tbody id="users-tbody"></tbody>
     </table>
-  </div>
-</div>
-
-
-<!-- ABOUT PAGE -->
-<div class="page" id="page-about">
-  <div class="date-bar">
-    <div><div class="date-display">ABOUT US</div><div class="date-sub">Who We Are</div></div>
-    <div id="about-admin-btn" style="display:none;"><button class="btn btn-secondary btn-sm" onclick="openAboutEditor()">✎ Edit Page</button></div>
-  </div>
-  <div class="about-hero">
-    <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">
-      <div style="font-size:64px;" id="about-avatar-display">🎯</div>
-      <div style="flex:1;min-width:200px;">
-        <div class="about-name" id="about-name-display">$harp $elections</div>
-        <div class="about-title-tag" id="about-title-display">Professional Sports Handicapper</div>
-        <div class="about-bio" id="about-bio-display">Welcome to $harp $elections — your source for sharp, data-driven sports picks.</div>
-        <div class="social-links" id="about-socials-display"></div>
-      </div>
-    </div>
-  </div>
-  <div class="about-section-title">Ambassadors & Sponsors</div>
-  <div class="ambassador-grid" id="ambassadors-grid">
-    <div class="empty-state" style="grid-column:1/-1;"><div class="icon">🤝</div>No ambassadors yet</div>
   </div>
 </div>
 ```
@@ -1388,15 +1026,6 @@ border: 1px dashed var(–border); border-radius: 2px;
 </div>
 
 <script>
-
-// Global error display for debugging
-window.onerror = function(msg, src, line, col, err) {
-  var div = document.createElement('div');
-  div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff3b3b;color:#fff;padding:10px;font-family:monospace;font-size:12px;z-index:99999;white-space:pre-wrap;';
-  div.textContent = 'JS ERROR: ' + msg + ' (line ' + line + ')';
-  document.body.appendChild(div);
-  return false;
-};
 // ════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════
@@ -1455,7 +1084,7 @@ function formatDateDisplay(d) {
 // SCREEN SWITCHING
 // ════════════════════════════════════════
 function showScreen(id) {
-  ['login-screen','register-screen','pending-screen','checkout-screen','subscription-screen'].forEach(s => {
+  ['login-screen','register-screen','pending-screen'].forEach(s => {
     document.getElementById(s).style.display = 'none';
   });
   document.getElementById(id).style.display = 'flex';
@@ -1489,7 +1118,7 @@ function doLogin() {
 
   currentUser = found;
   errEl.style.display = 'none';
-  ['login-screen','register-screen','pending-screen','checkout-screen','subscription-screen'].forEach(s => {
+  ['login-screen','register-screen','pending-screen'].forEach(s => {
     document.getElementById(s).style.display = 'none';
   });
   document.getElementById('app').style.display = 'block';
@@ -1583,7 +1212,6 @@ function setupApp() {
     document.getElementById('panel-chevron').classList.add('open');
   }
 
-  document.getElementById('about-admin-btn').style.display = currentUser.role === 'admin' ? 'block' : 'none';
   updatePendingBadge();
   showPage('picks', document.querySelectorAll('.nav-tab')[0]);
   loadPicksForDate(today);
@@ -1611,7 +1239,6 @@ function showPage(name, tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (tab) tab.classList.add('active');
-  if (name === 'about') { renderAboutPage(); }
   if (name === 'admin') {
     renderAdminPicks();
     if (document.getElementById('f-date') && !document.getElementById('f-date').value) {
@@ -1871,19 +1498,9 @@ async function fetchGames() {
 function selectGame(el) {
   document.querySelectorAll('.game-pill').forEach(p => p.classList.remove('selected'));
   el.classList.add('selected');
-  const away = el.dataset.away;
-  const home = el.dataset.home;
-  document.getElementById('f-away').value = away;
-  document.getElementById('f-home').value = home;
-  let qp = document.getElementById('team-quickpick');
-  if (!qp) { qp = document.createElement('div'); qp.id = 'team-quickpick'; qp.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;'; document.getElementById('games-grid').after(qp); }
-  qp.innerHTML = `<div style="width:100%;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">QUICK PICK</div>
-    <button class="game-pill" onclick="setTeamSelection(this)" data-team="${away}"><span style="font-size:10px;color:var(--muted);">AWAY</span> <strong>${away}</strong></button>
-    <button class="game-pill" onclick="setTeamSelection(this)" data-team="${home}"><span style="font-size:10px;color:var(--muted);">HOME</span> <strong>${home}</strong></button>`;
-}
-function setTeamSelection(el) {
-  document.getElementById('f-selection').value = el.dataset.team;
-  document.querySelectorAll('#team-quickpick .game-pill').forEach(b => b.classList.toggle('selected', b === el));
+  document.getElementById('f-away').value = el.dataset.away;
+  document.getElementById('f-home').value = el.dataset.home;
+  document.getElementById('f-selection').focus();
 }
 
 function escHtml(s) {
@@ -2091,7 +1708,6 @@ function renderUsersTable() {
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           ${u.username !== 'admin' ? `
             <button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status === 'active' ? 'Deactivate' : 'Activate'}</button>
-            <button class="btn btn-sm ${u.subscribed ? 'btn-success' : 'btn-warning'}" onclick="toggleSubscription('${u.id}')">${u.subscribed ? '✓ Subscribed' : '+ Subscribe'}</button>
             <button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button>
             <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>
           ` : '<span style="color:var(--muted);font-size:11px;font-family:\'DM Mono\',monospace;">Protected</span>'}
@@ -2198,334 +1814,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
-
-// ════════════════════════════════════════
-// STRIPE + CHECKOUT
-// ════════════════════════════════════════
-const DEMO_MODE = true; // SET TO false FOR LIVE STRIPE PAYMENTS
-const STRIPE_PK = 'pk_test_51T7ehMBzvE6XnDh4awB5SSouvjcTmjZGSUYsQ1oMDYWu5bhKsOYSsCqYoUrjRn10xcEyKCw0yq1vmwcC80kBdhwJ00k8isXmYT';
-let stripeInstance = null, stripeCardElement = null;
-let selectedPlan = 'monthly', appliedPromo = null, pendingRegData = null;
-
-function getSettings() { return getData('ss_settings', { monthlyPrice: 15, lifetimePrice: 250 }); }
-function getPrices() { const s = getSettings(); return { monthly: parseFloat(s.monthlyPrice)||15, lifetime: parseFloat(s.lifetimePrice)||250 }; }
-
-function goToCheckout() {
-  const first = document.getElementById('reg-first').value.trim();
-  const last  = document.getElementById('reg-last').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const user  = document.getElementById('reg-user').value.trim();
-  const pass  = document.getElementById('reg-pass').value;
-  const pass2 = document.getElementById('reg-pass2').value;
-  const msgEl = document.getElementById('reg-msg');
-  const show  = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
-  if (!first||!last||!email||!user||!pass) return show('All fields are required.', 'error');
-  if (pass.length < 6) return show('Password must be at least 6 characters.', 'error');
-  if (pass !== pass2) return show('Passwords do not match.', 'error');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email.', 'error');
-  const users = getData('ss_users', []);
-  if (users.find(u => u.username === user)) return show('Username already taken.', 'error');
-  if (users.find(u => u.email === email)) return show('Email already registered.', 'error');
-  pendingRegData = { first, last, email, user, pass };
-  msgEl.style.display = 'none';
-  appliedPromo = null;
-  document.getElementById('promo-input').value = '';
-  document.getElementById('promo-result').innerHTML = '';
-  selectedPlan = 'monthly';
-  updatePlanUI();
-  showScreen('checkout-screen');
-  initStripe();
-}
-
-function initStripe() {
-  const container = document.getElementById('stripe-card-element');
-  if (DEMO_MODE) {
-    container.innerHTML = '<div style="padding:12px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;border:1px dashed rgba(200,255,0,0.3);border-radius:2px;text-align:center;">🧪 DEMO MODE — Card entry disabled</div>';
-    return;
-  }
-  if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
-  const elements = stripeInstance.elements({ appearance: { theme: 'night' } });
-  stripeCardElement = elements.create('card', { style: { base: { color: '#ddffd0', fontFamily: '"DM Mono", monospace', fontSize: '14px' } } });
-  container.innerHTML = '';
-  stripeCardElement.mount('#stripe-card-element');
-  stripeCardElement.on('change', e => { document.getElementById('stripe-card-errors').textContent = e.error ? e.error.message : ''; });
-}
-
-function selectPlan(plan) { selectedPlan = plan; updatePlanUI(); }
-
-function updatePlanUI() {
-  const prices = getPrices();
-  document.getElementById('plan-monthly').classList.toggle('selected', selectedPlan === 'monthly');
-  document.getElementById('plan-lifetime').classList.toggle('selected', selectedPlan === 'lifetime');
-  const basePrice = selectedPlan === 'monthly' ? prices.monthly : prices.lifetime;
-  let finalPrice = basePrice;
-  if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
-  document.getElementById('checkout-total').textContent = '$' + finalPrice.toFixed(2);
-  document.getElementById('checkout-total-label').textContent = (selectedPlan === 'monthly' ? 'Monthly Plan · 30-day access' : 'Lifetime Plan · Unlimited access') + (appliedPromo ? ' · ' + appliedPromo.pct + '% off' : '');
-  document.getElementById('monthly-display').textContent = '$' + prices.monthly.toFixed(2);
-  document.getElementById('lifetime-display').textContent = '$' + prices.lifetime.toFixed(2);
-  document.getElementById('demo-notice').style.display = DEMO_MODE ? 'block' : 'none';
-}
-
-function applyPromo() {
-  const code = document.getElementById('promo-input').value.trim().toUpperCase();
-  const resultEl = document.getElementById('promo-result');
-  if (!code) return;
-  const promos = getData('ss_promos', []);
-  const found = promos.find(p => p.code === code && p.active);
-  if (!found) { resultEl.innerHTML = '<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">Invalid or expired code.</span>'; appliedPromo = null; updatePlanUI(); return; }
-  if (found.expiry && new Date(found.expiry) < new Date()) { resultEl.innerHTML = '<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">This code has expired.</span>'; appliedPromo = null; updatePlanUI(); return; }
-  appliedPromo = found;
-  resultEl.innerHTML = `<span class="promo-code-tag">✓ ${found.code} — ${found.pct}% off applied!</span>`;
-  updatePlanUI();
-}
-
-async function processPayment() {
-  const btn = document.getElementById('pay-btn');
-  const msgEl = document.getElementById('checkout-msg');
-  const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
-  if (!pendingRegData) { show('Session expired — go back and try again.', 'error'); return; }
-  btn.disabled = true; btn.textContent = '⏳ Processing...';
-  try {
-    const prices = getPrices();
-    const basePrice = selectedPlan === 'monthly' ? prices.monthly : prices.lifetime;
-    let finalPrice = basePrice;
-    if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
-    let paymentId = 'demo_' + Date.now(), paymentSuccess = false;
-    if (DEMO_MODE) {
-      paymentSuccess = true;
-    } else {
-      const { token, error } = await stripeInstance.createToken(stripeCardElement);
-      if (error) { show(error.message, 'error'); btn.disabled = false; btn.textContent = 'Pay & Create Account →'; return; }
-      paymentSuccess = true; paymentId = token.id;
-    }
-    if (paymentSuccess) {
-      const now = new Date();
-      const expiry = selectedPlan === 'monthly' ? new Date(now.getTime() + 30*24*60*60*1000).toISOString() : null;
-      const users = getData('ss_users', []);
-      if (appliedPromo) {
-        const promos = getData('ss_promos', []);
-        const idx = promos.findIndex(p => p.code === appliedPromo.code);
-        if (idx !== -1) promos[idx].uses = (promos[idx].uses || 0) + 1;
-        setData('ss_promos', promos);
-      }
-      users.push({ id: 'u'+Date.now(), username: pendingRegData.user, password: pendingRegData.pass, firstName: pendingRegData.first, lastName: pendingRegData.last, email: pendingRegData.email, role: 'user', status: 'active', subscribed: true, plan: selectedPlan, subscriptionExpiry: expiry, paymentId, promoUsed: appliedPromo ? appliedPromo.code : null, amountPaid: finalPrice.toFixed(2), created: now.toISOString() });
-      setData('ss_users', users);
-      pendingRegData = null;
-      showScreen('pending-screen');
-      document.querySelector('.pending-title').textContent = 'PAYMENT RECEIVED!';
-      document.querySelector('.pending-text').textContent = 'Your account is active. You can now sign in!';
-    }
-  } catch(e) { show('Payment error: ' + e.message, 'error'); }
-  btn.disabled = false; btn.textContent = 'Pay & Create Account →';
-}
-
-// ════════════════════════════════════════
-// ABOUT PAGE
-// ════════════════════════════════════════
-function renderAboutPage() {
-  const data = getData('ss_about', { name:'$harp $elections', title:'Professional Sports Handicapper', avatar:'🎯', bio:'Welcome to $harp $elections.', twitter:'', instagram:'', tiktok:'', telegram:'', ambassadors:[] });
-  document.getElementById('about-name-display').textContent = data.name || '$harp $elections';
-  document.getElementById('about-title-display').textContent = data.title || '';
-  document.getElementById('about-avatar-display').textContent = data.avatar || '🎯';
-  document.getElementById('about-bio-display').textContent = data.bio || '';
-  const socials = document.getElementById('about-socials-display');
-  socials.innerHTML = '';
-  [['twitter','𝕏 Twitter'],['instagram','📸 Instagram'],['tiktok','🎵 TikTok'],['telegram','✈️ Telegram']].forEach(([key,label]) => {
-    if (data[key]) { const a = document.createElement('a'); a.className='social-link'; a.href=data[key]; a.target='_blank'; a.rel='noopener'; a.textContent=label; socials.appendChild(a); }
-  });
-  const grid = document.getElementById('ambassadors-grid');
-  const amps = data.ambassadors || [];
-  if (!amps.length) { grid.innerHTML = '<div class="empty-state"><div class="icon">🤝</div>No ambassadors yet</div>'; return; }
-  grid.innerHTML = amps.map(a => `
-    <div class="ambassador-card">
-      <div class="ambassador-avatar">${a.avatar||'⭐'}</div>
-      <div class="ambassador-name">${a.name}</div>
-      <div class="ambassador-role">${a.role||'Ambassador'}</div>
-      <div class="ambassador-bio">${a.bio||''}</div>
-      <div class="ambassador-links">
-        ${a.twitter ? `<a class="social-link" href="${a.twitter}" target="_blank">𝕏</a>` : ''}
-        ${a.instagram ? `<a class="social-link" href="${a.instagram}" target="_blank">📸</a>` : ''}
-        ${a.tiktok ? `<a class="social-link" href="${a.tiktok}" target="_blank">🎵</a>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-function openAboutEditor() {
-  const data = getData('ss_about', {});
-  document.getElementById('ae-name').value = data.name||'';
-  document.getElementById('ae-title').value = data.title||'';
-  document.getElementById('ae-avatar').value = data.avatar||'🎯';
-  document.getElementById('ae-bio').value = data.bio||'';
-  document.getElementById('ae-twitter').value = data.twitter||'';
-  document.getElementById('ae-instagram').value = data.instagram||'';
-  document.getElementById('ae-tiktok').value = data.tiktok||'';
-  document.getElementById('ae-telegram').value = data.telegram||'';
-  document.getElementById('ambassador-editor-rows').innerHTML = '';
-  (data.ambassadors||[]).forEach(a => addAmbassadorRow(a));
-  openModal('modal-about-editor');
-}
-
-function addAmbassadorRow(a) {
-  a = a || {};
-  const div = document.createElement('div');
-  div.className = 'ambassador-row';
-  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:16px;margin-bottom:12px;position:relative;';
-  div.innerHTML = `<button onclick="this.closest('.ambassador-row').remove()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-      <div class="field" style="margin-bottom:0;"><label>Name</label><input type="text" class="amb-name" value="${a.name||''}" placeholder="Name"></div>
-      <div class="field" style="margin-bottom:0;"><label>Role</label><input type="text" class="amb-role" value="${a.role||''}" placeholder="e.g. Brand Ambassador"></div>
-      <div class="field" style="margin-bottom:0;"><label>Emoji</label><input type="text" class="amb-avatar" value="${a.avatar||'⭐'}" maxlength="4"></div>
-    </div>
-    <div class="field" style="margin-top:10px;margin-bottom:0;"><label>Bio</label><textarea class="amb-bio" rows="2">${a.bio||''}</textarea></div>
-
-```
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;">
-  <div class="field" style="margin-bottom:0;"><label>Twitter</label><input type="text" class="amb-twitter" value="${a.twitter||''}" placeholder="URL"></div>
-  <div class="field" style="margin-bottom:0;"><label>Instagram</label><input type="text" class="amb-instagram" value="${a.instagram||''}" placeholder="URL"></div>
-  <div class="field" style="margin-bottom:0;"><label>TikTok</label><input type="text" class="amb-tiktok" value="${a.tiktok||''}" placeholder="URL"></div>
-</div>`;
-```
-
-document.getElementById(‘ambassador-editor-rows’).appendChild(div);
-}
-
-function saveAboutPage() {
-const ambassadors = [];
-document.querySelectorAll(’.ambassador-row’).forEach(row => {
-const name = row.querySelector(’.amb-name’).value.trim();
-if (!name) return;
-ambassadors.push({ name, role:row.querySelector(’.amb-role’).value.trim(), avatar:row.querySelector(’.amb-avatar’).value.trim()||‘⭐’, bio:row.querySelector(’.amb-bio’).value.trim(), twitter:row.querySelector(’.amb-twitter’).value.trim(), instagram:row.querySelector(’.amb-instagram’).value.trim(), tiktok:row.querySelector(’.amb-tiktok’).value.trim() });
-});
-setData(‘ss_about’, { name:document.getElementById(‘ae-name’).value.trim(), title:document.getElementById(‘ae-title’).value.trim(), avatar:document.getElementById(‘ae-avatar’).value.trim()||‘🎯’, bio:document.getElementById(‘ae-bio’).value.trim(), twitter:document.getElementById(‘ae-twitter’).value.trim(), instagram:document.getElementById(‘ae-instagram’).value.trim(), tiktok:document.getElementById(‘ae-tiktok’).value.trim(), telegram:document.getElementById(‘ae-telegram’).value.trim(), ambassadors });
-closeModal(‘modal-about-editor’);
-renderAboutPage();
-}
-
-// ════════════════════════════════════════
-// PROMO CODES
-// ════════════════════════════════════════
-function openPromoManager() { renderPromoList(); openModal(‘modal-promos’); }
-function renderPromoList() {
-const promos = getData(‘ss_promos’, []);
-const el = document.getElementById(‘promo-list’);
-if (!promos.length) { el.innerHTML = ‘<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:12px;padding:12px 0;">No promo codes yet.</div>’; return; }
-el.innerHTML = promos.map((p,i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);flex:1;">${p.code}</span>
-<span style="font-family:'DM Mono',monospace;font-size:12px;">${p.pct}% off</span>
-<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${p.expiry?’Exp: ’+p.expiry:‘No expiry’}</span>
-<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Used: ${p.uses||0}x</span>
-<button class="btn btn-sm ${p.active?'btn-success':'btn-danger'}" onclick="togglePromo(${i})">${p.active?‘Active’:‘Disabled’}</button>
-<button class="btn btn-danger btn-sm" onclick="deletePromo(${i})">✕</button>
-
-  </div>`).join('');
-}
-function addPromoCode() {
-  const code = document.getElementById('new-promo-code').value.trim().toUpperCase();
-  const pct = parseInt(document.getElementById('new-promo-pct').value);
-  const expiry = document.getElementById('new-promo-expiry').value;
-  if (!code||!pct||pct<1||pct>100) return;
-  const promos = getData('ss_promos', []);
-  if (promos.find(p => p.code===code)) return alert('Code already exists.');
-  promos.push({ code, pct, expiry:expiry||null, active:true, uses:0, created:new Date().toISOString() });
-  setData('ss_promos', promos);
-  document.getElementById('new-promo-code').value=''; document.getElementById('new-promo-pct').value=''; document.getElementById('new-promo-expiry').value='';
-  renderPromoList();
-}
-function togglePromo(i) { const p=getData('ss_promos',[]); p[i].active=!p[i].active; setData('ss_promos',p); renderPromoList(); }
-function deletePromo(i) { if(!confirm('Delete this promo code?')) return; const p=getData('ss_promos',[]); p.splice(i,1); setData('ss_promos',p); renderPromoList(); }
-
-// ════════════════════════════════════════
-// PRICING EDITOR
-// ════════════════════════════════════════
-function openPricingEditor() {
-const s = getSettings();
-document.getElementById(‘price-monthly’).value = s.monthlyPrice||15;
-document.getElementById(‘price-lifetime’).value = s.lifetimePrice||250;
-document.getElementById(‘pricing-msg’).style.display=‘none’;
-openModal(‘modal-pricing’);
-}
-function savePricing() {
-const monthly = parseFloat(document.getElementById(‘price-monthly’).value);
-const lifetime = parseFloat(document.getElementById(‘price-lifetime’).value);
-if (!monthly||!lifetime) return;
-setData(‘ss_settings’, { monthlyPrice:monthly, lifetimePrice:lifetime });
-document.getElementById(‘pricing-msg’).style.display=‘block’;
-setTimeout(() => { document.getElementById(‘pricing-msg’).style.display=‘none’; closeModal(‘modal-pricing’); }, 1200);
-}
-
-// ════════════════════════════════════════
-// SUBSCRIPTION TOGGLE
-// ════════════════════════════════════════
-function toggleSubscription(id) {
-const users = getData(‘ss_users’,[]);
-const idx = users.findIndex(u => u.id===id);
-if (idx!==-1) users[idx].subscribed = !users[idx].subscribed;
-setData(‘ss_users’, users);
-renderUsersTable();
-}
-
 </script>
 
-<!-- ABOUT EDITOR MODAL -->
-
-<div class="modal-overlay" id="modal-about-editor">
-  <div class="modal" style="max-width:680px;">
-    <button class="modal-close" onclick="closeModal('modal-about-editor')">✕</button>
-    <div class="modal-title">EDIT ABOUT PAGE</div>
-    <div class="about-section-title" style="margin-top:0;">Profile</div>
-    <div class="form-grid">
-      <div class="field"><label>Display Name</label><input type="text" id="ae-name" placeholder="e.g. John Sharp"></div>
-      <div class="field"><label>Title / Tagline</label><input type="text" id="ae-title" placeholder="e.g. Professional Handicapper"></div>
-      <div class="field"><label>Avatar Emoji</label><input type="text" id="ae-avatar" placeholder="🎯" maxlength="4"></div>
-    </div>
-    <div class="field"><label>Bio</label><textarea id="ae-bio" rows="4" placeholder="Your background and credentials..."></textarea></div>
-    <div class="about-section-title" style="margin-top:20px;">Social Links</div>
-    <div class="form-grid">
-      <div class="field"><label>Twitter / X</label><input type="text" id="ae-twitter" placeholder="https://x.com/yourhandle"></div>
-      <div class="field"><label>Instagram</label><input type="text" id="ae-instagram" placeholder="https://instagram.com/yourhandle"></div>
-      <div class="field"><label>TikTok</label><input type="text" id="ae-tiktok" placeholder="https://tiktok.com/@yourhandle"></div>
-      <div class="field"><label>Telegram</label><input type="text" id="ae-telegram" placeholder="https://t.me/yourchannel"></div>
-    </div>
-    <div class="about-section-title" style="margin-top:20px;">Ambassadors / Sponsors <button class="btn btn-secondary btn-sm" onclick="addAmbassadorRow()" style="margin-left:12px;">+ Add</button></div>
-    <div id="ambassador-editor-rows"></div>
-    <div style="display:flex;gap:10px;margin-top:24px;">
-      <button class="btn btn-primary" onclick="saveAboutPage()" style="flex:1;">Save Page</button>
-      <button class="btn btn-secondary" onclick="closeModal('modal-about-editor')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- PROMO CODE MANAGER -->
-
-<div class="modal-overlay" id="modal-promos">
-  <div class="modal" style="max-width:600px;">
-    <button class="modal-close" onclick="closeModal('modal-promos')">✕</button>
-    <div class="modal-title">PROMO CODES</div>
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <input type="text" id="new-promo-code" placeholder="Code e.g. SHARP20" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-      <input type="number" id="new-promo-pct" placeholder="% off" min="1" max="100" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;width:90px;">
-      <input type="date" id="new-promo-expiry" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;">
-      <button class="btn btn-primary btn-sm" onclick="addPromoCode()" style="width:auto;">Add</button>
-    </div>
-    <div id="promo-list"></div>
-  </div>
-</div>
-
-<!-- PRICING EDITOR -->
-
-<div class="modal-overlay" id="modal-pricing">
-  <div class="modal" style="max-width:400px;">
-    <button class="modal-close" onclick="closeModal('modal-pricing')">✕</button>
-    <div class="modal-title">PRICING</div>
-    <div class="field"><label>Monthly Price ($)</label><input type="number" id="price-monthly" min="1" step="0.01" value="15"></div>
-    <div class="field"><label>Lifetime Price ($)</label><input type="number" id="price-lifetime" min="1" step="0.01" value="250"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-primary" onclick="savePricing()" style="flex:1;">Save Pricing</button>
-      <button class="btn btn-secondary" onclick="closeModal('modal-pricing')">Cancel</button>
-    </div>
-    <div id="pricing-msg" class="msg msg-success" style="display:none;margin-top:10px;">Pricing updated!</div>
-  </div>
-</div>
 </body>
 </html>
