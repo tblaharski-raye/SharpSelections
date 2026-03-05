@@ -1,154 +1,810 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://js.stripe.com/v3/">
+// ════════════════════════════════════════
+// STRIPE + CHECKOUT
+// ════════════════════════════════════════
+const DEMO_MODE = true; // SET TO false FOR LIVE STRIPE PAYMENTS
+const STRIPE_PK = 'pk_test_51T7ehMBzvE6XnDh4awB5SSouvjcTmjZGSUYsQ1oMDYWu5bhKsOYSsCqYoUrjRn10xcEyKCw0yq1vmwcC80kBdhwJ00k8isXmYT';
+let stripeInstance = null, stripeCardElement = null;
+let selectedPlan = 'monthly', appliedPromo = null, pendingRegData = null;
+
+function getSettings() { return getData(‘ss_settings’, { monthlyPrice: 15, lifetimePrice: 250 }); }
+function getPrices() { const s = getSettings(); return { monthly: parseFloat(s.monthlyPrice)||15, lifetime: parseFloat(s.lifetimePrice)||250 }; }
+
+function goToCheckout() {
+const first = document.getElementById(‘reg-first’).value.trim();
+const last  = document.getElementById(‘reg-last’).value.trim();
+const email = document.getElementById(‘reg-email’).value.trim();
+const user  = document.getElementById(‘reg-user’).value.trim();
+const pass  = document.getElementById(‘reg-pass’).value;
+const pass2 = document.getElementById(‘reg-pass2’).value;
+const msgEl = document.getElementById(‘reg-msg’);
+const show  = (txt, type) => { msgEl.textContent = txt; msgEl.className = ‘msg msg-’ + type; msgEl.style.display = ‘block’; };
+if (!first||!last||!email||!user||!pass) return show(‘All fields are required.’, ‘error’);
+if (pass.length < 6) return show(‘Password must be at least 6 characters.’, ‘error’);
+if (pass !== pass2) return show(‘Passwords do not match.’, ‘error’);
+if (!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)) return show(‘Please enter a valid email.’, ‘error’);
+const users = getData(‘ss_users’, []);
+if (users.find(u => u.username === user)) return show(‘Username already taken.’, ‘error’);
+if (users.find(u => u.email === email)) return show(‘Email already registered.’, ‘error’);
+pendingRegData = { first, last, email, user, pass };
+msgEl.style.display = ‘none’;
+appliedPromo = null;
+document.getElementById(‘promo-input’).value = ‘’;
+document.getElementById(‘promo-result’).innerHTML = ‘’;
+selectedPlan = ‘monthly’;
+updatePlanUI();
+showScreen(‘checkout-screen’);
+initStripe();
+}
+
+function initStripe() {
+const container = document.getElementById(‘stripe-card-element’);
+if (DEMO_MODE) {
+container.innerHTML = ‘<div style="padding:12px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;border:1px dashed rgba(200,255,0,0.3);border-radius:2px;text-align:center;">🧪 DEMO MODE — Card entry disabled</div>’;
+return;
+}
+if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
+const elements = stripeInstance.elements({ appearance: { theme: ‘night’ } });
+stripeCardElement = elements.create(‘card’, { style: { base: { color: ‘#ddffd0’, fontFamily: ‘“DM Mono”, monospace’, fontSize: ‘14px’ } } });
+container.innerHTML = ‘’;
+stripeCardElement.mount(’#stripe-card-element’);
+stripeCardElement.on(‘change’, e => { document.getElementById(‘stripe-card-errors’).textContent = e.error ? e.error.message : ‘’; });
+}
+
+function selectPlan(plan) { selectedPlan = plan; updatePlanUI(); }
+
+function updatePlanUI() {
+const prices = getPrices();
+document.getElementById(‘plan-monthly’).classList.toggle(‘selected’, selectedPlan === ‘monthly’);
+document.getElementById(‘plan-lifetime’).classList.toggle(‘selected’, selectedPlan === ‘lifetime’);
+const basePrice = selectedPlan === ‘monthly’ ? prices.monthly : prices.lifetime;
+let finalPrice = basePrice;
+if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
+document.getElementById(‘checkout-total’).textContent = ‘$’ + finalPrice.toFixed(2);
+document.getElementById(‘checkout-total-label’).textContent = (selectedPlan === ‘monthly’ ? ‘Monthly Plan · 30-day access’ : ‘Lifetime Plan · Unlimited access’) + (appliedPromo ? ’ · ’ + appliedPromo.pct + ‘% off’ : ‘’);
+document.getElementById(‘monthly-display’).textContent = ‘$’ + prices.monthly.toFixed(2);
+document.getElementById(‘lifetime-display’).textContent = ‘$’ + prices.lifetime.toFixed(2);
+document.getElementById(‘demo-notice’).style.display = DEMO_MODE ? ‘block’ : ‘none’;
+}
+
+function applyPromo() {
+const code = document.getElementById(‘promo-input’).value.trim().toUpperCase();
+const resultEl = document.getElementById(‘promo-result’);
+if (!code) return;
+const promos = getData(‘ss_promos’, []);
+const found = promos.find(p => p.code === code && p.active);
+if (!found) { resultEl.innerHTML = ‘<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">Invalid or expired code.</span>’; appliedPromo = null; updatePlanUI(); return; }
+if (found.expiry && new Date(found.expiry) < new Date()) { resultEl.innerHTML = ‘<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">This code has expired.</span>’; appliedPromo = null; updatePlanUI(); return; }
+appliedPromo = found;
+resultEl.innerHTML = `<span class="promo-code-tag">✓ ${found.code} — ${found.pct}% off applied!</span>`;
+updatePlanUI();
+}
+
+async function processPayment() {
+const btn = document.getElementById(‘pay-btn’);
+const msgEl = document.getElementById(‘checkout-msg’);
+const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = ‘msg msg-’ + type; msgEl.style.display = ‘block’; };
+if (!pendingRegData) { show(‘Session expired — go back and try again.’, ‘error’); return; }
+btn.disabled = true; btn.textContent = ‘⏳ Processing…’;
+try {
+const prices = getPrices();
+const basePrice = selectedPlan === ‘monthly’ ? prices.monthly : prices.lifetime;
+let finalPrice = basePrice;
+if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
+let paymentId = ‘demo_’ + Date.now(), paymentSuccess = false;
+if (DEMO_MODE) {
+paymentSuccess = true;
+} else {
+const { token, error } = await stripeInstance.createToken(stripeCardElement);
+if (error) { show(error.message, ‘error’); btn.disabled = false; btn.textContent = ‘Pay & Create Account →’; return; }
+paymentSuccess = true; paymentId = token.id;
+}
+if (paymentSuccess) {
+const now = new Date();
+const expiry = selectedPlan === ‘monthly’ ? new Date(now.getTime() + 30*24*60*60*1000).toISOString() : null;
+const users = getData(‘ss_users’, []);
+if (appliedPromo) {
+const promos = getData(‘ss_promos’, []);
+const idx = promos.findIndex(p => p.code === appliedPromo.code);
+if (idx !== -1) promos[idx].uses = (promos[idx].uses || 0) + 1;
+setData(‘ss_promos’, promos);
+}
+users.push({ id: ‘u’+Date.now(), username: pendingRegData.user, password: pendingRegData.pass, firstName: pendingRegData.first, lastName: pendingRegData.last, email: pendingRegData.email, role: ‘user’, status: ‘active’, subscribed: true, plan: selectedPlan, subscriptionExpiry: expiry, paymentId, promoUsed: appliedPromo ? appliedPromo.code : null, amountPaid: finalPrice.toFixed(2), created: now.toISOString() });
+setData(‘ss_users’, users);
+pendingRegData = null;
+showScreen(‘pending-screen’);
+document.querySelector(’.pending-title’).textContent = ‘PAYMENT RECEIVED!’;
+document.querySelector(’.pending-text’).textContent = ‘Your account is active. You can now sign in!’;
+}
+} catch(e) { show(’Payment error: ’ + e.message, ‘error’); }
+btn.disabled = false; btn.textContent = ‘Pay & Create Account →’;
+}
+
+// ════════════════════════════════════════
+// ABOUT PAGE
+// ════════════════════════════════════════
+function renderAboutPage() {
+const data = getData(‘ss_about’, { name:’$harp $elections’, title:‘Professional Sports Handicapper’, avatar:‘🎯’, bio:‘Welcome to $harp $elections.’, twitter:’’, instagram:’’, tiktok:’’, telegram:’’, ambassadors:[] });
+document.getElementById(‘about-name-display’).textContent = data.name || ‘$harp $elections’;
+document.getElementById(‘about-title-display’).textContent = data.title || ‘’;
+document.getElementById(‘about-avatar-display’).textContent = data.avatar || ‘🎯’;
+document.getElementById(‘about-bio-display’).textContent = data.bio || ‘’;
+const socials = document.getElementById(‘about-socials-display’);
+socials.innerHTML = ‘’;
+[[‘twitter’,‘𝕏 Twitter’],[‘instagram’,‘📸 Instagram’],[‘tiktok’,‘🎵 TikTok’],[‘telegram’,‘✈️ Telegram’]].forEach(([key,label]) => {
+if (data[key]) { const a = document.createElement(‘a’); a.className=‘social-link’; a.href=data[key]; a.target=’_blank’; a.rel=‘noopener’; a.textContent=label; socials.appendChild(a); }
+});
+const grid = document.getElementById(‘ambassadors-grid’);
+const amps = data.ambassadors || [];
+if (!amps.length) { grid.innerHTML = ‘<div class="empty-state"><div class="icon">🤝</div>No ambassadors yet</div>’; return; }
+grid.innerHTML = amps.map(a => `<div class="ambassador-card"> <div class="ambassador-avatar">${a.avatar||'⭐'}</div> <div class="ambassador-name">${a.name}</div> <div class="ambassador-role">${a.role||'Ambassador'}</div> <div class="ambassador-bio">${a.bio||''}</div> <div class="ambassador-links"> ${a.twitter ?`<a class="social-link" href="${a.twitter}" target="_blank">𝕏</a>`: ''} ${a.instagram ?`<a class="social-link" href="${a.instagram}" target="_blank">📸</a>`: ''} ${a.tiktok ?`<a class="social-link" href="${a.tiktok}" target="_blank">🎵</a>` : ''} </div> </div>`).join(’’);
+}
+
+function openAboutEditor() {
+const data = getData(‘ss_about’, {});
+document.getElementById(‘ae-name’).value = data.name||’’;
+document.getElementById(‘ae-title’).value = data.title||’’;
+document.getElementById(‘ae-avatar’).value = data.avatar||‘🎯’;
+document.getElementById(‘ae-bio’).value = data.bio||’’;
+document.getElementById(‘ae-twitter’).value = data.twitter||’’;
+document.getElementById(‘ae-instagram’).value = data.instagram||’’;
+document.getElementById(‘ae-tiktok’).value = data.tiktok||’’;
+document.getElementById(‘ae-telegram’).value = data.telegram||’’;
+document.getElementById(‘ambassador-editor-rows’).innerHTML = ‘’;
+(data.ambassadors||[]).forEach(a => addAmbassadorRow(a));
+openModal(‘modal-about-editor’);
+}
+
+function addAmbassadorRow(a) {
+a = a || {};
+const div = document.createElement(‘div’);
+div.className = ‘ambassador-row’;
+div.style.cssText = ‘background:var(–surface2);border:1px solid var(–border);border-radius:2px;padding:16px;margin-bottom:12px;position:relative;’;
+div.innerHTML = `<button onclick="this.closest('.ambassador-row').remove()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button> <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;"> <div class="field" style="margin-bottom:0;"><label>Name</label><input type="text" class="amb-name" value="${a.name||''}" placeholder="Name"></div> <div class="field" style="margin-bottom:0;"><label>Role</label><input type="text" class="amb-role" value="${a.role||''}" placeholder="e.g. Brand Ambassador"></div> <div class="field" style="margin-bottom:0;"><label>Emoji</label><input type="text" class="amb-avatar" value="${a.avatar||'⭐'}" maxlength="4"></div> </div> <div class="field" style="margin-top:10px;margin-bottom:0;"><label>Bio</label><textarea class="amb-bio" rows="2">${a.bio||''}</textarea></div> <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;"> <div class="field" style="margin-bottom:0;"><label>Twitter</label><input type="text" class="amb-twitter" value="${a.twitter||''}" placeholder="URL"></div> <div class="field" style="margin-bottom:0;"><label>Instagram</label><input type="text" class="amb-instagram" value="${a.instagram||''}" placeholder="URL"></div> <div class="field" style="margin-bottom:0;"><label>TikTok</label><input type="text" class="amb-tiktok" value="${a.tiktok||''}" placeholder="URL"></div> </div>`;
+document.getElementById(‘ambassador-editor-rows’).appendChild(div);
+}
+
+function saveAboutPage() {
+const ambassadors = [];
+document.querySelectorAll(’.ambassador-row’).forEach(row => {
+const name = row.querySelector(’.amb-name’).value.trim();
+if (!name) return;
+ambassadors.push({ name, role:row.querySelector(’.amb-role’).value.trim(), avatar:row.querySelector(’.amb-avatar’).value.trim()||‘⭐’, bio:row.querySelector(’.amb-bio’).value.trim(), twitter:row.querySelector(’.amb-twitter’).value.trim(), instagram:row.querySelector(’.amb-instagram’).value.trim(), tiktok:row.querySelector(’.amb-tiktok’).value.trim() });
+});
+setData(‘ss_about’, { name:document.getElementById(‘ae-name’).value.trim(), title:document.getElementById(‘ae-title’).value.trim(), avatar:document.getElementById(‘ae-avatar’).value.trim()||‘🎯’, bio:document.getElementById(‘ae-bio’).value.trim(), twitter:document.getElementById(‘ae-twitter’).value.trim(), instagram:document.getElementById(‘ae-instagram’).value.trim(), tiktok:document.getElementById(‘ae-tiktok’).value.trim(), telegram:document.getElementById(‘ae-telegram’).value.trim(), ambassadors });
+closeModal(‘modal-about-editor’);
+renderAboutPage();
+}
+
+// ════════════════════════════════════════
+// PROMO CODES
+// ════════════════════════════════════════
+function openPromoManager() { renderPromoList(); openModal(‘modal-promos’); }
+function renderPromoList() {
+const promos = getData(‘ss_promos’, []);
+const el = document.getElementById(‘promo-list’);
+if (!promos.length) { el.innerHTML = ‘<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:12px;padding:12px 0;">No promo codes yet.</div>’; return; }
+el.innerHTML = promos.map((p,i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);flex:1;">${p.code}</span>
+<span style="font-family:'DM Mono',monospace;font-size:12px;">${p.pct}% off</span>
+<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${p.expiry?’Exp: ’+p.expiry:‘No expiry’}</span>
+<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Used: ${p.uses||0}x</span>
+<button class="btn btn-sm ${p.active?'btn-success':'btn-danger'}" onclick="togglePromo(${i})">${p.active?‘Active’:‘Disabled’}</button>
+<button class="btn btn-danger btn-sm" onclick="deletePromo(${i})">✕</button>
+
+  </div>`).join('');
+}
+function addPromoCode() {
+  const code = document.getElementById('new-promo-code').value.trim().toUpperCase();
+  const pct = parseInt(document.getElementById('new-promo-pct').value);
+  const expiry = document.getElementById('new-promo-expiry').value;
+  if (!code||!pct||pct<1||pct>100) return;
+  const promos = getData('ss_promos', []);
+  if (promos.find(p => p.code===code)) return alert('Code already exists.');
+  promos.push({ code, pct, expiry:expiry||null, active:true, uses:0, created:new Date().toISOString() });
+  setData('ss_promos', promos);
+  document.getElementById('new-promo-code').value=''; document.getElementById('new-promo-pct').value=''; document.getElementById('new-promo-expiry').value='';
+  renderPromoList();
+}
+function togglePromo(i) { const p=getData('ss_promos',[]); p[i].active=!p[i].active; setData('ss_promos',p); renderPromoList(); }
+function deletePromo(i) { if(!confirm('Delete this promo code?')) return; const p=getData('ss_promos',[]); p.splice(i,1); setData('ss_promos',p); renderPromoList(); }
+
+// ════════════════════════════════════════
+// PRICING EDITOR
+// ════════════════════════════════════════
+function openPricingEditor() {
+const s = getSettings();
+document.getElementById(‘price-monthly’).value = s.monthlyPrice||15;
+document.getElementById(‘price-lifetime’).value = s.lifetimePrice||250;
+document.getElementById(‘pricing-msg’).style.display=‘none’;
+openModal(‘modal-pricing’);
+}
+function savePricing() {
+const monthly = parseFloat(document.getElementById(‘price-monthly’).value);
+const lifetime = parseFloat(document.getElementById(‘price-lifetime’).value);
+if (!monthly||!lifetime) return;
+setData(‘ss_settings’, { monthlyPrice:monthly, lifetimePrice:lifetime });
+document.getElementById(‘pricing-msg’).style.display=‘block’;
+setTimeout(() => { document.getElementById(‘pricing-msg’).style.display=‘none’; closeModal(‘modal-pricing’); }, 1200);
+}
+
+// ════════════════════════════════════════
+// SUBSCRIPTION TOGGLE
+// ════════════════════════════════════════
+function toggleSubscription(id) {
+const users = getData(‘ss_users’,[]);
+const idx = users.findIndex(u => u.id===id);
+if (idx!==-1) users[idx].subscribed = !users[idx].subscribed;
+setData(‘ss_users’, users);
+renderUsersTable();
+}
+
+</script>
 <title>Sharp Selections — Daily Selections</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-  :root {
-    --bg: #0d0f0d; --surface: #0e120e; --surface2: #121812; --border: #1c301c;
-    --accent: #c8ff00; --accent-glow: #b3f000; --accent2: #1a56ff; --accent2-glow: #0040ff;
-    --danger: #ff3b3b; --success: #c8ff00; --warning: #1a56ff;
-    --text: #ddffd0; --muted: #3d5c3d;
-    --nfl: #c8ff00; --nba: #1a56ff; --mlb: #00d4ff; --nhl: #1a56ff; --ncaaf: #c8ff00; --ncaam: #00aaff;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-  .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; background: radial-gradient(ellipse at 50% 40%, #0a1a00 0%, #060806 60%, #000 100%); }
-  .auth-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(200,255,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(200,255,0,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
-  .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 48px 44px; width: 100%; max-width: 440px; position: relative; box-shadow: 0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(26,86,255,0.15); animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1); }
-  .auth-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent2), var(--accent), var(--accent2), transparent); }
-  .auth-logo { font-family: 'Pacifico', cursive; font-size: 46px; color: var(--accent); text-align: center; margin-bottom: 2px; line-height: 1.1; text-shadow: -2px -2px 0 var(--accent2), 2px -2px 0 var(--accent2), -2px 2px 0 var(--accent2), 2px 2px 0 var(--accent2), 0 0 18px rgba(26,86,255,0.7), 0 0 35px rgba(200,255,0,0.25); letter-spacing: 1px; }
-  .logo-swoosh { text-align: center; margin: 4px auto 8px; overflow: visible; display: block; }
-  .auth-tagline { text-align: center; color: var(--accent); font-size: 13px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 28px; font-weight: 600; }
-  .auth-toggle { text-align: center; margin-top: 20px; font-size: 13px; color: var(--muted); }
-  .auth-toggle a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 500; }
-  .field { margin-bottom: 18px; }
-  .field label { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 8px; }
-  .field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; border-radius: 2px; outline: none; transition: border-color 0.2s; }
-  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,255,0,0.1); }
-  .field select option { background: var(--surface); }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border: none; cursor: pointer; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; transition: all 0.2s; }
-  .btn-primary { background: var(--accent); color: #0a0c10; width: 100%; }
-  .btn-primary:hover { background: #d8ff20; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,255,0,0.3); }
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-danger { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
-  .btn-success { background: rgba(200,255,0,0.08); color: var(--accent); border: 1px solid rgba(200,255,0,0.3); }
-  .btn-warning { background: rgba(41,121,255,0.1); color: var(--accent2); border: 1px solid rgba(41,121,255,0.25); }
-  .btn-sm { padding: 8px 14px; font-size: 10px; }
-  .msg { padding: 10px 14px; border-radius: 2px; font-size: 13px; margin-top: 12px; font-family: 'DM Mono', monospace; }
-  .msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
-  .msg-success { background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.3); color: var(--accent); }
-  .msg-warning { background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.3); color: var(--accent2); }
-  .pending-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
-  .pending-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--accent2); text-align: center; margin-bottom: 8px; }
-  .pending-text { text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
-  #app { display: none; min-height: 100vh; }
-  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
-  .topbar-logo { font-family: 'Pacifico', cursive; font-size: 22px; color: var(--accent); letter-spacing: 1px; text-shadow: -1px -1px 0 var(--accent2), 1px -1px 0 var(--accent2), -1px 1px 0 var(--accent2), 1px 1px 0 var(--accent2), 0 0 10px rgba(26,86,255,0.6); }
-  .topbar-tagline { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; opacity: 0.7; }
-  .topbar-right { display: flex; align-items: center; gap: 16px; }
-  .user-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
-  .role-tag { background: rgba(200,255,0,0.08); color: var(--accent); border: 1px solid rgba(200,255,0,0.25); padding: 2px 8px; border-radius: 20px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
-  .role-tag.user-role { background: rgba(26,86,255,0.1); color: var(--accent2); border-color: rgba(26,86,255,0.25); }
-  .nav-tabs { display: flex; background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0 32px; overflow-x: auto; }
-  .nav-tab { padding: 14px 20px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; background: none; border-top: none; border-left: none; border-right: none; }
-  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .content { padding: 32px; max-width: 1200px; margin: 0 auto; }
-  .page { display: none; }
-  .page.active { display: block; animation: fadeIn 0.3s ease; }
-  .pending-badge { background: var(--danger); color: #fff; border-radius: 20px; font-size: 10px; padding: 1px 7px; font-family: 'DM Mono', monospace; font-weight: 700; margin-left: 4px; }
-  .date-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-  .date-display { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 2px; color: var(--accent); }
-  .date-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .sport-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
-  .sport-chip { padding: 6px 16px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.2s; }
-  .sport-chip[data-sport="ALL"].active { color: var(--accent); border-color: var(--accent); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NFL"].active { color: var(--nfl); border-color: var(--nfl); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NBA"].active { color: var(--nba); border-color: var(--nba); background: rgba(26,86,255,0.08); }
-  .sport-chip[data-sport="MLB"].active { color: var(--mlb); border-color: var(--mlb); background: rgba(0,212,255,0.08); }
-  .sport-chip[data-sport="NHL"].active { color: var(--nhl); border-color: var(--nhl); background: rgba(26,86,255,0.08); }
-  .sport-chip[data-sport="NCAAF"].active { color: var(--ncaaf); border-color: var(--ncaaf); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NCAAM"].active { color: var(--ncaam); border-color: var(--ncaam); background: rgba(0,170,255,0.08); }
-  .picks-grid { display: flex; flex-direction: column; gap: 10px; }
-  .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 18px 20px; display: grid; grid-template-columns: 80px 1fr 120px 120px 100px auto; align-items: center; gap: 16px; transition: border-color 0.2s; }
-  .pick-card:hover { border-color: rgba(200,255,0,0.2); }
-  .pick-sport-badge { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; padding: 4px 10px; border-radius: 2px; text-align: center; }
-  .sport-NFL { color: #c8ff00; background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.2); }
-  .sport-NBA { color: #1a56ff; background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.2); }
-  .sport-MLB { color: #00d4ff; background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2); }
-  .sport-NHL { color: #1a56ff; background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.2); }
-  .sport-NCAAF { color: #c8ff00; background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.2); }
-  .sport-NCAAM { color: #00aaff; background: rgba(0,170,255,0.07); border: 1px solid rgba(0,170,255,0.2); }
-  .pick-teams { font-weight: 500; font-size: 14px; }
-  .pick-teams .matchup { color: var(--muted); font-size: 12px; margin-top: 2px; font-family: 'DM Mono', monospace; }
-  .pick-type { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
-  .pick-selection { font-weight: 600; font-size: 14px; }
-  .pick-odds { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); }
-  .pick-result { font-family: 'DM Mono', monospace; font-size: 12px; padding: 4px 10px; border-radius: 2px; text-align: center; }
-  .result-win { background: rgba(200,255,0,0.08); color: var(--accent); border: 1px solid rgba(200,255,0,0.25); }
-  .result-loss { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
-  .result-push { background: rgba(90,98,120,0.2); color: var(--muted); border: 1px solid var(--border); }
-  .result-pending { background: rgba(200,255,0,0.05); color: var(--accent); border: 1px solid rgba(200,255,0,0.15); }
-  .pick-actions { display: flex; gap: 6px; }
-  .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 16px 20px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; border-top: none; }
-  .note-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 20px; }
-  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; color: var(--accent); }
-  .stat-value.green { color: var(--success); }
-  .stat-value.red { color: var(--danger); }
-  .users-table { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
-  .users-table table { width: 100%; border-collapse: collapse; }
-  .users-table th { background: var(--surface2); padding: 12px 16px; text-align: left; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
-  .users-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .users-table tr:last-child td { border-bottom: none; }
-  .game-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; transition: all 0.15s; white-space: nowrap; }
-  .game-pill:hover, .game-pill.selected { border-color: var(--accent); color: var(--accent); background: rgba(200,255,0,0.08); }
-  .game-pill .gp-sport { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 2px 6px; opacity: 0.8; }
-  .game-pill .gp-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
-  .games-empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; padding: 8px 0; }
-  .admin-add-panel { background: var(--surface); border: 1px solid var(--accent2); border-radius: 4px; margin-bottom: 24px; overflow: hidden; box-shadow: 0 0 20px rgba(26,86,255,0.08); }
-  .admin-add-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; background: linear-gradient(90deg, rgba(26,86,255,0.06), transparent); flex-wrap: wrap; gap: 12px; }
-  .add-panel-icon { font-size: 22px; color: var(--accent); width: 36px; height: 36px; border: 1px solid rgba(200,255,0,0.3); display: flex; align-items: center; justify-content: center; border-radius: 2px; background: rgba(200,255,0,0.06); flex-shrink: 0; }
-  .add-panel-title { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--accent); font-weight: 500; }
-  .add-panel-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .sport-quick-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-  .sport-quick { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 5px 10px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s; text-transform: uppercase; }
-  .sport-quick:hover, .sport-quick.active-sport { color: var(--accent); border-color: var(--accent); background: rgba(200,255,0,0.08); }
-  .panel-chevron { font-size: 11px; color: var(--muted); transition: transform 0.3s; flex-shrink: 0; }
-  .panel-chevron.open { transform: rotate(180deg); color: var(--accent); }
-  .admin-add-body { padding: 20px; border-top: 1px solid var(--border); display: none; }
-  .admin-add-body.open { display: block; animation: fadeIn 0.2s ease; }
-  .add-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .section-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 36px; width: 100%; max-width: 520px; position: relative; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.22,1,0.36,1); max-height: 90vh; overflow-y: auto; }
-  .modal-overlay.open .modal { transform: translateY(0); }
-  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--accent); margin-bottom: 24px; }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px 8px; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; border: 1px dashed var(--border); border-radius: 2px; }
-  .empty-state .icon { font-size: 36px; margin-bottom: 16px; opacity: 0.3; }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  @media (max-width: 768px) { .content { padding: 16px; } .topbar { padding: 0 16px; } .nav-tabs { padding: 0 16px; } .auth-box { padding: 32px 24px; } .pick-card { grid-template-columns: 70px 1fr auto; } .pick-type, .pick-odds, .pick-selection { display: none; } }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  .strength-bar { height: 3px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; background: var(--border); }
-  .strength-bar.weak { background: var(--danger); width: 33%; }
-  .strength-bar.medium { background: var(--warning); width: 66%; }
-  .strength-bar.strong { background: var(--success); width: 100%; }
+
+:root {
+–bg: #0d0f0d;
+–surface: #0e120e;
+–surface2: #121812;
+–border: #1c301c;
+–accent: #c8ff00;
+–accent-glow: #b3f000;
+–accent2: #1a56ff;
+–accent2-glow: #0040ff;
+–danger: #ff3b3b;
+–success: #c8ff00;
+–warning: #1a56ff;
+–text: #ddffd0;
+–muted: #3d5c3d;
+–nfl: #c8ff00;
+–nba: #1a56ff;
+–mlb: #00d4ff;
+–nhl: #1a56ff;
+–ncaaf: #c8ff00;
+–ncaam: #00aaff;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ─── AUTH SCREENS ─── */
+.auth-screen {
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+background: radial-gradient(ellipse at 50% 40%, #0a1a00 0%, #060806 60%, #000 100%);
+}
+
+.auth-grid-bg {
+position: absolute; inset: 0;
+background-image:
+linear-gradient(rgba(200,255,0,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(200,255,0,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+}
+
+.auth-box {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 48px 44px;
+width: 100%;
+max-width: 440px;
+position: relative;
+box-shadow: 0 40px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(26,86,255,0.15), 0 0 30px rgba(26,86,255,0.05);
+animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+
+.auth-box::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: linear-gradient(90deg, transparent, var(–accent2), var(–accent), var(–accent2), transparent);
+}
+
+.auth-logo {
+font-family: ‘Pacifico’, cursive;
+font-size: 46px;
+color: var(–accent);
+text-align: center;
+margin-bottom: 2px;
+line-height: 1.1;
+text-shadow:
+-2px -2px 0 var(–accent2),
+2px -2px 0 var(–accent2),
+-2px  2px 0 var(–accent2),
+2px  2px 0 var(–accent2),
+0    0  18px rgba(26,86,255,0.7),
+0    0  35px rgba(200,255,0,0.25);
+letter-spacing: 1px;
+}
+
+.logo-swoosh {
+text-align: center;
+margin: 4px auto 8px;
+overflow: visible;
+display: block;
+}
+
+.auth-tagline {
+text-align: center;
+color: var(–accent);
+font-size: 13px;
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-bottom: 28px;
+font-family: ‘DM Sans’, sans-serif;
+font-weight: 600;
+text-shadow: 0 0 10px rgba(200,255,0,0.4);
+}
+
+.auth-toggle {
+text-align: center;
+margin-top: 20px;
+font-size: 13px;
+color: var(–muted);
+}
+
+.auth-toggle a {
+color: var(–accent);
+cursor: pointer;
+text-decoration: none;
+font-weight: 500;
+}
+.auth-toggle a:hover { text-decoration: underline; }
+
+.field { margin-bottom: 18px; }
+
+.field label {
+display: block;
+font-size: 11px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–muted);
+font-family: ‘DM Mono’, monospace;
+margin-bottom: 8px;
+}
+
+.field input, .field select, .field textarea {
+width: 100%;
+background: var(–bg);
+border: 1px solid var(–border);
+color: var(–text);
+padding: 12px 16px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+border-radius: 2px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+.field input:focus, .field select:focus, .field textarea:focus {
+border-color: var(–accent);
+box-shadow: 0 0 0 2px rgba(200,255,0,0.1);
+}
+
+.field select option { background: var(–surface); }
+
+.btn {
+display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+padding: 13px 24px;
+border: none; cursor: pointer; border-radius: 2px;
+font-family: ‘DM Mono’, monospace;
+font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+font-weight: 500; transition: all 0.2s;
+}
+
+.btn-primary { background: var(–accent); color: #0a0c10; width: 100%; }
+.btn-primary:hover { background: #d8ff20; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,255,0,0.3); }
+
+.btn-secondary { background: var(–surface2); color: var(–text); border: 1px solid var(–border); }
+.btn-secondary:hover { border-color: var(–accent); color: var(–accent); }
+
+.btn-danger { background: rgba(239,68,68,0.12); color: var(–danger); border: 1px solid rgba(239,68,68,0.25); }
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+.btn-success { background: rgba(200,255,0,0.08); color: var(–accent); border: 1px solid rgba(200,255,0,0.3); }
+.btn-success:hover { background: rgba(200,255,0,0.16); }
+
+.btn-warning { background: rgba(41,121,255,0.1); color: var(–accent2); border: 1px solid rgba(41,121,255,0.25); }
+.btn-warning:hover { background: rgba(41,121,255,0.18); }
+
+.btn-sm { padding: 8px 14px; font-size: 10px; }
+
+.msg {
+padding: 10px 14px; border-radius: 2px;
+font-size: 13px; margin-top: 12px;
+font-family: ‘DM Mono’, monospace;
+}
+.msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(–danger); }
+.msg-success { background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.3); color: var(–accent); }
+.msg-warning { background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.3); color: var(–accent2); }
+
+/* ─── PENDING SCREEN ─── */
+.pending-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+.pending-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 28px; letter-spacing: 2px; color: var(–accent2);
+text-align: center; margin-bottom: 8px;
+}
+.pending-text { text-align: center; color: var(–muted); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
+
+/* ─── MAIN APP ─── */
+#app { display: none; min-height: 100vh; }
+
+.topbar {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 0 32px;
+display: flex; align-items: center; justify-content: space-between;
+height: 60px;
+position: sticky; top: 0; z-index: 100;
+}
+
+.topbar-logo {
+font-family: ‘Pacifico’, cursive;
+font-size: 22px;
+color: var(–accent);
+letter-spacing: 1px;
+text-shadow:
+-1px -1px 0 var(–accent2),
+1px -1px 0 var(–accent2),
+-1px  1px 0 var(–accent2),
+1px  1px 0 var(–accent2),
+0    0  10px rgba(26,86,255,0.6),
+0    0  20px rgba(200,255,0,0.2);
+}
+.topbar-tagline {
+font-family: ‘DM Sans’, sans-serif;
+font-size: 10px;
+color: var(–accent);
+letter-spacing: 2px;
+text-transform: uppercase;
+font-weight: 600;
+opacity: 0.7;
+}
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+
+.user-badge { display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: ‘DM Mono’, monospace; color: var(–muted); }
+
+.role-tag {
+background: rgba(200,255,0,0.08); color: var(–accent); border: 1px solid rgba(200,255,0,0.25);
+padding: 2px 8px; border-radius: 20px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+}
+.role-tag.user-role { background: rgba(26,86,255,0.1); color: var(–accent2); border-color: rgba(26,86,255,0.25); }
+
+/* ─── NAV ─── */
+.nav-tabs {
+display: flex;
+background: var(–surface2);
+border-bottom: 1px solid var(–border);
+padding: 0 32px;
+overflow-x: auto;
+}
+
+.nav-tab {
+padding: 14px 20px;
+font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+color: var(–muted); cursor: pointer;
+border-bottom: 2px solid transparent;
+transition: all 0.2s; white-space: nowrap;
+background: none; border-top: none; border-left: none; border-right: none;
+}
+.nav-tab:hover { color: var(–text); }
+.nav-tab.active { color: var(–accent); border-bottom-color: var(–accent); }
+
+/* ─── CONTENT ─── */
+.content { padding: 32px; max-width: 1200px; margin: 0 auto; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+/* ─── PENDING BADGE ─── */
+.pending-badge {
+background: var(–danger); color: #fff;
+border-radius: 20px; font-size: 10px; padding: 1px 7px;
+font-family: ‘DM Mono’, monospace; font-weight: 700;
+margin-left: 4px;
+}
+
+/* ─── DATE BAR ─── */
+.date-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+.date-display { font-family: ‘Bebas Neue’, sans-serif; font-size: 32px; letter-spacing: 2px; color: var(–accent); }
+.date-sub { font-family: ‘DM Mono’, monospace; font-size: 11px; color: var(–muted); letter-spacing: 2px; text-transform: uppercase; }
+
+/* ─── SPORT CHIPS ─── */
+.sport-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+
+.sport-chip {
+padding: 6px 16px; border-radius: 2px;
+font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+cursor: pointer; border: 1px solid var(–border);
+background: transparent; color: var(–muted); transition: all 0.2s;
+}
+
+.sport-chip[data-sport=“ALL”].active { color: var(–accent); border-color: var(–accent); background: rgba(200,255,0,0.08); }
+.sport-chip[data-sport=“NFL”].active, .sport-chip[data-sport=“NFL”]:hover { color: var(–nfl); border-color: var(–nfl); background: rgba(200,255,0,0.08); }
+.sport-chip[data-sport=“NBA”].active, .sport-chip[data-sport=“NBA”]:hover { color: var(–nba); border-color: var(–nba); background: rgba(26,86,255,0.08); }
+.sport-chip[data-sport=“MLB”].active, .sport-chip[data-sport=“MLB”]:hover { color: var(–mlb); border-color: var(–mlb); background: rgba(0,212,255,0.08); }
+.sport-chip[data-sport=“NHL”].active, .sport-chip[data-sport=“NHL”]:hover { color: var(–nhl); border-color: var(–nhl); background: rgba(26,86,255,0.08); }
+.sport-chip[data-sport=“NCAAF”].active, .sport-chip[data-sport=“NCAAF”]:hover { color: var(–ncaaf); border-color: var(–ncaaf); background: rgba(200,255,0,0.08); }
+.sport-chip[data-sport=“NCAAM”].active, .sport-chip[data-sport=“NCAAM”]:hover { color: var(–ncaam); border-color: var(–ncaam); background: rgba(0,170,255,0.08); }
+
+/* ─── PICKS ─── */
+.picks-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.pick-card {
+background: var(–surface); border: 1px solid var(–border); border-radius: 2px;
+padding: 18px 20px;
+display: grid;
+grid-template-columns: 80px 1fr 120px 120px 100px auto;
+align-items: center; gap: 16px;
+transition: border-color 0.2s;
+}
+.pick-card:hover { border-color: rgba(200,255,0,0.2); }
+
+.pick-sport-badge {
+font-family: ‘Bebas Neue’, sans-serif; font-size: 16px; letter-spacing: 2px;
+padding: 4px 10px; border-radius: 2px; text-align: center;
+}
+
+.sport-NFL { color: #c8ff00; background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.2); }
+.sport-NBA { color: #1a56ff; background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.2); }
+.sport-MLB { color: #00d4ff; background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2); }
+.sport-NHL { color: #1a56ff; background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.2); }
+.sport-NCAAF { color: #c8ff00; background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.2); }
+.sport-NCAAM { color: #00aaff; background: rgba(0,170,255,0.07); border: 1px solid rgba(0,170,255,0.2); }
+
+.pick-teams { font-weight: 500; font-size: 14px; }
+.pick-teams .matchup { color: var(–muted); font-size: 12px; margin-top: 2px; font-family: ‘DM Mono’, monospace; }
+.pick-type { font-family: ‘DM Mono’, monospace; font-size: 12px; color: var(–muted); }
+.pick-selection { font-weight: 600; font-size: 14px; }
+.pick-odds { font-family: ‘DM Mono’, monospace; font-size: 13px; color: var(–accent); }
+
+.pick-result {
+font-family: ‘DM Mono’, monospace; font-size: 12px;
+padding: 4px 10px; border-radius: 2px; text-align: center;
+}
+.result-win { background: rgba(200,255,0,0.08); color: var(–accent); border: 1px solid rgba(200,255,0,0.25); }
+.result-loss { background: rgba(239,68,68,0.12); color: var(–danger); border: 1px solid rgba(239,68,68,0.2); }
+.result-push { background: rgba(90,98,120,0.2); color: var(–muted); border: 1px solid var(–border); }
+.result-pending { background: rgba(200,255,0,0.05); color: var(–accent); border: 1px solid rgba(200,255,0,0.15); }
+
+.pick-actions { display: flex; gap: 6px; }
+
+/* ─── NOTE CARD ─── */
+.note-card {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 2px; padding: 16px 20px; margin-bottom: 8px;
+font-size: 13px; line-height: 1.6; border-top: none;
+}
+.note-meta { font-family: ‘DM Mono’, monospace; font-size: 10px; color: var(–muted); letter-spacing: 1px; margin-bottom: 6px; }
+
+/* ─── STATS ─── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+
+.stat-card { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; padding: 20px; }
+.stat-label { font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted); margin-bottom: 8px; }
+.stat-value { font-family: ‘Bebas Neue’, sans-serif; font-size: 36px; letter-spacing: 1px; color: var(–accent); }
+.stat-value.green { color: var(–success); }
+.stat-value.red { color: var(–danger); }
+
+/* ─── USERS TABLE ─── */
+.users-table { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; overflow: hidden; }
+.users-table table { width: 100%; border-collapse: collapse; }
+.users-table th {
+background: var(–surface2); padding: 12px 16px; text-align: left;
+font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted);
+border-bottom: 1px solid var(–border);
+}
+.users-table td { padding: 14px 16px; border-bottom: 1px solid var(–border); font-size: 13px; }
+.users-table tr:last-child td { border-bottom: none; }
+.users-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.game-pill {
+display: inline-flex; align-items: center; gap: 8px;
+padding: 8px 14px; border-radius: 2px; cursor: pointer;
+border: 1px solid var(–border); background: var(–surface2);
+color: var(–text); font-size: 12px; font-family: ‘DM Sans’, sans-serif;
+transition: all 0.15s; white-space: nowrap;
+}
+.game-pill:hover { border-color: var(–accent); color: var(–accent); background: rgba(200,255,0,0.06); }
+.game-pill.selected { border-color: var(–accent); color: var(–accent); background: rgba(200,255,0,0.1); }
+.game-pill .gp-sport {
+font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 1px;
+padding: 2px 6px; border-radius: 2px; opacity: 0.8;
+}
+.game-pill .gp-time { font-family: ‘DM Mono’, monospace; font-size: 10px; color: var(–muted); }
+.games-empty { font-family: ‘DM Mono’, monospace; font-size:11px; color: var(–muted); letter-spacing:1px; padding: 8px 0; }
+
+/* ─── ADMIN ADD PANEL ─── */
+.admin-add-panel {
+background: var(–surface);
+border: 1px solid var(–accent2);
+border-radius: 4px;
+margin-bottom: 24px;
+overflow: hidden;
+box-shadow: 0 0 20px rgba(26,86,255,0.08);
+}
+
+.admin-add-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 16px 20px; cursor: pointer;
+background: linear-gradient(90deg, rgba(26,86,255,0.06), transparent);
+transition: background 0.2s; flex-wrap: wrap; gap: 12px;
+}
+.admin-add-header:hover { background: linear-gradient(90deg, rgba(26,86,255,0.1), transparent); }
+
+.add-panel-icon {
+font-size: 22px; color: var(–accent); font-weight: 300;
+width: 36px; height: 36px; border: 1px solid rgba(200,255,0,0.3);
+display: flex; align-items: center; justify-content: center;
+border-radius: 2px; background: rgba(200,255,0,0.06); flex-shrink: 0;
+}
+
+.add-panel-title {
+font-family: ‘DM Mono’, monospace; font-size: 12px;
+letter-spacing: 2px; color: var(–accent); font-weight: 500;
+}
+.add-panel-sub { font-size: 11px; color: var(–muted); margin-top: 2px; }
+
+.sport-quick-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.sport-quick {
+font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 1px;
+padding: 5px 10px; border-radius: 2px; cursor: pointer;
+border: 1px solid var(–border); background: transparent; color: var(–muted);
+transition: all 0.15s; text-transform: uppercase;
+}
+.sport-quick:hover, .sport-quick.active-sport { color: var(–accent); border-color: var(–accent); background: rgba(200,255,0,0.08); }
+
+.panel-chevron { font-size: 11px; color: var(–muted); transition: transform 0.3s; flex-shrink: 0; }
+.panel-chevron.open { transform: rotate(180deg); color: var(–accent); }
+
+.admin-add-body { padding: 20px; border-top: 1px solid var(–border); display: none; }
+.admin-add-body.open { display: block; animation: fadeIn 0.2s ease; }
+
+.add-form-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+gap: 12px;
+}
+
+/* ─── SECTION HEADER ─── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–muted); }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+display: flex; align-items: center; justify-content: center;
+z-index: 1000; padding: 20px;
+opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+background: var(–surface); border: 1px solid var(–border); border-radius: 2px;
+padding: 36px; width: 100%; max-width: 520px;
+position: relative;
+transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+max-height: 90vh; overflow-y: auto;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-title { font-family: ‘Bebas Neue’, sans-serif; font-size: 28px; letter-spacing: 2px; color: var(–accent); margin-bottom: 24px; }
+
+.modal-close {
+position: absolute; top: 16px; right: 16px;
+background: none; border: none; color: var(–muted);
+cursor: pointer; font-size: 20px; padding: 4px 8px; transition: color 0.2s;
+}
+.modal-close:hover { color: var(–text); }
+
+/* ─── FORM GRID ─── */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+text-align: center; padding: 60px 20px;
+color: var(–muted); font-family: ‘DM Mono’, monospace;
+font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+border: 1px dashed var(–border); border-radius: 2px;
+}
+.empty-state .icon { font-size: 36px; margin-bottom: 16px; opacity: 0.3; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(–bg); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+.content { padding: 16px; }
+.topbar { padding: 0 16px; }
+.nav-tabs { padding: 0 16px; }
+.auth-box { padding: 32px 24px; }
+.pick-card { grid-template-columns: 70px 1fr auto; }
+.pick-type, .pick-odds, .pick-selection { display: none; }
+}
+
+/* ─── DIVIDER ─── */
+.divider { border: none; border-top: 1px solid var(–border); margin: 20px 0; }
+
+/* ─── PASSWORD STRENGTH ─── */
+.strength-bar { height: 3px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; background: var(–border); }
+.strength-bar.weak { background: var(–danger); width: 33%; }
+.strength-bar.medium { background: var(–warning); width: 66%; }
+.strength-bar.strong { background: var(–success); width: 100%; }
+
+/* ─── CHECKOUT / PLANS ─── */
+.plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.plan-card { border: 2px solid var(–border); border-radius: 4px; padding: 20px 16px; cursor: pointer; transition: all 0.2s; background: var(–surface2); text-align: center; position: relative; }
+.plan-card:hover { border-color: var(–accent); }
+.plan-card.selected { border-color: var(–accent); background: rgba(200,255,0,0.06); }
+.plan-card .plan-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 22px; letter-spacing: 2px; color: var(–text); }
+.plan-card .plan-price { font-family: ‘DM Mono’, monospace; font-size: 28px; color: var(–accent); margin: 4px 0; }
+.plan-card .plan-desc { font-size: 11px; color: var(–muted); font-family: ‘DM Mono’, monospace; letter-spacing: 1px; }
+.plan-card .plan-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(–accent2); color: #fff; font-size: 9px; font-family: ‘DM Mono’, monospace; letter-spacing: 1px; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+#stripe-card-element { background: var(–bg); border: 1px solid var(–border); border-radius: 2px; padding: 12px 14px; margin-top: 6px; }
+.promo-row { display: flex; gap: 8px; }
+.promo-row input { flex: 1; }
+.promo-row button { flex-shrink: 0; }
+#checkout-total { font-family: ‘Bebas Neue’, sans-serif; font-size: 28px; color: var(–accent); text-align: center; margin: 12px 0 4px; }
+#checkout-total-label { text-align: center; font-family: ‘DM Mono’, monospace; font-size: 11px; color: var(–muted); margin-bottom: 16px; }
+.promo-code-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(200,255,0,0.08); border: 1px solid rgba(200,255,0,0.25); color: var(–accent); font-family: ‘DM Mono’, monospace; font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+/* ─── ABOUT PAGE ─── */
+.about-hero { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; padding: 40px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.about-hero::before { content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(–accent2), var(–accent), var(–accent2), transparent); }
+.about-bio { font-size: 14px; line-height: 1.8; color: var(–text); opacity: 0.85; margin-top: 16px; white-space: pre-wrap; }
+.social-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.social-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 2px; border: 1px solid var(–border); background: var(–surface2); color: var(–muted); font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 1px; text-decoration: none; transition: all 0.2s; }
+.social-link:hover { border-color: var(–accent); color: var(–accent); }
+.ambassador-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.ambassador-card { background: var(–surface); border: 1px solid var(–border); border-radius: 2px; padding: 24px; transition: border-color 0.2s; }
+.ambassador-card:hover { border-color: rgba(200,255,0,0.2); }
+.ambassador-avatar { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(–accent2); background: var(–surface2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; margin-bottom: 12px; }
+.ambassador-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 22px; letter-spacing: 1px; color: var(–text); line-height: 1; }
+.ambassador-role { font-family: ‘DM Mono’, monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–accent2); margin-top: 4px; }
+.ambassador-bio { font-size: 13px; color: var(–muted); margin-top: 8px; line-height: 1.6; }
+.ambassador-links { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.about-section-title { font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–muted); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(–border); }
+.about-name { font-family: ‘Bebas Neue’, sans-serif; font-size: 36px; letter-spacing: 2px; color: var(–accent); line-height: 1; }
+.about-title-tag { font-family: ‘DM Mono’, monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–accent2); margin-top: 4px; }
+.sub-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-family: ‘DM Mono’, monospace; letter-spacing: 1px; text-transform: uppercase; }
+.sub-active { background: rgba(200,255,0,0.08); color: var(–accent); border: 1px solid rgba(200,255,0,0.25); }
+.sub-inactive { background: rgba(239,68,68,0.08); color: var(–danger); border: 1px solid rgba(239,68,68,0.2); }
 </style>
+
 </head>
 <body>
+
+<!-- ═══════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════ -->
 
 <div class="auth-screen" id="login-screen">
   <div class="auth-grid-bg"></div>
@@ -157,17 +813,36 @@
     <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <!-- left arrow -->
       <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
+      <!-- right arrow -->
       <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
     </svg>
     <div class="auth-tagline">Bet $harp</div>
-    <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="off"></div>
-    <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
-    <div id="login-error" class="msg msg-error" style="display:none;"></div>
-    <div class="auth-toggle">Don't have an account? <a onclick="showScreen('register-screen')">Create one</a></div>
+
+```
+<div class="field">
+  <label>Username</label>
+  <input type="text" id="login-user" placeholder="Enter username" autocomplete="off">
+</div>
+<div class="field">
+  <label>Password</label>
+  <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+</div>
+<button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+<div id="login-error" class="msg msg-error" style="display:none;"></div>
+
+<div class="auth-toggle">
+  Don't have an account? <a onclick="showScreen('register-screen')">Create one</a>
+</div>
+```
+
   </div>
 </div>
+
+<!-- ═══════════════════════════════════
+     REGISTER SCREEN — STEP 1
+════════════════════════════════════ -->
 
 <div class="auth-screen" id="register-screen" style="display:none;">
   <div class="auth-grid-bg"></div>
@@ -176,10 +851,10 @@
     <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
       <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
-      <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
+      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
     </svg>
     <div class="auth-tagline">Create Your Account</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:20px;">STEP 1 OF 2 — ACCOUNT INFO</div>
     <div class="form-grid" style="margin-bottom:0;">
       <div class="field"><label>First Name</label><input type="text" id="reg-first" placeholder="John"></div>
       <div class="field"><label>Last Name</label><input type="text" id="reg-last" placeholder="Smith"></div>
@@ -188,11 +863,81 @@
     <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="Choose a username" autocomplete="off"></div>
     <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min. 6 characters" oninput="checkStrength(this.value)"><div class="strength-bar" id="strength-bar"></div></div>
     <div class="field"><label>Confirm Password</label><input type="password" id="reg-pass2" placeholder="Repeat password"></div>
-    <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+    <button class="btn btn-primary" onclick="goToCheckout()">Next: Choose Plan →</button>
     <div id="reg-msg" class="msg" style="display:none;"></div>
     <div class="auth-toggle">Already have an account? <a onclick="showScreen('login-screen')">Sign in</a></div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════
+     CHECKOUT SCREEN — STEP 2
+════════════════════════════════════ -->
+
+<div class="auth-screen" id="checkout-screen" style="display:none;">
+  <div class="auth-grid-bg"></div>
+  <div class="auth-box" style="max-width:500px;">
+    <div class="auth-logo">$harp $elections</div>
+    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
+      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
+    </svg>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:16px;">STEP 2 OF 2 — SELECT PLAN & PAYMENT</div>
+    <div class="plan-grid">
+      <div class="plan-card selected" id="plan-monthly" onclick="selectPlan('monthly')">
+        <div class="plan-name">Monthly</div>
+        <div class="plan-price" id="monthly-display">$15</div>
+        <div class="plan-desc">30-day access</div>
+      </div>
+      <div class="plan-card" id="plan-lifetime" onclick="selectPlan('lifetime')">
+        <div class="plan-badge">BEST VALUE</div>
+        <div class="plan-name">Lifetime</div>
+        <div class="plan-price" id="lifetime-display">$250</div>
+        <div class="plan-desc">Unlimited access</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Promo Code <span style="color:var(--muted);font-size:10px;">(optional)</span></label>
+      <div class="promo-row">
+        <input type="text" id="promo-input" placeholder="Enter code" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn btn-secondary btn-sm" onclick="applyPromo()">Apply</button>
+      </div>
+      <div id="promo-result" style="margin-top:6px;"></div>
+    </div>
+    <div id="checkout-total">$15.00</div>
+    <div id="checkout-total-label">Monthly Plan · 30-day access</div>
+    <div class="field"><label>Card Details</label><div id="stripe-card-element"></div><div id="stripe-card-errors" style="color:var(--danger);font-size:12px;font-family:'DM Mono',monospace;margin-top:6px;"></div></div>
+    <button class="btn btn-primary" id="pay-btn" onclick="processPayment()">Pay & Create Account →</button>
+    <div id="demo-notice" style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:1px;margin-top:8px;opacity:0.7;">🧪 DEMO MODE — no real charge</div>
+    <div id="checkout-msg" class="msg" style="display:none;margin-top:10px;"></div>
+    <div class="auth-toggle"><a onclick="showScreen('register-screen')" style="color:var(--muted);">← Back</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SUBSCRIPTION REQUIRED SCREEN
+════════════════════════════════════ -->
+
+<div class="auth-screen" id="subscription-screen" style="display:none;">
+  <div class="auth-grid-bg"></div>
+  <div class="auth-box" style="text-align:center;">
+    <div class="auth-logo">$harp $elections</div>
+    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
+      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/><polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
+    </svg>
+    <hr class="divider">
+    <div class="pending-icon">🔒</div>
+    <div class="pending-title">SUBSCRIPTION REQUIRED</div>
+    <p class="pending-text">Your account does not have an active subscription.<br><br>Contact us to subscribe and unlock access to all picks.</p>
+    <button class="btn btn-secondary" onclick="doLogout()" style="width:100%;">← Sign Out</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PENDING APPROVAL SCREEN
+════════════════════════════════════ -->
 
 <div class="auth-screen" id="pending-screen" style="display:none;">
   <div class="auth-grid-bg"></div>
@@ -207,148 +952,396 @@
     <hr class="divider">
     <div class="pending-icon">⏳</div>
     <div class="pending-title">AWAITING APPROVAL</div>
-    <p class="pending-text">Your account has been submitted and is pending admin approval.<br><br>You'll be able to log in once an administrator approves your registration.</p>
+    <p class="pending-text">
+      Your account has been submitted and is pending admin approval.<br><br>
+      You'll be able to log in once an administrator reviews and approves your registration.
+    </p>
     <button class="btn btn-secondary" onclick="showScreen('login-screen')" style="width:100%;">← Back to Login</button>
   </div>
 </div>
 
+<!-- ═══════════════════════════════════
+     MAIN APP
+════════════════════════════════════ -->
+
 <div id="app">
+  <!-- Topbar -->
   <div class="topbar">
     <div style="display:flex;flex-direction:column;line-height:1;">
       <div class="topbar-logo">$harp $elections</div>
       <div class="topbar-tagline">Bet $harp</div>
     </div>
     <div class="topbar-right">
-      <div class="user-badge"><span id="topbar-username"></span><span class="role-tag" id="topbar-role"></span></div>
+      <div class="user-badge">
+        <span id="topbar-username"></span>
+        <span class="role-tag" id="topbar-role"></span>
+      </div>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
     </div>
   </div>
-  <div class="nav-tabs">
+
+  <!-- Nav Tabs -->
+
+  <div class="nav-tabs" id="nav-tabs">
     <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
     <button class="nav-tab" onclick="showPage('history', this)">History</button>
     <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
+    <button class="nav-tab" onclick="showPage('about', this)">About</button>
     <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
-    <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">User Management <span class="pending-badge" id="pending-count" style="display:none;"></span></button>
+    <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">
+      User Management <span class="pending-badge" id="pending-count" style="display:none;"></span>
+    </button>
   </div>
+
   <div class="content">
 
-    <div class="page active" id="page-picks">
-      <div class="date-bar">
-        <div><div class="date-display" id="today-date"></div><div class="date-sub">Today's Selections</div></div>
-        <input type="date" id="pick-date-selector" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="loadPicksForDate(this.value)">
+```
+<!-- ─── TODAY'S PICKS ─── -->
+<div class="page active" id="page-picks">
+  <div class="date-bar">
+    <div>
+      <div class="date-display" id="today-date"></div>
+      <div class="date-sub">Today's Selections</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="date" id="pick-date-selector"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;"
+        onchange="loadPicksForDate(this.value)">
+    </div>
+  </div>
+
+  <div class="sport-tabs">
+    <button class="sport-chip active" data-sport="ALL" onclick="filterSport('ALL', this)">All Sports</button>
+    <button class="sport-chip" data-sport="NFL" onclick="filterSport('NFL', this)">NFL</button>
+    <button class="sport-chip" data-sport="NBA" onclick="filterSport('NBA', this)">NBA</button>
+    <button class="sport-chip" data-sport="MLB" onclick="filterSport('MLB', this)">MLB</button>
+    <button class="sport-chip" data-sport="NHL" onclick="filterSport('NHL', this)">NHL</button>
+    <button class="sport-chip" data-sport="NCAAF" onclick="filterSport('NCAAF', this)">NCAAF</button>
+    <button class="sport-chip" data-sport="NCAAM" onclick="filterSport('NCAAM', this)">NCAAM</button>
+  </div>
+
+  <div id="picks-container" class="picks-grid"></div>
+</div>
+
+<!-- ─── HISTORY ─── -->
+<div class="page" id="page-history">
+  <div class="date-bar">
+    <div>
+      <div class="date-display">HISTORY</div>
+      <div class="date-sub">All Past Selections</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <select id="hist-sport" onchange="renderHistory()"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
+        <option value="ALL">All Sports</option>
+        <option value="NFL">NFL</option><option value="NBA">NBA</option>
+        <option value="MLB">MLB</option><option value="NHL">NHL</option>
+        <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+      </select>
+      <select id="hist-result" onchange="renderHistory()"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
+        <option value="ALL">All Results</option>
+        <option value="WIN">Wins</option><option value="LOSS">Losses</option>
+        <option value="PUSH">Pushes</option><option value="PENDING">Pending</option>
+      </select>
+    </div>
+  </div>
+  <div id="history-container" class="picks-grid"></div>
+</div>
+
+<!-- ─── STATS ─── -->
+<div class="page" id="page-stats">
+  <div class="date-bar">
+    <div><div class="date-display">STATISTICS</div><div class="date-sub">Season Performance</div></div>
+  </div>
+  <div class="stats-row" id="overall-stats"></div>
+  <div class="section-header" style="margin-top:8px;">
+    <div class="section-title">By Sport</div>
+  </div>
+  <div id="sport-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+</div>
+
+<!-- ─── ADMIN PANEL ─── -->
+<div class="page" id="page-admin">
+  <div class="date-bar">
+    <div><div class="date-display">ADMIN PANEL</div><div class="date-sub">Add Picks & Manage Results</div></div>
+  </div>
+
+  <!-- ADD NEW PICK PANEL -->
+  <div class="admin-add-panel" id="admin-add-panel">
+    <div class="admin-add-header" onclick="toggleAddPanel()">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="add-panel-icon">＋</span>
+        <div>
+          <div class="add-panel-title">ADD NEW PICK</div>
+          <div class="add-panel-sub">Click to expand · Add selections for any sport</div>
+        </div>
       </div>
-      <div class="sport-tabs">
-        <button class="sport-chip active" data-sport="ALL" onclick="filterSport('ALL', this)">All Sports</button>
-        <button class="sport-chip" data-sport="NFL" onclick="filterSport('NFL', this)">NFL</button>
-        <button class="sport-chip" data-sport="NBA" onclick="filterSport('NBA', this)">NBA</button>
-        <button class="sport-chip" data-sport="MLB" onclick="filterSport('MLB', this)">MLB</button>
-        <button class="sport-chip" data-sport="NHL" onclick="filterSport('NHL', this)">NHL</button>
-        <button class="sport-chip" data-sport="NCAAF" onclick="filterSport('NCAAF', this)">NCAAF</button>
-        <button class="sport-chip" data-sport="NCAAM" onclick="filterSport('NCAAM', this)">NCAAM</button>
+      <div class="sport-quick-btns" onclick="event.stopPropagation()">
+        <button class="sport-quick" data-s="NFL"   onclick="quickSport('NFL')">NFL</button>
+        <button class="sport-quick" data-s="NBA"   onclick="quickSport('NBA')">NBA</button>
+        <button class="sport-quick" data-s="MLB"   onclick="quickSport('MLB')">MLB</button>
+        <button class="sport-quick" data-s="NHL"   onclick="quickSport('NHL')">NHL</button>
+        <button class="sport-quick" data-s="NCAAF" onclick="quickSport('NCAAF')">NCAAF</button>
+        <button class="sport-quick" data-s="NCAAM" onclick="quickSport('NCAAM')">NCAAM</button>
       </div>
-      <div id="picks-container" class="picks-grid"></div>
+      <span class="panel-chevron" id="panel-chevron">▼</span>
     </div>
 
-    <div class="page" id="page-history">
-      <div class="date-bar">
-        <div><div class="date-display">HISTORY</div><div class="date-sub">All Past Selections</div></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <select id="hist-sport" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
-            <option value="ALL">All Sports</option><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+    <div class="admin-add-body" id="admin-add-body">
+
+      <!-- GAME PICKER -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+          <div class="section-title" style="margin:0;">Select a Game</div>
+          <div style="display:flex;gap:8px;align-items:center;flex:1;flex-wrap:wrap;">
+            <input type="date" id="f-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="lastFetchKey='';document.getElementById('games-grid').innerHTML='';document.getElementById('fetch-btn').textContent='🔄 Load Games';">
+            <button class="btn btn-secondary btn-sm" onclick="lastFetchKey='';fetchGames()" id="fetch-btn">🔄 Load Games</button>
+          </div>
+        </div>
+        <div id="games-loader" style="display:none;padding:14px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;">
+          LOADING SCHEDULE...
+        </div>
+        <div id="games-grid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;">
+          <div class="games-empty" style="color:var(--muted);">Select a date and sport, then tap Load Games.</div>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px;">
+
+      <!-- PICK FORM -->
+      <div class="add-form-grid">
+        <div class="field">
+          <label>Sport</label>
+          <select id="f-sport" onchange="updateSportQuick(this.value)">
+            <option value="NFL">NFL</option>
+            <option value="NBA">NBA</option>
+            <option value="MLB">MLB</option>
+            <option value="NHL">NHL</option>
+            <option value="NCAAF">NCAAF</option>
+            <option value="NCAAM">NCAAM</option>
           </select>
-          <select id="hist-result" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
-            <option value="ALL">All Results</option><option value="WIN">Wins</option><option value="LOSS">Losses</option><option value="PUSH">Pushes</option><option value="PENDING">Pending</option>
+        </div>
+        <div class="field">
+          <label>Away Team</label>
+          <input type="text" id="f-away" placeholder="e.g. Cowboys">
+        </div>
+        <div class="field">
+          <label>Home Team</label>
+          <input type="text" id="f-home" placeholder="e.g. Eagles">
+        </div>
+        <div class="field">
+          <label>Bet Type</label>
+          <select id="f-type">
+            <option value="Spread">Spread</option>
+            <option value="Moneyline">Moneyline</option>
+            <option value="Total (O/U)">Total (O/U)</option>
+            <option value="Parlay">Parlay</option>
+            <option value="Prop">Prop</option>
+            <option value="Futures">Futures</option>
           </select>
         </div>
-      </div>
-      <div id="history-container" class="picks-grid"></div>
-    </div>
-
-    <div class="page" id="page-stats">
-      <div class="date-bar"><div><div class="date-display">STATISTICS</div><div class="date-sub">Season Performance</div></div></div>
-      <div class="stats-row" id="overall-stats"></div>
-      <div class="section-header" style="margin-top:8px;"><div class="section-title">By Sport</div></div>
-      <div id="sport-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
-    </div>
-
-    <div class="page" id="page-admin">
-      <div class="date-bar"><div><div class="date-display">ADMIN PANEL</div><div class="date-sub">Add Picks & Manage Results</div></div></div>
-      <div class="admin-add-panel">
-        <div class="admin-add-header" onclick="toggleAddPanel()">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span class="add-panel-icon">＋</span>
-            <div><div class="add-panel-title">ADD NEW PICK</div><div class="add-panel-sub">Click to expand · Add selections for any sport</div></div>
-          </div>
-          <div class="sport-quick-btns" onclick="event.stopPropagation()">
-            <button class="sport-quick" data-s="NFL" onclick="quickSport('NFL')">NFL</button>
-            <button class="sport-quick" data-s="NBA" onclick="quickSport('NBA')">NBA</button>
-            <button class="sport-quick" data-s="MLB" onclick="quickSport('MLB')">MLB</button>
-            <button class="sport-quick" data-s="NHL" onclick="quickSport('NHL')">NHL</button>
-            <button class="sport-quick" data-s="NCAAF" onclick="quickSport('NCAAF')">NCAAF</button>
-            <button class="sport-quick" data-s="NCAAM" onclick="quickSport('NCAAM')">NCAAM</button>
-          </div>
-          <span class="panel-chevron" id="panel-chevron">▼</span>
+        <div class="field">
+          <label>Selection</label>
+          <input type="text" id="f-selection" placeholder="e.g. Cowboys -3.5">
         </div>
-        <div class="admin-add-body" id="admin-add-body">
-          <div style="margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-              <div class="section-title" style="margin:0;">Select a Game</div>
-              <input type="date" id="f-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="lastFetchKey='';document.getElementById('games-grid').innerHTML='';document.getElementById('fetch-btn').textContent='🔄 Load Games';">
-              <button class="btn btn-secondary btn-sm" onclick="lastFetchKey='';fetchGames()" id="fetch-btn">🔄 Load Games</button>
-            </div>
-            <div id="games-loader" style="display:none;padding:14px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;">LOADING SCHEDULE...</div>
-            <div id="games-grid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;"><div class="games-empty">Select a date and sport, then tap Load Games.</div></div>
-          </div>
-          <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px;">
-          <div class="add-form-grid">
-            <div class="field"><label>Sport</label><select id="f-sport" onchange="updateSportQuick(this.value)"><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option></select></div>
-            <div class="field"><label>Away Team</label><input type="text" id="f-away" placeholder="e.g. Cowboys"></div>
-            <div class="field"><label>Home Team</label><input type="text" id="f-home" placeholder="e.g. Eagles"></div>
-            <div class="field"><label>Bet Type</label><select id="f-type"><option value="Spread">Spread</option><option value="Moneyline">Moneyline</option><option value="Total (O/U)">Total (O/U)</option><option value="Parlay">Parlay</option><option value="Prop">Prop</option><option value="Futures">Futures</option></select></div>
-            <div class="field"><label>Selection</label><input type="text" id="f-selection" placeholder="e.g. Cowboys -3.5"></div>
-            <div class="field"><label>Odds</label><input type="text" id="f-odds" placeholder="e.g. -110"></div>
-            <div class="field"><label>Units</label><input type="number" id="f-units" min="0.5" step="0.5" value="1"></div>
-          </div>
-          <div class="field" style="margin-top:4px;"><label>Analysis / Notes</label><textarea id="f-notes" rows="2" placeholder="Brief analysis or reasoning..."></textarea></div>
-          <div id="add-pick-error" class="msg msg-error" style="display:none;margin-top:8px;"></div>
-          <div style="display:flex;gap:10px;margin-top:16px;">
-            <button class="btn btn-primary" onclick="savePickInline()" style="flex:1;">＋ Save Pick</button>
-            <button class="btn btn-secondary" onclick="clearPickForm()">Clear</button>
-          </div>
+        <div class="field">
+          <label>Odds</label>
+          <input type="text" id="f-odds" placeholder="e.g. -110">
+        </div>
+        <div class="field">
+          <label>Units</label>
+          <input type="number" id="f-units" min="0.5" step="0.5" value="1">
         </div>
       </div>
-      <div class="section-header"><div class="section-title">All Picks — Update Results</div></div>
-      <div id="admin-picks-container" class="picks-grid"></div>
-    </div>
-
-    <div class="page" id="page-users">
-      <div class="date-bar">
-        <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+      <div class="field" style="margin-top:4px;">
+        <label>Analysis / Notes</label>
+        <textarea id="f-notes" rows="2" placeholder="Brief analysis or reasoning for this pick..."></textarea>
       </div>
-      <div id="pending-section" style="margin-bottom:28px;display:none;">
-        <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
-        <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
+      <div id="add-pick-error" class="msg msg-error" style="display:none;margin-top:8px;"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-primary" onclick="savePickInline()" style="flex:1;font-size:13px;">＋ Save Pick</button>
+        <button class="btn btn-secondary" onclick="clearPickForm()" style="font-size:13px;">Clear</button>
       </div>
-      <div class="section-header"><div class="section-title">All Users</div></div>
-      <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
     </div>
+  </div>
 
+  <!-- EXISTING PICKS — UPDATE RESULTS -->
+  <div class="section-header" style="margin-top:8px;">
+    <div class="section-title">All Picks — Update Results</div>
+  </div>
+  <div id="admin-picks-container" class="picks-grid"></div>
+</div>
+
+<!-- ─── USER MANAGEMENT ─── -->
+<div class="page" id="page-users">
+  <div class="date-bar">
+    <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="openPromoManager()">🎟 Promo Codes</button>
+      <button class="btn btn-secondary btn-sm" onclick="openPricingEditor()">💲 Pricing</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+  </div>
+
+  <!-- Pending registrations -->
+  <div id="pending-section" style="margin-bottom:28px;display:none;">
+    <div class="section-header">
+      <div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div>
+    </div>
+    <div class="users-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pending-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Active users -->
+  <div class="section-header">
+    <div class="section-title">Active & Inactive Users</div>
+  </div>
+  <div class="users-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
   </div>
 </div>
+
+
+<!-- ABOUT PAGE -->
+<div class="page" id="page-about">
+  <div class="date-bar">
+    <div><div class="date-display">ABOUT US</div><div class="date-sub">Who We Are</div></div>
+    <div id="about-admin-btn" style="display:none;"><button class="btn btn-secondary btn-sm" onclick="openAboutEditor()">✎ Edit Page</button></div>
+  </div>
+  <div class="about-hero">
+    <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap;">
+      <div style="font-size:64px;" id="about-avatar-display">🎯</div>
+      <div style="flex:1;min-width:200px;">
+        <div class="about-name" id="about-name-display">$harp $elections</div>
+        <div class="about-title-tag" id="about-title-display">Professional Sports Handicapper</div>
+        <div class="about-bio" id="about-bio-display">Welcome to $harp $elections — your source for sharp, data-driven sports picks.</div>
+        <div class="social-links" id="about-socials-display"></div>
+      </div>
+    </div>
+  </div>
+  <div class="about-section-title">Ambassadors & Sponsors</div>
+  <div class="ambassador-grid" id="ambassadors-grid">
+    <div class="empty-state" style="grid-column:1/-1;"><div class="icon">🤝</div>No ambassadors yet</div>
+  </div>
+</div>
+```
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- ═══ ADD PICK MODAL ═══ -->
+
+<div class="modal-overlay" id="modal-add-pick">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-pick')">✕</button>
+    <div class="modal-title">ADD PICK</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Sport</label>
+        <select id="pick-sport">
+          <option value="NFL">NFL</option><option value="NBA">NBA</option>
+          <option value="MLB">MLB</option><option value="NHL">NHL</option>
+          <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="pick-form-date">
+      </div>
+      <div class="field">
+        <label>Away Team</label>
+        <input type="text" id="pick-away" placeholder="e.g. Cowboys">
+      </div>
+      <div class="field">
+        <label>Home Team</label>
+        <input type="text" id="pick-home" placeholder="e.g. Eagles">
+      </div>
+      <div class="field">
+        <label>Bet Type</label>
+        <select id="pick-type">
+          <option value="Spread">Spread</option>
+          <option value="Moneyline">Moneyline</option>
+          <option value="Total (O/U)">Total (O/U)</option>
+          <option value="Parlay">Parlay</option>
+          <option value="Prop">Prop</option>
+          <option value="Futures">Futures</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Selection</label>
+        <input type="text" id="pick-selection" placeholder="e.g. Cowboys -3.5">
+      </div>
+      <div class="field">
+        <label>Odds</label>
+        <input type="text" id="pick-odds" placeholder="e.g. -110">
+      </div>
+      <div class="field">
+        <label>Units</label>
+        <input type="number" id="pick-units" min="0.5" step="0.5" value="1">
+      </div>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Analysis / Notes</label>
+      <textarea id="pick-notes" rows="3" placeholder="Brief analysis or reasoning..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="savePick()" style="flex:1;">Save Pick</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-pick')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD / EDIT USER MODAL ═══ -->
 
 <div class="modal-overlay" id="modal-add-user">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
     <div class="modal-title" id="user-modal-title">ADD USER</div>
     <div class="form-grid">
-      <div class="field"><label>First Name</label><input type="text" id="new-first" placeholder="First name"></div>
-      <div class="field"><label>Last Name</label><input type="text" id="new-last" placeholder="Last name"></div>
+      <div class="field">
+        <label>First Name</label>
+        <input type="text" id="new-first" placeholder="First name">
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <input type="text" id="new-last" placeholder="Last name">
+      </div>
     </div>
-    <div class="field"><label>Email</label><input type="email" id="new-email" placeholder="Email address"></div>
-    <div class="field"><label>Username</label><input type="text" id="new-username" placeholder="Username" autocomplete="off"></div>
-    <div class="field"><label>Password <span style="color:var(--muted);font-size:10px;">(leave blank to keep current)</span></label><input type="password" id="new-password" placeholder="Password"></div>
-    <div class="field"><label>Role</label><select id="new-role"><option value="user">User</option><option value="admin">Admin</option></select></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="new-email" placeholder="Email address">
+    </div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="new-username" placeholder="Username" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Password <span style="color:var(--muted);font-size:10px;">(leave blank to keep current)</span></label>
+      <input type="password" id="new-password" placeholder="Password" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <select id="new-role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button class="btn btn-primary" onclick="saveUser()" style="flex:1;" id="save-user-btn">Add User</button>
       <button class="btn btn-secondary" onclick="closeModal('modal-add-user')">Cancel</button>
@@ -357,12 +1350,22 @@
   </div>
 </div>
 
+<!-- ═══ RESULT MODAL ═══ -->
+
 <div class="modal-overlay" id="modal-result">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-result')">✕</button>
     <div class="modal-title">UPDATE RESULT</div>
     <input type="hidden" id="result-pick-id">
-    <div class="field"><label>Result</label><select id="result-select"><option value="PENDING">Pending</option><option value="WIN">Win ✓</option><option value="LOSS">Loss ✗</option><option value="PUSH">Push ~</option></select></div>
+    <div class="field">
+      <label>Result</label>
+      <select id="result-select">
+        <option value="PENDING">Pending</option>
+        <option value="WIN">Win ✓</option>
+        <option value="LOSS">Loss ✗</option>
+        <option value="PUSH">Push ~</option>
+      </select>
+    </div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button class="btn btn-primary" onclick="saveResult()" style="flex:1;">Save Result</button>
       <button class="btn btn-secondary" onclick="closeModal('modal-result')">Cancel</button>
@@ -371,9 +1374,19 @@
 </div>
 
 <script>
+// ════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// STORAGE — works in preview (no localStorage) and standalone
+// ════════════════════════════════════════
 const _memStore = {};
 function getData(key, def) {
-  try { const v = localStorage.getItem(key); if (v) return JSON.parse(v); } catch(e) {}
+  try {
+    const v = localStorage.getItem(key);
+    if (v) return JSON.parse(v);
+  } catch(e) {}
+  // fallback to in-memory store
   return key in _memStore ? JSON.parse(JSON.stringify(_memStore[key])) : def;
 }
 function setData(key, val) {
@@ -381,44 +1394,88 @@ function setData(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
 }
 
+// ════════════════════════════════════════
+// INIT — seed admin account if first run
+// ════════════════════════════════════════
 function init() {
-  if (!getData('ss_users', null)) {
-    setData('ss_users', [{ id:'u1', username:'admin', password:'admin123', firstName:'Site', lastName:'Admin', email:'admin@sharpselections.com', role:'admin', status:'active', created:new Date().toISOString() }]);
+  const users = getData('ss_users', null);
+  if (!users) {
+    setData('ss_users', [{
+      id: 'u1', username: 'admin', password: 'admin123',
+      firstName: 'Site', lastName: 'Admin', email: 'admin@sharpselections.com',
+      role: 'admin', status: 'active', created: new Date().toISOString()
+    }]);
   }
+  // Migrate old picks key if coming from old app
+  const oldPicks = getData('sp_picks', null);
+  if (oldPicks && !getData('ss_picks', null)) setData('ss_picks', oldPicks);
 }
 init();
 
-let currentUser = null, currentSportFilter = 'ALL', currentDateView = todayStr(), editingUserId = null;
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let currentUser = null;
+let currentSportFilter = 'ALL';
+let currentDateView = todayStr();
+let editingUserId = null;
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
+
 function formatDateDisplay(d) {
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const [y,m,day] = d.split('-');
+  const [y, m, day] = d.split('-');
   return `${months[+m-1]} ${+day}, ${y}`;
 }
 
+// ════════════════════════════════════════
+// SCREEN SWITCHING
+// ════════════════════════════════════════
 function showScreen(id) {
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+  ['login-screen','register-screen','pending-screen','checkout-screen','subscription-screen'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
   document.getElementById(id).style.display = 'flex';
+  // clear messages when switching
   document.getElementById('login-error').style.display = 'none';
   document.getElementById('reg-msg').style.display = 'none';
 }
 
+// ════════════════════════════════════════
+// AUTH — LOGIN
+// ════════════════════════════════════════
 function doLogin() {
   const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
-  const found = getData('ss_users', []).find(x => x.username === u && x.password === p);
-  if (!found) { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; return; }
-  if (found.status === 'pending') { showScreen('pending-screen'); return; }
-  if (found.status === 'inactive') { errEl.textContent = 'Account deactivated. Contact an admin.'; errEl.style.display = 'block'; return; }
+
+  const users = getData('ss_users', []);
+  const found = users.find(x => x.username === u && x.password === p);
+
+  if (!found) {
+    errEl.textContent = 'Invalid username or password.';
+    errEl.style.display = 'block'; return;
+  }
+  if (found.status === 'pending') {
+    showScreen('pending-screen'); return;
+  }
+  if (found.status === 'inactive') {
+    errEl.textContent = 'Your account has been deactivated. Contact an admin.';
+    errEl.style.display = 'block'; return;
+  }
+
   currentUser = found;
   errEl.style.display = 'none';
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+  ['login-screen','register-screen','pending-screen','checkout-screen','subscription-screen'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
   document.getElementById('app').style.display = 'block';
   setupApp();
 }
 
+// ════════════════════════════════════════
+// AUTH — REGISTER
+// ════════════════════════════════════════
 function doRegister() {
   const first = document.getElementById('reg-first').value.trim();
   const last = document.getElementById('reg-last').value.trim();
@@ -427,16 +1484,31 @@ function doRegister() {
   const pass = document.getElementById('reg-pass').value;
   const pass2 = document.getElementById('reg-pass2').value;
   const msgEl = document.getElementById('reg-msg');
-  const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
-  if (!first||!last||!email||!user||!pass) return show('All fields are required.', 'error');
+
+  const show = (txt, type) => {
+    msgEl.textContent = txt;
+    msgEl.className = 'msg msg-' + type;
+    msgEl.style.display = 'block';
+  };
+
+  if (!first || !last || !email || !user || !pass) return show('All fields are required.', 'error');
   if (pass.length < 6) return show('Password must be at least 6 characters.', 'error');
   if (pass !== pass2) return show('Passwords do not match.', 'error');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email.', 'error');
+
   const users = getData('ss_users', []);
-  if (users.find(u => u.username === user)) return show('Username already taken.', 'error');
-  if (users.find(u => u.email === email)) return show('Email already in use.', 'error');
-  users.push({ id:'u'+Date.now(), username:user, password:pass, firstName:first, lastName:last, email, role:'user', status:'pending', created:new Date().toISOString() });
+  if (users.find(u => u.username === user)) return show('Username already taken. Please choose another.', 'error');
+  if (users.find(u => u.email === email)) return show('An account with this email already exists.', 'error');
+
+  users.push({
+    id: 'u' + Date.now(),
+    username: user, password: pass,
+    firstName: first, lastName: last, email,
+    role: 'user', status: 'pending',
+    created: new Date().toISOString()
+  });
   setData('ss_users', users);
+
   show('Account created! Awaiting admin approval.', 'success');
   setTimeout(() => showScreen('pending-screen'), 1500);
 }
@@ -449,6 +1521,9 @@ function checkStrength(val) {
   else bar.className = 'strength-bar strong';
 }
 
+// ════════════════════════════════════════
+// AUTH — LOGOUT
+// ════════════════════════════════════════
 function doLogout() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
@@ -457,16 +1532,25 @@ function doLogout() {
   showScreen('login-screen');
 }
 
+// ════════════════════════════════════════
+// APP SETUP
+// ════════════════════════════════════════
 function setupApp() {
   document.getElementById('topbar-username').textContent = currentUser.username;
   const roleEl = document.getElementById('topbar-role');
   roleEl.textContent = currentUser.role;
   roleEl.className = 'role-tag' + (currentUser.role === 'admin' ? '' : ' user-role');
-  document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? '' : 'none');
+
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = currentUser.role === 'admin' ? '' : 'none';
+  });
+
   const today = todayStr();
   currentDateView = today;
   document.getElementById('today-date').textContent = formatDateDisplay(today);
   document.getElementById('pick-date-selector').value = today;
+
+  // Init inline add form (no fetch yet — happens when admin tab is opened)
   if (currentUser.role === 'admin') {
     document.getElementById('f-date').value = today;
     document.getElementById('f-sport').value = 'NFL';
@@ -475,11 +1559,17 @@ function setupApp() {
     document.getElementById('admin-add-body').classList.add('open');
     document.getElementById('panel-chevron').classList.add('open');
   }
+
+  document.getElementById('about-admin-btn').style.display = currentUser.role === 'admin' ? 'block' : 'none';
   updatePendingBadge();
   showPage('picks', document.querySelectorAll('.nav-tab')[0]);
   loadPicksForDate(today);
-  renderHistory(); renderStats();
-  if (currentUser.role === 'admin') { renderAdminPicks(); renderUsersTable(); }
+  renderHistory();
+  renderStats();
+  if (currentUser.role === 'admin') {
+    renderAdminPicks();
+    renderUsersTable();
+  }
 }
 
 function updatePendingBadge() {
@@ -490,20 +1580,37 @@ function updatePendingBadge() {
   else { badge.style.display = 'none'; }
 }
 
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
 function showPage(name, tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (tab) tab.classList.add('active');
-  if (name === 'admin') { renderAdminPicks(); if (!document.getElementById('f-date').value) document.getElementById('f-date').value = todayStr(); }
+  if (name === 'about') { renderAboutPage(); }
+  if (name === 'admin') {
+    renderAdminPicks();
+    if (document.getElementById('f-date') && !document.getElementById('f-date').value) {
+      document.getElementById('f-date').value = todayStr();
+    }
+  }
   if (name === 'users') { renderUsersTable(); updatePendingBadge(); }
   if (name === 'stats') renderStats();
   if (name === 'history') renderHistory();
 }
 
+// ════════════════════════════════════════
+// PICKS
+// ════════════════════════════════════════
 function getPicks() { return getData('ss_picks', []); }
 function savePicks(picks) { setData('ss_picks', picks); }
-function loadPicksForDate(date) { currentDateView = date; document.getElementById('today-date').textContent = formatDateDisplay(date); renderPicks(); }
+
+function loadPicksForDate(date) {
+  currentDateView = date;
+  document.getElementById('today-date').textContent = formatDateDisplay(date);
+  renderPicks();
+}
 
 function filterSport(sport, el) {
   currentSportFilter = sport;
@@ -516,104 +1623,248 @@ function renderPicks() {
   const picks = getPicks().filter(p => p.date === currentDateView);
   const filtered = currentSportFilter === 'ALL' ? picks : picks.filter(p => p.sport === currentSportFilter);
   const container = document.getElementById('picks-container');
-  container.innerHTML = filtered.length === 0
-    ? `<div class="empty-state"><div class="icon">🎯</div>No picks for this date${currentSportFilter !== 'ALL' ? ' / sport' : ''}</div>`
-    : filtered.map(p => pickCardHTML(p, false)).join('');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🎯</div>No picks for this date${currentSportFilter !== 'ALL' ? ' / sport' : ''}</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(p => pickCardHTML(p, false)).join('');
 }
 
 function pickCardHTML(p, adminMode) {
   const rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
+  const rLabel = p.result || 'PENDING';
   return `
     <div class="pick-card">
       <div class="pick-sport-badge sport-${p.sport}">${p.sport}</div>
-      <div class="pick-teams">${p.away} @ ${p.home}<div class="matchup">${formatDateDisplay(p.date)}</div></div>
+      <div class="pick-teams">
+        ${p.away} @ ${p.home}
+        <div class="matchup">${formatDateDisplay(p.date)}</div>
+      </div>
       <div class="pick-type">${p.type}</div>
       <div class="pick-selection">${p.selection}</div>
       <div class="pick-odds">${p.odds || '—'}</div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-        <span class="pick-result ${rClass}">${p.result || 'PENDING'}</span>
-        ${adminMode ? `<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal('${p.id}')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick('${p.id}')">✕</button></div>` : ''}
+        <span class="pick-result ${rClass}">${rLabel}</span>
+        ${adminMode ? `
+          <div class="pick-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openResultModal('${p.id}')">Result</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePick('${p.id}')">✕</button>
+          </div>` : ''}
       </div>
     </div>
-    ${p.notes ? `<div class="note-card"><div class="note-meta">${p.sport} · ${p.type} · ${p.units||1}u</div>${p.notes}</div>` : ''}`;
+    ${p.notes ? `<div class="note-card"><div class="note-meta">${p.sport} · ${p.type} · ${p.units||1}u</div>${p.notes}</div>` : ''}
+  `;
 }
 
+function openAddPickModal() {
+  // legacy — not used but kept for safety
+  openModal('modal-add-pick');
+}
+
+// ─── INLINE ADD PANEL ───
 let addPanelOpen = false;
+
 function toggleAddPanel() {
   addPanelOpen = !addPanelOpen;
   document.getElementById('admin-add-body').classList.toggle('open', addPanelOpen);
   document.getElementById('panel-chevron').classList.toggle('open', addPanelOpen);
 }
-function quickSport(sport) { document.getElementById('f-sport').value = sport; updateSportQuick(sport); if (!addPanelOpen) toggleAddPanel(); }
-function updateSportQuick(sport) { document.querySelectorAll('.sport-quick').forEach(b => b.classList.toggle('active-sport', b.dataset.s === sport)); }
 
-let isFetching = false, lastFetchKey = '';
+function quickSport(sport) {
+  document.getElementById('f-sport').value = sport;
+  updateSportQuick(sport);
+  if (!addPanelOpen) toggleAddPanel();
+}
+
+function updateSportQuick(sport) {
+  document.querySelectorAll('.sport-quick').forEach(b => {
+    b.classList.toggle('active-sport', b.dataset.s === sport);
+  });
+}
+
+
+// ════════════════════════════════════════
+// GAME SCHEDULE FETCHER (Anthropic API)
+// ════════════════════════════════════════
+let isFetching = false;
+let lastFetchKey = '';
 
 async function fetchGames() {
   const adminPage = document.getElementById('page-admin');
   if (!adminPage || !adminPage.classList.contains('active')) return;
-  const sport = document.getElementById('f-sport').value;
-  const date = document.getElementById('f-date').value;
-  const grid = document.getElementById('games-grid');
-  const loader = document.getElementById('games-loader');
+
+  const sportEl  = document.getElementById('f-sport');
+  const dateEl   = document.getElementById('f-date');
+  const grid     = document.getElementById('games-grid');
+  const loader   = document.getElementById('games-loader');
   const fetchBtn = document.getElementById('fetch-btn');
-  if (!date || !sport || isFetching) return;
+
+  if (!sportEl || !dateEl || !grid) return;
+
+  const sport = sportEl.value;
+  const date  = dateEl.value;
+  if (!date || !sport) return;
+  if (isFetching) return;
+
   const fetchKey = sport + '|' + date;
   if (fetchKey === lastFetchKey) return;
   lastFetchKey = fetchKey;
+
   isFetching = true;
   grid.innerHTML = '';
   loader.style.display = 'block';
   fetchBtn.textContent = '⏳ Loading...';
   fetchBtn.disabled = true;
-  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-  const resetBtn = label => { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; };
-  const espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
+
+  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+  });
+
+  const resetBtn = (label) => {
+    loader.style.display = 'none';
+    fetchBtn.textContent = label;
+    fetchBtn.disabled = false;
+    isFetching = false;
+  };
+
+  // ESPN API sport path map
+  const espnMap = {
+    NFL:   'football/nfl',
+    NBA:   'basketball/nba',
+    MLB:   'baseball/mlb',
+    NHL:   'hockey/nhl',
+    NCAAF: 'football/college-football',
+    NCAAM: 'basketball/mens-college-basketball'
+  };
+
   const espnPath = espnMap[sport];
-  if (!espnPath) { resetBtn('🔄 Try Again'); lastFetchKey = ''; grid.innerHTML = `<div class="games-empty">Sport not supported — enter teams manually.</div>`; return; }
+  if (!espnPath) {
+    resetBtn('🔄 Try Again');
+    lastFetchKey = '';
+    grid.innerHTML = `<div class="games-empty" style="color:var(--muted);">Sport not supported — enter teams manually.</div>`;
+    return;
+  }
+
   const espnDate = date.replace(/-/g, '');
   const directUrl = `https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard?dates=${espnDate}`;
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-  const tryFetch = async url => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
+  const proxyUrl  = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+
+  const tryFetch = async (url) => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  };
+
   try {
     let data;
-    try { data = await tryFetch(directUrl); } catch(e) { data = await tryFetch(proxyUrl); }
+    try {
+      data = await tryFetch(directUrl);
+    } catch(e) {
+      // Direct blocked by CORS — try proxy
+      data = await tryFetch(proxyUrl);
+    }
     const events = data.events || [];
-    if (!events.length) { resetBtn('🔄 Refresh'); grid.innerHTML = `<div class="games-empty">No ${sport} games on ${dateLabel}. Enter teams manually.</div>`; return; }
-    const upcoming = [], started = [];
+    const now = new Date();
+
+    if (!events.length) {
+      resetBtn('🔄 Refresh');
+      grid.innerHTML = `<div class="games-empty" style="color:var(--muted);">No ${sport} games scheduled for ${dateLabel}. Enter teams manually below.</div>`;
+      return;
+    }
+
+    const upcoming = [];
+    const started  = [];
+
     events.forEach(e => {
-      const comp = e.competitions?.[0]; if (!comp) return;
-      const aw = comp.competitors?.find(c => c.homeAway === 'away');
-      const hm = comp.competitors?.find(c => c.homeAway === 'home');
-      if (!aw || !hm) return;
-      const time = new Date(e.date).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short', timeZone:'America/New_York' });
-      const state = comp.status?.type?.state || 'pre';
-      (state === 'pre' ? upcoming : started).push({ away: aw.team.displayName||aw.team.name, home: hm.team.displayName||hm.team.name, time });
+      const competition = e.competitions?.[0];
+      if (!competition) return;
+
+      const competitors = competition.competitors || [];
+      const away = competitors.find(c => c.homeAway === 'away');
+      const home = competitors.find(c => c.homeAway === 'home');
+      if (!away || !home) return;
+
+      const awayName = away.team.displayName || away.team.name;
+      const homeName = home.team.displayName || home.team.name;
+      const startTime = new Date(e.date);
+      const gameTime  = startTime.toLocaleTimeString('en-US', {
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: 'America/New_York'
+      });
+
+      const status = competition.status?.type?.state || 'pre';
+      const isStarted = status === 'in' || status === 'post';
+
+      const game = { away: awayName, home: homeName, time: gameTime };
+      if (isStarted) started.push(game);
+      else upcoming.push(game);
     });
+
     resetBtn('🔄 Refresh');
+
     let html = '';
+
     if (upcoming.length) {
-      html += upcoming.map(g => `<button class="game-pill" onclick="selectGame(this)" data-away="${g.away}" data-home="${g.home}"><span class="gp-sport">${sport}</span><strong>${g.away}</strong><span style="opacity:0.4;font-size:11px;">@</span><strong>${g.home}</strong><span class="gp-time">${g.time}</span></button>`).join('');
+      html += upcoming.map(g => `
+        <button class="game-pill" onclick="selectGame(this)"
+          data-away="${escHtml(g.away)}" data-home="${escHtml(g.home)}">
+          <span class="gp-sport">${sport}</span>
+          <strong>${escHtml(g.away)}</strong>
+          <span style="opacity:0.4;font-size:11px;">@</span>
+          <strong>${escHtml(g.home)}</strong>
+          <span class="gp-time">${g.time}</span>
+        </button>`).join('');
     } else {
-      html += `<div class="games-empty">All ${sport} games today have already started.</div>`;
+      html += `<div class="games-empty" style="color:var(--muted);">All ${sport} games for ${dateLabel} have already started.</div>`;
     }
+
     if (started.length) {
-      html += `<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${started.map(g => `<span class="game-pill" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><strong>${g.away}</strong><span style="opacity:0.4;">@</span><strong>${g.home}</strong><span style="color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;">LIVE</span></span>`).join('')}</div></div>`;
+      html += `<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED — NOT AVAILABLE FOR PICKS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${started.map(g => `
+            <span class="game-pill" style="opacity:0.3;cursor:not-allowed;pointer-events:none;">
+              <span class="gp-sport">${sport}</span>
+              <strong>${escHtml(g.away)}</strong>
+              <span style="opacity:0.4;font-size:11px;">@</span>
+              <strong>${escHtml(g.home)}</strong>
+              <span class="gp-time">${g.time}</span>
+              <span style="color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;">LIVE</span>
+            </span>`).join('')}
+        </div>
+      </div>`;
     }
+
     grid.innerHTML = html;
+
   } catch(err) {
     resetBtn('🔄 Try Again');
     lastFetchKey = '';
-    grid.innerHTML = `<div class="games-empty" style="color:var(--danger);">⚠ Could not load — enter teams manually. (${err.message})</div>`;
+    grid.innerHTML = `<div class="games-empty" style="color:var(--danger);">⚠ Could not load schedule — enter teams manually.<br><span style="font-size:10px;font-family:'DM Mono',monospace;opacity:0.6;">${err.message}</span></div>`;
   }
 }
+
+
 
 function selectGame(el) {
   document.querySelectorAll('.game-pill').forEach(p => p.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('f-away').value = el.dataset.away;
-  document.getElementById('f-home').value = el.dataset.home;
-  document.getElementById('f-selection').focus();
+  const away = el.dataset.away;
+  const home = el.dataset.home;
+  document.getElementById('f-away').value = away;
+  document.getElementById('f-home').value = home;
+  let qp = document.getElementById('team-quickpick');
+  if (!qp) { qp = document.createElement('div'); qp.id = 'team-quickpick'; qp.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;'; document.getElementById('games-grid').after(qp); }
+  qp.innerHTML = `<div style="width:100%;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">QUICK PICK</div>
+    <button class="game-pill" onclick="setTeamSelection(this)" data-team="${away}"><span style="font-size:10px;color:var(--muted);">AWAY</span> <strong>${away}</strong></button>
+    <button class="game-pill" onclick="setTeamSelection(this)" data-team="${home}"><span style="font-size:10px;color:var(--muted);">HOME</span> <strong>${home}</strong></button>`;
+}
+function setTeamSelection(el) {
+  document.getElementById('f-selection').value = el.dataset.team;
+  document.querySelectorAll('#team-quickpick .game-pill').forEach(b => b.classList.toggle('selected', b === el));
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function savePickInline() {
@@ -627,24 +1878,60 @@ function savePickInline() {
   const units = document.getElementById('f-units').value || 1;
   const notes = document.getElementById('f-notes').value.trim();
   const errEl = document.getElementById('add-pick-error');
-  if (!away || !home || !selection) { errEl.textContent = 'Away, Home and Selection are required.'; errEl.style.display = 'block'; setTimeout(() => errEl.style.display = 'none', 3000); return; }
+
+  if (!away || !home || !selection) {
+    errEl.textContent = 'Away Team, Home Team and Selection are required.';
+    errEl.style.display = 'block';
+    setTimeout(() => errEl.style.display = 'none', 3000);
+    return;
+  }
+
   const picks = getPicks();
-  picks.push({ id:'p'+Date.now(), sport, date, away, home, type, selection, odds, units, notes, result:'PENDING', createdBy:currentUser.username, created:new Date().toISOString() });
+  picks.push({ id: 'p' + Date.now(), sport, date, away, home, type, selection, odds, units, notes, result: 'PENDING', createdBy: currentUser.username, created: new Date().toISOString() });
   savePicks(picks);
+
+  // Clear fields but keep sport/date
   ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-units').value = 1;
   errEl.style.display = 'none';
+
+  // Flash success
   const btn = document.querySelector('[onclick="savePickInline()"]');
   const orig = btn.textContent;
   btn.textContent = '✓ Pick Saved!';
-  setTimeout(() => { btn.textContent = orig; }, 1800);
-  loadPicksForDate(currentDateView); renderAdminPicks(); renderStats(); renderHistory();
+  btn.style.background = 'rgba(200,255,0,0.2)';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1800);
+
+  loadPicksForDate(currentDateView);
+  renderAdminPicks(); renderStats(); renderHistory();
 }
 
 function clearPickForm() {
   ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-units').value = 1;
   document.getElementById('add-pick-error').style.display = 'none';
+}
+
+function savePick() {
+  // modal version (admin panel page)
+  const sport = document.getElementById('pick-sport').value;
+  const date = document.getElementById('pick-form-date').value;
+  const away = document.getElementById('pick-away').value.trim();
+  const home = document.getElementById('pick-home').value.trim();
+  const type = document.getElementById('pick-type').value;
+  const selection = document.getElementById('pick-selection').value.trim();
+  const odds = document.getElementById('pick-odds').value.trim();
+  const units = document.getElementById('pick-units').value || 1;
+  const notes = document.getElementById('pick-notes').value.trim();
+  if (!away || !home || !selection) { alert('Please fill in Away Team, Home Team, and Selection.'); return; }
+  const picks = getPicks();
+  picks.push({ id: 'p' + Date.now(), sport, date, away, home, type, selection, odds, units, notes, result: 'PENDING', createdBy: currentUser.username, created: new Date().toISOString() });
+  savePicks(picks);
+  closeModal('modal-add-pick');
+  ['pick-away','pick-home','pick-selection','pick-odds','pick-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pick-units').value = 1;
+  loadPicksForDate(currentDateView);
+  renderAdminPicks(); renderStats(); renderHistory();
 }
 
 function deletePick(id) {
@@ -671,6 +1958,9 @@ function saveResult() {
   renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
 }
 
+// ════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════
 function renderHistory() {
   const sport = document.getElementById('hist-sport')?.value || 'ALL';
   const result = document.getElementById('hist-result')?.value || 'ALL';
@@ -684,30 +1974,45 @@ function renderHistory() {
     : picks.map(p => pickCardHTML(p, false)).join('');
 }
 
+// ════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════
 function renderStats() {
-  const picks = getPicks().filter(p => p.result && p.result !== 'PENDING');
+  const picks = getPicks().filter(p => p.result !== 'PENDING');
   const wins = picks.filter(p => p.result === 'WIN').length;
   const losses = picks.filter(p => p.result === 'LOSS').length;
   const pushes = picks.filter(p => p.result === 'PUSH').length;
   const total = wins + losses;
   const pct = total > 0 ? Math.round((wins/total)*100) : 0;
+
   document.getElementById('overall-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ${pct>=55?'green':pct<45&&total>0?'red':''}">${pct}%</div></div>
+    <div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ${pct >= 55 ? 'green' : pct < 45 && total > 0 ? 'red' : ''}">${pct}%</div></div>
     <div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">${picks.length}</div></div>
     <div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">${wins}</div></div>
     <div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">${losses}</div></div>
     <div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">${pushes}</div></div>
-    <div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">${wins}-${losses}</div></div>`;
+    <div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">${wins}-${losses}</div></div>
+  `;
+
   const sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
   document.getElementById('sport-stats').innerHTML = sports.map(s => {
     const sp = picks.filter(p => p.sport === s);
     const sw = sp.filter(p => p.result === 'WIN').length;
     const sl = sp.filter(p => p.result === 'LOSS').length;
     const spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
-    return `<div class="stat-card" style="border-top:2px solid var(--${s.toLowerCase()});"><div class="stat-label">${s}</div><div class="stat-value" style="font-size:28px;">${sw}-${sl}</div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${spct}% · ${sp.length} picks</div></div>`;
+    const colorVar = { NFL:'nfl', NBA:'nba', MLB:'mlb', NHL:'nhl', NCAAF:'ncaaf', NCAAM:'ncaam' }[s] || s.toLowerCase();
+    return `
+      <div class="stat-card" style="border-top:2px solid var(--${colorVar});">
+        <div class="stat-label">${s}</div>
+        <div class="stat-value" style="font-size:28px;">${sw}-${sl}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${spct}% · ${sp.length} picks</div>
+      </div>`;
   }).join('');
 }
 
+// ════════════════════════════════════════
+// ADMIN PICKS
+// ════════════════════════════════════════
 function renderAdminPicks() {
   const picks = getPicks().sort((a,b) => b.date.localeCompare(a.date));
   const c = document.getElementById('admin-picks-container');
@@ -717,22 +2022,76 @@ function renderAdminPicks() {
     : picks.map(p => pickCardHTML(p, true)).join('');
 }
 
+// ════════════════════════════════════════
+// USER MANAGEMENT
+// ════════════════════════════════════════
 function renderUsersTable() {
   const users = getData('ss_users', []);
   const pending = users.filter(u => u.status === 'pending');
   const active = users.filter(u => u.status !== 'pending');
+
+  // Pending section
   const pendingSection = document.getElementById('pending-section');
   const pendingTbody = document.getElementById('pending-tbody');
   if (!pendingTbody) return;
+
   if (pending.length > 0) {
     pendingSection.style.display = 'block';
-    pendingTbody.innerHTML = pending.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">✕ Reject</button></div></td></tr>`).join('');
-  } else { pendingSection.style.display = 'none'; }
-  document.getElementById('users-tbody').innerHTML = active.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td><span class="role-tag ${u.role!=='admin'?'user-role':''}">${u.role}</span></td><td><span class="pick-result ${u.status==='active'?'result-win':'result-loss'}">${u.status}</span></td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${u.username!=='admin'?`<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status==='active'?'Deactivate':'Activate'}</button><button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span style="color:var(--muted);font-size:11px;">Protected</span>'}</div></td></tr>`).join('');
+    pendingTbody.innerHTML = pending.map(u => `
+      <tr>
+        <td style="font-family:'DM Mono',monospace;">${u.username}</td>
+        <td>${u.firstName || ''} ${u.lastName || ''}</td>
+        <td style="color:var(--muted);font-size:12px;">${u.email || '—'}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✓ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">✕ Reject</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  } else {
+    pendingSection.style.display = 'none';
+  }
+
+  // Active/inactive users
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = active.map(u => `
+    <tr>
+      <td style="font-family:'DM Mono',monospace;">${u.username}</td>
+      <td>${u.firstName || ''} ${u.lastName || ''}</td>
+      <td style="color:var(--muted);font-size:12px;">${u.email || '—'}</td>
+      <td><span class="role-tag ${u.role !== 'admin' ? 'user-role' : ''}">${u.role}</span></td>
+      <td><span class="pick-result ${u.status === 'active' ? 'result-win' : 'result-loss'}">${u.status}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${u.username !== 'admin' ? `
+            <button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status === 'active' ? 'Deactivate' : 'Activate'}</button>
+            <button class="btn btn-sm ${u.subscribed ? 'btn-success' : 'btn-warning'}" onclick="toggleSubscription('${u.id}')">${u.subscribed ? '✓ Subscribed' : '+ Subscribe'}</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>
+          ` : '<span style="color:var(--muted);font-size:11px;font-family:\'DM Mono\',monospace;">Protected</span>'}
+        </div>
+      </td>
+    </tr>`).join('');
 }
 
-function approveUser(id) { const users = getData('ss_users',[]); const idx = users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status='active'; setData('ss_users',users); renderUsersTable(); updatePendingBadge(); }
-function rejectUser(id) { if(!confirm('Reject and delete this request?')) return; setData('ss_users', getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
+function approveUser(id) {
+  const users = getData('ss_users', []);
+  const idx = users.findIndex(u => u.id === id);
+  if (idx !== -1) users[idx].status = 'active';
+  setData('ss_users', users);
+  renderUsersTable();
+  updatePendingBadge();
+}
+
+function rejectUser(id) {
+  if (!confirm('Reject and delete this registration request?')) return;
+  setData('ss_users', getData('ss_users', []).filter(u => u.id !== id));
+  renderUsersTable();
+  updatePendingBadge();
+}
 
 function openAddUserModal() {
   editingUserId = null;
@@ -768,28 +2127,382 @@ function saveUser() {
   const password = document.getElementById('new-password').value;
   const role = document.getElementById('new-role').value;
   const errEl = document.getElementById('user-error');
+
   const show = txt => { errEl.textContent = txt; errEl.style.display = 'block'; };
+
   if (!username) return show('Username is required.');
   if (!editingUserId && !password) return show('Password is required.');
+
   const users = getData('ss_users', []);
+
   if (editingUserId) {
     const idx = users.findIndex(u => u.id === editingUserId);
-    if (idx !== -1) { users[idx] = { ...users[idx], firstName:first, lastName:last, email, username, role }; if (password) users[idx].password = password; }
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], firstName: first, lastName: last, email, username, role };
+      if (password) users[idx].password = password;
+    }
   } else {
     if (users.find(u => u.username === username)) return show('Username already exists.');
-    users.push({ id:'u'+Date.now(), username, password, firstName:first, lastName:last, email, role, status:'active', created:new Date().toISOString() });
+    users.push({ id: 'u' + Date.now(), username, password, firstName: first, lastName: last, email, role, status: 'active', created: new Date().toISOString() });
   }
+
   setData('ss_users', users);
   closeModal('modal-add-user');
   renderUsersTable();
   updatePendingBadge();
 }
 
-function toggleUserStatus(id) { const users=getData('ss_users',[]); const idx=users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status=users[idx].status==='active'?'inactive':'active'; setData('ss_users',users); renderUsersTable(); }
-function deleteUser(id) { if(!confirm('Permanently delete this user?')) return; setData('ss_users',getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
+function toggleUserStatus(id) {
+  const users = getData('ss_users', []);
+  const idx = users.findIndex(u => u.id === id);
+  if (idx !== -1) users[idx].status = users[idx].status === 'active' ? 'inactive' : 'active';
+  setData('ss_users', users);
+  renderUsersTable();
+}
+
+function deleteUser(id) {
+  if (!confirm('Permanently delete this user?')) return;
+  setData('ss_users', getData('ss_users', []).filter(u => u.id !== id));
+  renderUsersTable();
+  updatePendingBadge();
+}
+
+// ════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════
+// STRIPE + CHECKOUT
+// ════════════════════════════════════════
+const DEMO_MODE = true; // SET TO false FOR LIVE STRIPE PAYMENTS
+const STRIPE_PK = 'pk_test_51T7ehMBzvE6XnDh4awB5SSouvjcTmjZGSUYsQ1oMDYWu5bhKsOYSsCqYoUrjRn10xcEyKCw0yq1vmwcC80kBdhwJ00k8isXmYT';
+let stripeInstance = null, stripeCardElement = null;
+let selectedPlan = 'monthly', appliedPromo = null, pendingRegData = null;
+
+function getSettings() { return getData('ss_settings', { monthlyPrice: 15, lifetimePrice: 250 }); }
+function getPrices() { const s = getSettings(); return { monthly: parseFloat(s.monthlyPrice)||15, lifetime: parseFloat(s.lifetimePrice)||250 }; }
+
+function goToCheckout() {
+  const first = document.getElementById('reg-first').value.trim();
+  const last  = document.getElementById('reg-last').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const user  = document.getElementById('reg-user').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+  const msgEl = document.getElementById('reg-msg');
+  const show  = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
+  if (!first||!last||!email||!user||!pass) return show('All fields are required.', 'error');
+  if (pass.length < 6) return show('Password must be at least 6 characters.', 'error');
+  if (pass !== pass2) return show('Passwords do not match.', 'error');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email.', 'error');
+  const users = getData('ss_users', []);
+  if (users.find(u => u.username === user)) return show('Username already taken.', 'error');
+  if (users.find(u => u.email === email)) return show('Email already registered.', 'error');
+  pendingRegData = { first, last, email, user, pass };
+  msgEl.style.display = 'none';
+  appliedPromo = null;
+  document.getElementById('promo-input').value = '';
+  document.getElementById('promo-result').innerHTML = '';
+  selectedPlan = 'monthly';
+  updatePlanUI();
+  showScreen('checkout-screen');
+  initStripe();
+}
+
+function initStripe() {
+  const container = document.getElementById('stripe-card-element');
+  if (DEMO_MODE) {
+    container.innerHTML = '<div style="padding:12px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);letter-spacing:1px;border:1px dashed rgba(200,255,0,0.3);border-radius:2px;text-align:center;">🧪 DEMO MODE — Card entry disabled</div>';
+    return;
+  }
+  if (!stripeInstance) stripeInstance = Stripe(STRIPE_PK);
+  const elements = stripeInstance.elements({ appearance: { theme: 'night' } });
+  stripeCardElement = elements.create('card', { style: { base: { color: '#ddffd0', fontFamily: '"DM Mono", monospace', fontSize: '14px' } } });
+  container.innerHTML = '';
+  stripeCardElement.mount('#stripe-card-element');
+  stripeCardElement.on('change', e => { document.getElementById('stripe-card-errors').textContent = e.error ? e.error.message : ''; });
+}
+
+function selectPlan(plan) { selectedPlan = plan; updatePlanUI(); }
+
+function updatePlanUI() {
+  const prices = getPrices();
+  document.getElementById('plan-monthly').classList.toggle('selected', selectedPlan === 'monthly');
+  document.getElementById('plan-lifetime').classList.toggle('selected', selectedPlan === 'lifetime');
+  const basePrice = selectedPlan === 'monthly' ? prices.monthly : prices.lifetime;
+  let finalPrice = basePrice;
+  if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
+  document.getElementById('checkout-total').textContent = '$' + finalPrice.toFixed(2);
+  document.getElementById('checkout-total-label').textContent = (selectedPlan === 'monthly' ? 'Monthly Plan · 30-day access' : 'Lifetime Plan · Unlimited access') + (appliedPromo ? ' · ' + appliedPromo.pct + '% off' : '');
+  document.getElementById('monthly-display').textContent = '$' + prices.monthly.toFixed(2);
+  document.getElementById('lifetime-display').textContent = '$' + prices.lifetime.toFixed(2);
+  document.getElementById('demo-notice').style.display = DEMO_MODE ? 'block' : 'none';
+}
+
+function applyPromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  const resultEl = document.getElementById('promo-result');
+  if (!code) return;
+  const promos = getData('ss_promos', []);
+  const found = promos.find(p => p.code === code && p.active);
+  if (!found) { resultEl.innerHTML = '<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">Invalid or expired code.</span>'; appliedPromo = null; updatePlanUI(); return; }
+  if (found.expiry && new Date(found.expiry) < new Date()) { resultEl.innerHTML = '<span style="color:var(--danger);font-family:\'DM Mono\',monospace;font-size:12px;">This code has expired.</span>'; appliedPromo = null; updatePlanUI(); return; }
+  appliedPromo = found;
+  resultEl.innerHTML = `<span class="promo-code-tag">✓ ${found.code} — ${found.pct}% off applied!</span>`;
+  updatePlanUI();
+}
+
+async function processPayment() {
+  const btn = document.getElementById('pay-btn');
+  const msgEl = document.getElementById('checkout-msg');
+  const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
+  if (!pendingRegData) { show('Session expired — go back and try again.', 'error'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Processing...';
+  try {
+    const prices = getPrices();
+    const basePrice = selectedPlan === 'monthly' ? prices.monthly : prices.lifetime;
+    let finalPrice = basePrice;
+    if (appliedPromo) finalPrice = basePrice * (1 - appliedPromo.pct / 100);
+    let paymentId = 'demo_' + Date.now(), paymentSuccess = false;
+    if (DEMO_MODE) {
+      paymentSuccess = true;
+    } else {
+      const { token, error } = await stripeInstance.createToken(stripeCardElement);
+      if (error) { show(error.message, 'error'); btn.disabled = false; btn.textContent = 'Pay & Create Account →'; return; }
+      paymentSuccess = true; paymentId = token.id;
+    }
+    if (paymentSuccess) {
+      const now = new Date();
+      const expiry = selectedPlan === 'monthly' ? new Date(now.getTime() + 30*24*60*60*1000).toISOString() : null;
+      const users = getData('ss_users', []);
+      if (appliedPromo) {
+        const promos = getData('ss_promos', []);
+        const idx = promos.findIndex(p => p.code === appliedPromo.code);
+        if (idx !== -1) promos[idx].uses = (promos[idx].uses || 0) + 1;
+        setData('ss_promos', promos);
+      }
+      users.push({ id: 'u'+Date.now(), username: pendingRegData.user, password: pendingRegData.pass, firstName: pendingRegData.first, lastName: pendingRegData.last, email: pendingRegData.email, role: 'user', status: 'active', subscribed: true, plan: selectedPlan, subscriptionExpiry: expiry, paymentId, promoUsed: appliedPromo ? appliedPromo.code : null, amountPaid: finalPrice.toFixed(2), created: now.toISOString() });
+      setData('ss_users', users);
+      pendingRegData = null;
+      showScreen('pending-screen');
+      document.querySelector('.pending-title').textContent = 'PAYMENT RECEIVED!';
+      document.querySelector('.pending-text').textContent = 'Your account is active. You can now sign in!';
+    }
+  } catch(e) { show('Payment error: ' + e.message, 'error'); }
+  btn.disabled = false; btn.textContent = 'Pay & Create Account →';
+}
+
+// ════════════════════════════════════════
+// ABOUT PAGE
+// ════════════════════════════════════════
+function renderAboutPage() {
+  const data = getData('ss_about', { name:'$harp $elections', title:'Professional Sports Handicapper', avatar:'🎯', bio:'Welcome to $harp $elections.', twitter:'', instagram:'', tiktok:'', telegram:'', ambassadors:[] });
+  document.getElementById('about-name-display').textContent = data.name || '$harp $elections';
+  document.getElementById('about-title-display').textContent = data.title || '';
+  document.getElementById('about-avatar-display').textContent = data.avatar || '🎯';
+  document.getElementById('about-bio-display').textContent = data.bio || '';
+  const socials = document.getElementById('about-socials-display');
+  socials.innerHTML = '';
+  [['twitter','𝕏 Twitter'],['instagram','📸 Instagram'],['tiktok','🎵 TikTok'],['telegram','✈️ Telegram']].forEach(([key,label]) => {
+    if (data[key]) { const a = document.createElement('a'); a.className='social-link'; a.href=data[key]; a.target='_blank'; a.rel='noopener'; a.textContent=label; socials.appendChild(a); }
+  });
+  const grid = document.getElementById('ambassadors-grid');
+  const amps = data.ambassadors || [];
+  if (!amps.length) { grid.innerHTML = '<div class="empty-state"><div class="icon">🤝</div>No ambassadors yet</div>'; return; }
+  grid.innerHTML = amps.map(a => `
+    <div class="ambassador-card">
+      <div class="ambassador-avatar">${a.avatar||'⭐'}</div>
+      <div class="ambassador-name">${a.name}</div>
+      <div class="ambassador-role">${a.role||'Ambassador'}</div>
+      <div class="ambassador-bio">${a.bio||''}</div>
+      <div class="ambassador-links">
+        ${a.twitter ? `<a class="social-link" href="${a.twitter}" target="_blank">𝕏</a>` : ''}
+        ${a.instagram ? `<a class="social-link" href="${a.instagram}" target="_blank">📸</a>` : ''}
+        ${a.tiktok ? `<a class="social-link" href="${a.tiktok}" target="_blank">🎵</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function openAboutEditor() {
+  const data = getData('ss_about', {});
+  document.getElementById('ae-name').value = data.name||'';
+  document.getElementById('ae-title').value = data.title||'';
+  document.getElementById('ae-avatar').value = data.avatar||'🎯';
+  document.getElementById('ae-bio').value = data.bio||'';
+  document.getElementById('ae-twitter').value = data.twitter||'';
+  document.getElementById('ae-instagram').value = data.instagram||'';
+  document.getElementById('ae-tiktok').value = data.tiktok||'';
+  document.getElementById('ae-telegram').value = data.telegram||'';
+  document.getElementById('ambassador-editor-rows').innerHTML = '';
+  (data.ambassadors||[]).forEach(a => addAmbassadorRow(a));
+  openModal('modal-about-editor');
+}
+
+function addAmbassadorRow(a) {
+  a = a || {};
+  const div = document.createElement('div');
+  div.className = 'ambassador-row';
+  div.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:16px;margin-bottom:12px;position:relative;';
+  div.innerHTML = `<button onclick="this.closest('.ambassador-row').remove()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+      <div class="field" style="margin-bottom:0;"><label>Name</label><input type="text" class="amb-name" value="${a.name||''}" placeholder="Name"></div>
+      <div class="field" style="margin-bottom:0;"><label>Role</label><input type="text" class="amb-role" value="${a.role||''}" placeholder="e.g. Brand Ambassador"></div>
+      <div class="field" style="margin-bottom:0;"><label>Emoji</label><input type="text" class="amb-avatar" value="${a.avatar||'⭐'}" maxlength="4"></div>
+    </div>
+    <div class="field" style="margin-top:10px;margin-bottom:0;"><label>Bio</label><textarea class="amb-bio" rows="2">${a.bio||''}</textarea></div>
+
+```
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;">
+  <div class="field" style="margin-bottom:0;"><label>Twitter</label><input type="text" class="amb-twitter" value="${a.twitter||''}" placeholder="URL"></div>
+  <div class="field" style="margin-bottom:0;"><label>Instagram</label><input type="text" class="amb-instagram" value="${a.instagram||''}" placeholder="URL"></div>
+  <div class="field" style="margin-bottom:0;"><label>TikTok</label><input type="text" class="amb-tiktok" value="${a.tiktok||''}" placeholder="URL"></div>
+</div>`;
+```
+
+document.getElementById(‘ambassador-editor-rows’).appendChild(div);
+}
+
+function saveAboutPage() {
+const ambassadors = [];
+document.querySelectorAll(’.ambassador-row’).forEach(row => {
+const name = row.querySelector(’.amb-name’).value.trim();
+if (!name) return;
+ambassadors.push({ name, role:row.querySelector(’.amb-role’).value.trim(), avatar:row.querySelector(’.amb-avatar’).value.trim()||‘⭐’, bio:row.querySelector(’.amb-bio’).value.trim(), twitter:row.querySelector(’.amb-twitter’).value.trim(), instagram:row.querySelector(’.amb-instagram’).value.trim(), tiktok:row.querySelector(’.amb-tiktok’).value.trim() });
+});
+setData(‘ss_about’, { name:document.getElementById(‘ae-name’).value.trim(), title:document.getElementById(‘ae-title’).value.trim(), avatar:document.getElementById(‘ae-avatar’).value.trim()||‘🎯’, bio:document.getElementById(‘ae-bio’).value.trim(), twitter:document.getElementById(‘ae-twitter’).value.trim(), instagram:document.getElementById(‘ae-instagram’).value.trim(), tiktok:document.getElementById(‘ae-tiktok’).value.trim(), telegram:document.getElementById(‘ae-telegram’).value.trim(), ambassadors });
+closeModal(‘modal-about-editor’);
+renderAboutPage();
+}
+
+// ════════════════════════════════════════
+// PROMO CODES
+// ════════════════════════════════════════
+function openPromoManager() { renderPromoList(); openModal(‘modal-promos’); }
+function renderPromoList() {
+const promos = getData(‘ss_promos’, []);
+const el = document.getElementById(‘promo-list’);
+if (!promos.length) { el.innerHTML = ‘<div style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:12px;padding:12px 0;">No promo codes yet.</div>’; return; }
+el.innerHTML = promos.map((p,i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+<span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);flex:1;">${p.code}</span>
+<span style="font-family:'DM Mono',monospace;font-size:12px;">${p.pct}% off</span>
+<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">${p.expiry?’Exp: ’+p.expiry:‘No expiry’}</span>
+<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);">Used: ${p.uses||0}x</span>
+<button class="btn btn-sm ${p.active?'btn-success':'btn-danger'}" onclick="togglePromo(${i})">${p.active?‘Active’:‘Disabled’}</button>
+<button class="btn btn-danger btn-sm" onclick="deletePromo(${i})">✕</button>
+
+  </div>`).join('');
+}
+function addPromoCode() {
+  const code = document.getElementById('new-promo-code').value.trim().toUpperCase();
+  const pct = parseInt(document.getElementById('new-promo-pct').value);
+  const expiry = document.getElementById('new-promo-expiry').value;
+  if (!code||!pct||pct<1||pct>100) return;
+  const promos = getData('ss_promos', []);
+  if (promos.find(p => p.code===code)) return alert('Code already exists.');
+  promos.push({ code, pct, expiry:expiry||null, active:true, uses:0, created:new Date().toISOString() });
+  setData('ss_promos', promos);
+  document.getElementById('new-promo-code').value=''; document.getElementById('new-promo-pct').value=''; document.getElementById('new-promo-expiry').value='';
+  renderPromoList();
+}
+function togglePromo(i) { const p=getData('ss_promos',[]); p[i].active=!p[i].active; setData('ss_promos',p); renderPromoList(); }
+function deletePromo(i) { if(!confirm('Delete this promo code?')) return; const p=getData('ss_promos',[]); p.splice(i,1); setData('ss_promos',p); renderPromoList(); }
+
+// ════════════════════════════════════════
+// PRICING EDITOR
+// ════════════════════════════════════════
+function openPricingEditor() {
+const s = getSettings();
+document.getElementById(‘price-monthly’).value = s.monthlyPrice||15;
+document.getElementById(‘price-lifetime’).value = s.lifetimePrice||250;
+document.getElementById(‘pricing-msg’).style.display=‘none’;
+openModal(‘modal-pricing’);
+}
+function savePricing() {
+const monthly = parseFloat(document.getElementById(‘price-monthly’).value);
+const lifetime = parseFloat(document.getElementById(‘price-lifetime’).value);
+if (!monthly||!lifetime) return;
+setData(‘ss_settings’, { monthlyPrice:monthly, lifetimePrice:lifetime });
+document.getElementById(‘pricing-msg’).style.display=‘block’;
+setTimeout(() => { document.getElementById(‘pricing-msg’).style.display=‘none’; closeModal(‘modal-pricing’); }, 1200);
+}
+
+// ════════════════════════════════════════
+// SUBSCRIPTION TOGGLE
+// ════════════════════════════════════════
+function toggleSubscription(id) {
+const users = getData(‘ss_users’,[]);
+const idx = users.findIndex(u => u.id===id);
+if (idx!==-1) users[idx].subscribed = !users[idx].subscribed;
+setData(‘ss_users’, users);
+renderUsersTable();
+}
+
 </script>
+
+<!-- ABOUT EDITOR MODAL -->
+
+<div class="modal-overlay" id="modal-about-editor">
+  <div class="modal" style="max-width:680px;">
+    <button class="modal-close" onclick="closeModal('modal-about-editor')">✕</button>
+    <div class="modal-title">EDIT ABOUT PAGE</div>
+    <div class="about-section-title" style="margin-top:0;">Profile</div>
+    <div class="form-grid">
+      <div class="field"><label>Display Name</label><input type="text" id="ae-name" placeholder="e.g. John Sharp"></div>
+      <div class="field"><label>Title / Tagline</label><input type="text" id="ae-title" placeholder="e.g. Professional Handicapper"></div>
+      <div class="field"><label>Avatar Emoji</label><input type="text" id="ae-avatar" placeholder="🎯" maxlength="4"></div>
+    </div>
+    <div class="field"><label>Bio</label><textarea id="ae-bio" rows="4" placeholder="Your background and credentials..."></textarea></div>
+    <div class="about-section-title" style="margin-top:20px;">Social Links</div>
+    <div class="form-grid">
+      <div class="field"><label>Twitter / X</label><input type="text" id="ae-twitter" placeholder="https://x.com/yourhandle"></div>
+      <div class="field"><label>Instagram</label><input type="text" id="ae-instagram" placeholder="https://instagram.com/yourhandle"></div>
+      <div class="field"><label>TikTok</label><input type="text" id="ae-tiktok" placeholder="https://tiktok.com/@yourhandle"></div>
+      <div class="field"><label>Telegram</label><input type="text" id="ae-telegram" placeholder="https://t.me/yourchannel"></div>
+    </div>
+    <div class="about-section-title" style="margin-top:20px;">Ambassadors / Sponsors <button class="btn btn-secondary btn-sm" onclick="addAmbassadorRow()" style="margin-left:12px;">+ Add</button></div>
+    <div id="ambassador-editor-rows"></div>
+    <div style="display:flex;gap:10px;margin-top:24px;">
+      <button class="btn btn-primary" onclick="saveAboutPage()" style="flex:1;">Save Page</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-about-editor')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMO CODE MANAGER -->
+
+<div class="modal-overlay" id="modal-promos">
+  <div class="modal" style="max-width:600px;">
+    <button class="modal-close" onclick="closeModal('modal-promos')">✕</button>
+    <div class="modal-title">PROMO CODES</div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <input type="text" id="new-promo-code" placeholder="Code e.g. SHARP20" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <input type="number" id="new-promo-pct" placeholder="% off" min="1" max="100" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;width:90px;">
+      <input type="date" id="new-promo-expiry" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;outline:none;">
+      <button class="btn btn-primary btn-sm" onclick="addPromoCode()" style="width:auto;">Add</button>
+    </div>
+    <div id="promo-list"></div>
+  </div>
+</div>
+
+<!-- PRICING EDITOR -->
+
+<div class="modal-overlay" id="modal-pricing">
+  <div class="modal" style="max-width:400px;">
+    <button class="modal-close" onclick="closeModal('modal-pricing')">✕</button>
+    <div class="modal-title">PRICING</div>
+    <div class="field"><label>Monthly Price ($)</label><input type="number" id="price-monthly" min="1" step="0.01" value="15"></div>
+    <div class="field"><label>Lifetime Price ($)</label><input type="number" id="price-lifetime" min="1" step="0.01" value="250"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="savePricing()" style="flex:1;">Save Pricing</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-pricing')">Cancel</button>
+    </div>
+    <div id="pricing-msg" class="msg msg-success" style="display:none;margin-top:10px;">Pricing updated!</div>
+  </div>
+</div>
 </body>
 </html>
