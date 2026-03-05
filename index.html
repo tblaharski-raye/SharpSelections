@@ -323,7 +323,7 @@ content: ‘’;
 position: absolute;
 top: 0; left: 0; right: 0;
 height: 2px;
-background: linear-gradient(90deg, transparent, var(–accent2), var(–accent), var(–accent2), transparent);
+background: linear-gradient(90deg, transparent, #1a56ff, #c8ff00, #1a56ff, transparent);
 }
 
 .auth-logo {
@@ -335,10 +335,10 @@ text-align: center;
 margin-bottom: 2px;
 line-height: 1.1;
 text-shadow:
--2px -2px 0 var(–accent2),
-2px -2px 0 var(–accent2),
--2px  2px 0 var(–accent2),
-2px  2px 0 var(–accent2),
+-2px -2px 0 #1a56ff,
+2px -2px 0 #1a56ff,
+-2px  2px 0 #1a56ff,
+2px  2px 0 #1a56ff,
 0    0  18px rgba(26,86,255,0.7),
 0    0  35px rgba(200,255,0,0.25);
 letter-spacing: 1px;
@@ -368,10 +368,12 @@ text-shadow: 0 0 10px rgba(200,255,0,0.4);
 text-align: center;
 margin-top: 20px;
 font-size: 13px;
+color: #3d5c3d;
 color: var(–muted);
 }
 
 .auth-toggle a {
+color: #c8ff00;
 color: var(–accent);
 cursor: pointer;
 text-decoration: none;
@@ -408,6 +410,7 @@ transition: border-color 0.2s;
 }
 
 .field input:focus, .field select:focus, .field textarea:focus {
+border-color: #c8ff00;
 border-color: var(–accent);
 box-shadow: 0 0 0 2px rgba(200,255,0,0.1);
 }
@@ -473,13 +476,14 @@ position: sticky; top: 0; z-index: 100;
 .topbar-logo {
 font-family: ‘Pacifico’, cursive;
 font-size: 22px;
+color: #c8ff00;
 color: var(–accent);
 letter-spacing: 1px;
 text-shadow:
--1px -1px 0 var(–accent2),
-1px -1px 0 var(–accent2),
--1px  1px 0 var(–accent2),
-1px  1px 0 var(–accent2),
+-1px -1px 0 #1a56ff,
+1px -1px 0 #1a56ff,
+-1px  1px 0 #1a56ff,
+1px  1px 0 #1a56ff,
 0    0  10px rgba(26,86,255,0.6),
 0    0  20px rgba(200,255,0,0.2);
 }
