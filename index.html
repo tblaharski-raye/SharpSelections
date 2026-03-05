@@ -147,7 +147,31 @@
   .strength-bar.weak { background: var(--danger); width: 33%; }
   .strength-bar.medium { background: var(--warning); width: 66%; }
   .strength-bar.strong { background: var(--success); width: 100%; }
+
+.about-hero { text-align:center; padding:32px 16px 24px; }
+.about-avatar { width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #c8ff00; border:3px solid var(–accent); margin-bottom:16px; display:block; margin-left:auto; margin-right:auto; }
+.about-avatar-placeholder { width:100px; height:100px; border-radius:50%; background:#0e120e; background:var(–surface); border:3px solid #c8ff00; border:3px solid var(–accent); display:inline-flex; align-items:center; justify-content:center; font-size:36px; margin-bottom:16px; }
+.about-name { font-size:22px; font-weight:700; color:#c8ff00; color:var(–accent); letter-spacing:1px; }
+.about-title { font-size:12px; color:#3d5c3d; color:var(–muted); letter-spacing:2px; margin:4px 0 12px; }
+.about-bio { font-size:14px; color:#ddffd0; color:var(–text); line-height:1.7; max-width:500px; margin:0 auto 16px; }
+.about-socials { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+.about-social-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:6px; font-size:12px; font-weight:600; letter-spacing:1px; text-decoration:none; border:1px solid #1c301c; border:1px solid var(–border); color:#ddffd0; color:var(–text); background:#0e120e; background:var(–surface); cursor:pointer; transition:border-color .2s; }
+.about-social-btn:hover { border-color:#c8ff00; border-color:var(–accent); color:#c8ff00; color:var(–accent); }
+.ambassador-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-top:8px; }
+.ambassador-card { background:#0e120e; background:var(–surface); border:1px solid #1c301c; border:1px solid var(–border); border-radius:10px; padding:16px; text-align:center; }
+.ambassador-avatar { width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #c8ff00; border:2px solid var(–accent); margin-bottom:10px; display:block; margin-left:auto; margin-right:auto; }
+.ambassador-avatar-placeholder { width:60px; height:60px; border-radius:50%; background:#0d0f0d; background:var(–bg); border:2px solid #c8ff00; border:2px solid var(–accent); display:inline-flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:10px; }
+.ambassador-name { font-size:13px; font-weight:700; color:#ddffd0; color:var(–text); }
+.ambassador-role { font-size:11px; color:#c8ff00; color:var(–accent); letter-spacing:1px; margin:3px 0 8px; }
+.ambassador-bio { font-size:12px; color:#3d5c3d; color:var(–muted); line-height:1.5; }
+.ambassador-socials { display:flex; justify-content:center; gap:8px; margin-top:8px; }
+.ambassador-social-btn { font-size:11px; color:#3d5c3d; color:var(–muted); text-decoration:none; padding:3px 7px; border:1px solid #1c301c; border:1px solid var(–border); border-radius:4px; }
+.ambassador-social-btn:hover { color:#c8ff00; color:var(–accent); border-color:#c8ff00; border-color:var(–accent); }
+.section-label { font-size:11px; color:#3d5c3d; color:var(–muted); letter-spacing:2px; margin:24px 0 12px; padding-bottom:6px; border-bottom:1px solid #1c301c; border-bottom:1px solid var(–border); }
+.ambassador-editor-row { background:#0d0f0d; background:var(–bg); border:1px solid #1c301c; border:1px solid var(–border); border-radius:8px; padding:12px; display:grid; gap:8px; margin-bottom:10px; }
+.ambassador-editor-row .row-header { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#3d5c3d; color:var(–muted); letter-spacing:1px; }
 </style>
+
 </head>
 <body>
 
@@ -228,6 +252,7 @@
     <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
     <button class="nav-tab" onclick="showPage('history', this)">History</button>
     <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
+    <button class="nav-tab" onclick="showPage('about', this)">About</button>
     <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
     <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">User Management <span class="pending-badge" id="pending-count" style="display:none;"></span></button>
   </div>
@@ -328,14 +353,22 @@
     <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
     <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
   </div>
-  <div id="pending-section" style="margin-bottom:28px;display:none;">
-    <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
-    <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
-  </div>
-  <div class="section-header"><div class="section-title">All Users</div></div>
-  <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
-</div>
 ```
+
+  <div class="page" id="page-about">
+    <div class="date-bar">
+      <div><div class="date-display">ABOUT US</div></div>
+      <button class="btn btn-secondary btn-sm admin-only" id="about-edit-btn" onclick="openAboutEditor()" style="display:none;">Edit Page</button>
+    </div>
+    <div id="about-content" style="padding:16px;max-width:700px;margin:0 auto;"></div>
+  </div>
+      <div id="pending-section" style="margin-bottom:28px;display:none;">
+        <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
+        <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
+      </div>
+      <div class="section-header"><div class="section-title">All Users</div></div>
+      <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
+    </div>
 
   </div>
 </div>
@@ -502,6 +535,7 @@ function showPage(name, tab) {
   if (name === 'users') { renderUsersTable(); updatePendingBadge(); }
   if (name === 'stats') renderStats();
   if (name === 'history') renderHistory();
+  if (name === 'about') renderAboutPage();
 }
 
 function getPicks() { return getData('ss_picks', []); }
@@ -793,8 +827,152 @@ function deleteUser(id) { if(!confirm('Permanently delete this user?')) return; 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+// ABOUT PAGE
+function getAboutData() {
+  return getData('ss_about', {
+    name: '$harp $elections', tagline: 'SHARP BETTOR', avatar: '',
+    bio: 'Welcome to Sharp Selections. Premium sports picks backed by data and discipline.',
+    twitter: '', instagram: '', tiktok: '', telegram: '', ambassadors: []
+  });
+}
+
+function renderAboutPage() {
+  var container = document.getElementById('about-content');
+  if (!container) return;
+  var about = getAboutData();
+  var html = '<div class="about-hero">';
+  if (about.avatar) {
+    html += '<img class="about-avatar" src="' + about.avatar + '">';
+  } else {
+    html += '<div class="about-avatar-placeholder">SS</div>';
+  }
+  html += '<div class="about-name">' + (about.name || '$harp $elections') + '</div>';
+  html += '<div class="about-title">' + (about.tagline || '') + '</div>';
+  html += '<div class="about-bio">' + (about.bio || '') + '</div>';
+  var socials = [];
+  if (about.twitter)   socials.push('<a class="about-social-btn" href="https://twitter.com/' + about.twitter.replace('@','') + '" target="_blank">X ' + about.twitter + '</a>');
+  if (about.instagram) socials.push('<a class="about-social-btn" href="https://instagram.com/' + about.instagram.replace('@','') + '" target="_blank">IG ' + about.instagram + '</a>');
+  if (about.tiktok)    socials.push('<a class="about-social-btn" href="https://tiktok.com/@' + about.tiktok.replace('@','') + '" target="_blank">TT ' + about.tiktok + '</a>');
+  if (about.telegram)  socials.push('<a class="about-social-btn" href="https://t.me/' + about.telegram.replace('@','') + '" target="_blank">TG ' + about.telegram + '</a>');
+  if (socials.length) html += '<div class="about-socials">' + socials.join('') + '</div>';
+  html += '</div>';
+  if (about.ambassadors && about.ambassadors.length) {
+    html += '<div class="section-label">AMBASSADORS</div><div class="ambassador-grid">';
+    for (var i = 0; i < about.ambassadors.length; i++) {
+      var a = about.ambassadors[i];
+      html += '<div class="ambassador-card">';
+      if (a.avatar) {
+        html += '<img class="ambassador-avatar" src="' + a.avatar + '">';
+      } else {
+        html += '<div class="ambassador-avatar-placeholder">*</div>';
+      }
+      html += '<div class="ambassador-name">' + (a.name||'') + '</div>';
+      html += '<div class="ambassador-role">' + (a.role||'') + '</div>';
+      html += '<div class="ambassador-bio">' + (a.bio||'') + '</div>';
+      var as = [];
+      if (a.twitter)   as.push('<a class="ambassador-social-btn" href="https://twitter.com/' + a.twitter.replace('@','') + '" target="_blank">X</a>');
+      if (a.instagram) as.push('<a class="ambassador-social-btn" href="https://instagram.com/' + a.instagram.replace('@','') + '" target="_blank">IG</a>');
+      if (a.tiktok)    as.push('<a class="ambassador-social-btn" href="https://tiktok.com/@' + a.tiktok.replace('@','') + '" target="_blank">TT</a>');
+      if (as.length) html += '<div class="ambassador-socials">' + as.join('') + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function openAboutEditor() {
+  var about = getAboutData();
+  document.getElementById('about-name').value      = about.name || '';
+  document.getElementById('about-tagline').value   = about.tagline || '';
+  document.getElementById('about-avatar').value    = about.avatar || '';
+  document.getElementById('about-bio').value       = about.bio || '';
+  document.getElementById('about-twitter').value   = about.twitter || '';
+  document.getElementById('about-instagram').value = about.instagram || '';
+  document.getElementById('about-tiktok').value    = about.tiktok || '';
+  document.getElementById('about-telegram').value  = about.telegram || '';
+  var rows = document.getElementById('ambassador-editor-rows');
+  rows.innerHTML = '';
+  var ambs = about.ambassadors || [];
+  for (var i = 0; i < ambs.length; i++) { addAmbassadorRow(ambs[i]); }
+  document.getElementById('about-modal').classList.add('open');
+}
+
+function addAmbassadorRow(data) {
+  data = data || {};
+  var rows = document.getElementById('ambassador-editor-rows');
+  var div = document.createElement('div');
+  div.className = 'ambassador-editor-row';
+  div.innerHTML =
+    '<div class="row-header"><span>AMBASSADOR</span><button class="btn btn-danger btn-sm" onclick="this.parentNode.parentNode.remove()">Remove</button></div>' +
+    '<div class="field"><label>Name</label><input type="text" class="amb-name" value="' + (data.name||'') + '" placeholder="Name"></div>' +
+    '<div class="field"><label>Role</label><input type="text" class="amb-role" value="' + (data.role||'') + '" placeholder="NFL Specialist"></div>' +
+    '<div class="field"><label>Avatar URL</label><input type="text" class="amb-avatar" value="' + (data.avatar||'') + '" placeholder="https://..."></div>' +
+    '<div class="field"><label>Bio</label><input type="text" class="amb-bio" value="' + (data.bio||'') + '" placeholder="Short bio"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+      '<div class="field"><label>Twitter</label><input type="text" class="amb-twitter" value="' + (data.twitter||'') + '" placeholder="@handle"></div>' +
+      '<div class="field"><label>Instagram</label><input type="text" class="amb-instagram" value="' + (data.instagram||'') + '" placeholder="@handle"></div>' +
+      '<div class="field"><label>TikTok</label><input type="text" class="amb-tiktok" value="' + (data.tiktok||'') + '" placeholder="@handle"></div>' +
+    '</div>';
+  rows.appendChild(div);
+}
+
+function saveAboutPage() {
+  var ambassadors = [];
+  var rows = document.querySelectorAll('.ambassador-editor-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    ambassadors.push({
+      name:      row.querySelector('.amb-name').value.trim(),
+      role:      row.querySelector('.amb-role').value.trim(),
+      avatar:    row.querySelector('.amb-avatar').value.trim(),
+      bio:       row.querySelector('.amb-bio').value.trim(),
+      twitter:   row.querySelector('.amb-twitter').value.trim(),
+      instagram: row.querySelector('.amb-instagram').value.trim(),
+      tiktok:    row.querySelector('.amb-tiktok').value.trim()
+    });
+  }
+  setData('ss_about', {
+    name:        document.getElementById('about-name').value.trim(),
+    tagline:     document.getElementById('about-tagline').value.trim(),
+    avatar:      document.getElementById('about-avatar').value.trim(),
+    bio:         document.getElementById('about-bio').value.trim(),
+    twitter:     document.getElementById('about-twitter').value.trim(),
+    instagram:   document.getElementById('about-instagram').value.trim(),
+    tiktok:      document.getElementById('about-tiktok').value.trim(),
+    telegram:    document.getElementById('about-telegram').value.trim(),
+    ambassadors: ambassadors
+  });
+  closeModal('about-modal');
+  renderAboutPage();
+}
+
 </script>
 
+  <div class="modal-overlay" id="about-modal">
+    <div class="modal" style="max-width:600px;max-height:85vh;overflow-y:auto;">
+      <div class="modal-header"><span class="modal-title">Edit About Page</span><button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button></div>
+      <div style="display:grid;gap:12px;">
+        <div class="field"><label>Your Name</label><input type="text" id="about-name" placeholder="e.g. John Sharp"></div>
+        <div class="field"><label>Title / Tagline</label><input type="text" id="about-tagline" placeholder="e.g. SHARP BETTOR"></div>
+        <div class="field"><label>Avatar URL (optional)</label><input type="text" id="about-avatar" placeholder="https://..."></div>
+        <div class="field"><label>Bio</label><textarea id="about-bio" rows="4" placeholder="Tell your story..."></textarea></div>
+        <div class="field"><label>Twitter / X</label><input type="text" id="about-twitter" placeholder="@handle"></div>
+        <div class="field"><label>Instagram</label><input type="text" id="about-instagram" placeholder="@handle"></div>
+        <div class="field"><label>TikTok</label><input type="text" id="about-tiktok" placeholder="@handle"></div>
+        <div class="field"><label>Telegram</label><input type="text" id="about-telegram" placeholder="@handle or link"></div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:12px;color:var(--muted);letter-spacing:1px;">AMBASSADORS</span>
+            <button class="btn btn-secondary btn-sm" onclick="addAmbassadorRow()">+ Add</button>
+          </div>
+          <div id="ambassador-editor-rows"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAboutPage()">Save About Page</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
 ```
