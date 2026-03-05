@@ -407,9 +407,9 @@
 </div>
 
 <script>
-const _memStore = {};
+var _memStore = {};
 function getData(key, def) {
-  try { const v = localStorage.getItem(key); if (v) return JSON.parse(v); } catch(e) {}
+  try { var v = localStorage.getItem(key); if (v) return JSON.parse(v); } catch(e) {}
   return key in _memStore ? JSON.parse(JSON.stringify(_memStore[key])) : def;
 }
 function setData(key, val) {
@@ -424,61 +424,61 @@ function init() {
 }
 init();
 
-let currentUser = null, currentSportFilter = 'ALL', currentDateView = todayStr(), editingUserId = null;
+var currentUser = null, currentSportFilter = 'ALL', currentDateView = todayStr(), editingUserId = null;
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 function formatDateDisplay(d) {
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const [y,m,day] = d.split('-');
-  return `${months[+m-1]} ${+day}, ${y}`;
+  var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var [y,m,day] = d.split('-');
+  return months[+m-1] + ' ' + (+day) + ', ' + y;
 }
 
 function showScreen(id) {
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+  ['login-screen','register-screen','pending-screen'].forEach(function(s) { document.getElementById(s).style.display = 'none'; });
   document.getElementById(id).style.display = 'flex';
   document.getElementById('login-error').style.display = 'none';
   document.getElementById('reg-msg').style.display = 'none';
 }
 
 function doLogin() {
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  const found = getData('ss_users', []).find(x => x.username === u && x.password === p);
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+  var found = getData('ss_users', []).find(function(x) { return x.username === u && x.password === p; });
   if (!found) { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; return; }
   if (found.status === 'pending') { showScreen('pending-screen'); return; }
   if (found.status === 'inactive') { errEl.textContent = 'Account deactivated. Contact an admin.'; errEl.style.display = 'block'; return; }
   currentUser = found;
   errEl.style.display = 'none';
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+  ['login-screen','register-screen','pending-screen'].forEach(function(s) { document.getElementById(s).style.display = 'none'; });
   document.getElementById('app').style.display = 'block';
   setupApp();
 }
 
 function doRegister() {
-  const first = document.getElementById('reg-first').value.trim();
-  const last = document.getElementById('reg-last').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const user = document.getElementById('reg-user').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const pass2 = document.getElementById('reg-pass2').value;
-  const msgEl = document.getElementById('reg-msg');
-  const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
+  var first = document.getElementById('reg-first').value.trim();
+  var last = document.getElementById('reg-last').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var user = document.getElementById('reg-user').value.trim();
+  var pass = document.getElementById('reg-pass').value;
+  var pass2 = document.getElementById('reg-pass2').value;
+  var msgEl = document.getElementById('reg-msg');
+  function show(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
   if (!first||!last||!email||!user||!pass) return show('All fields are required.', 'error');
   if (pass.length < 6) return show('Password must be at least 6 characters.', 'error');
   if (pass !== pass2) return show('Passwords do not match.', 'error');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email.', 'error');
-  const users = getData('ss_users', []);
-  if (users.find(u => u.username === user)) return show('Username already taken.', 'error');
-  if (users.find(u => u.email === email)) return show('Email already in use.', 'error');
+  var users = getData('ss_users', []);
+  if (users.find(function(u) { return u.username === user; })) return show('Username already taken.', 'error');
+  if (users.find(function(u) { return u.email === email; })) return show('Email already in use.', 'error');
   users.push({ id:'u'+Date.now(), username:user, password:pass, firstName:first, lastName:last, email, role:'user', status:'pending', created:new Date().toISOString() });
   setData('ss_users', users);
   show('Account created! Awaiting admin approval.', 'success');
-  setTimeout(() => showScreen('pending-screen'), 1500);
+  setTimeout(function() { showScreen('pending-screen'); }, 1500);
 }
 
 function checkStrength(val) {
-  const bar = document.getElementById('strength-bar');
+  var bar = document.getElementById('strength-bar');
   if (!val) { bar.className = 'strength-bar'; return; }
   if (val.length < 6) bar.className = 'strength-bar weak';
   else if (val.length < 10 || !/[^a-zA-Z0-9]/.test(val)) bar.className = 'strength-bar medium';
@@ -495,11 +495,11 @@ function doLogout() {
 
 function setupApp() {
   document.getElementById('topbar-username').textContent = currentUser.username;
-  const roleEl = document.getElementById('topbar-role');
+  var roleEl = document.getElementById('topbar-role');
   roleEl.textContent = currentUser.role;
   roleEl.className = 'role-tag' + (currentUser.role === 'admin' ? '' : ' user-role');
-  document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? '' : 'none');
-  const today = todayStr();
+  document.querySelectorAll('.admin-only').forEach(function(el) { el.style.display = currentUser.role === 'admin' ? '' : 'none'; });
+  var today = todayStr();
   currentDateView = today;
   document.getElementById('today-date').textContent = formatDateDisplay(today);
   document.getElementById('pick-date-selector').value = today;
@@ -519,16 +519,16 @@ function setupApp() {
 }
 
 function updatePendingBadge() {
-  if (currentUser?.role !== 'admin') return;
-  const pending = getData('ss_users', []).filter(u => u.status === 'pending').length;
-  const badge = document.getElementById('pending-count');
+  if (currentUser && currentUser.role !== 'admin') return;
+  var pending = getData('ss_users', []).filter(function(u) { return u.status === 'pending'; }).length;
+  var badge = document.getElementById('pending-count');
   if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline'; }
   else { badge.style.display = 'none'; }
 }
 
 function showPage(name, tab) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
   document.getElementById('page-' + name).classList.add('active');
   if (tab) tab.classList.add('active');
   if (name === 'admin') { renderAdminPicks(); if (!document.getElementById('f-date').value) document.getElementById('f-date').value = todayStr(); }
@@ -544,58 +544,62 @@ function loadPicksForDate(date) { currentDateView = date; document.getElementByI
 
 function filterSport(sport, el) {
   currentSportFilter = sport;
-  document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.sport-chip').forEach(function(c) { c.classList.remove('active'); });
   el.classList.add('active');
   renderPicks();
 }
 
 function renderPicks() {
-  const picks = getPicks().filter(p => p.date === currentDateView);
-  const filtered = currentSportFilter === 'ALL' ? picks : picks.filter(p => p.sport === currentSportFilter);
-  const container = document.getElementById('picks-container');
+  var picks = getPicks().filter(function(p) { return p.date === currentDateView; });
+  var filtered = currentSportFilter === 'ALL' ? picks : picks.filter(function(p) { return p.sport === currentSportFilter; });
+  var container = document.getElementById('picks-container');
   container.innerHTML = filtered.length === 0
-    ? `<div class="empty-state"><div class="icon">🎯</div>No picks for this date${currentSportFilter !== 'ALL' ? ' / sport' : ''}</div>`
-    : filtered.map(p => pickCardHTML(p, false)).join('');
+    ? '<div class="empty-state"><div class="icon">&#127919;</div>No picks for this date' + (currentSportFilter !== 'ALL' ? ' / sport' : '') + '</div>'
+    : filtered.map(function(p) { return pickCardHTML(p, false); }).join('');
 }
 
 function pickCardHTML(p, adminMode) {
-  const rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
-  return `
-    <div class="pick-card">
-      <div class="pick-sport-badge sport-${p.sport}">${p.sport}</div>
-      <div class="pick-teams">${p.away} @ ${p.home}<div class="matchup">${formatDateDisplay(p.date)}</div></div>
-      <div class="pick-type">${p.type}</div>
-      <div class="pick-selection">${p.selection}</div>
-      <div class="pick-odds">${p.odds || '—'}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-        <span class="pick-result ${rClass}">${p.result || 'PENDING'}</span>
-        ${adminMode ? `<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal('${p.id}')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick('${p.id}')">✕</button></div>` : ''}
-      </div>
-    </div>
-    ${p.notes ? `<div class="note-card"><div class="note-meta">${p.sport} · ${p.type} · ${p.units||1}u</div>${p.notes}</div>` : ''}`;
+  var rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
+  var actionsHTML = adminMode
+    ? '<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal(\'' + p.id + '\')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick(\'' + p.id + '\')">&times;</button></div>'
+    : '';
+  var notesHTML = p.notes
+    ? '<div class="note-card"><div class="note-meta">' + p.sport + ' &middot; ' + p.type + ' &middot; ' + (p.units||1) + 'u</div>' + p.notes + '</div>'
+    : '';
+  return '<div class="pick-card">' +
+    '<div class="pick-sport-badge sport-' + p.sport + '">' + p.sport + '</div>' +
+    '<div class="pick-teams">' + p.away + ' @ ' + p.home + '<div class="matchup">' + formatDateDisplay(p.date) + '</div></div>' +
+    '<div class="pick-type">' + p.type + '</div>' +
+    '<div class="pick-selection">' + p.selection + '</div>' +
+    '<div class="pick-odds">' + (p.odds || '-') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+      '<span class="pick-result ' + rClass + '">' + (p.result || 'PENDING') + '</span>' +
+      actionsHTML +
+    '</div>' +
+    '</div>' + notesHTML;
 }
 
-let addPanelOpen = false;
+var addPanelOpen = false;
 function toggleAddPanel() {
   addPanelOpen = !addPanelOpen;
   document.getElementById('admin-add-body').classList.toggle('open', addPanelOpen);
   document.getElementById('panel-chevron').classList.toggle('open', addPanelOpen);
 }
 function quickSport(sport) { document.getElementById('f-sport').value = sport; updateSportQuick(sport); if (!addPanelOpen) toggleAddPanel(); }
-function updateSportQuick(sport) { document.querySelectorAll('.sport-quick').forEach(b => b.classList.toggle('active-sport', b.dataset.s === sport)); }
+function updateSportQuick(sport) { document.querySelectorAll('.sport-quick').forEach(function(b) { b.classList.toggle('active-sport', b.dataset.s === sport); }); }
 
-let isFetching = false, lastFetchKey = '';
+var isFetching = false, lastFetchKey = '';
 
-async function fetchGames() {
-  const adminPage = document.getElementById('page-admin');
+function fetchGames() {
+  var adminPage = document.getElementById('page-admin');
   if (!adminPage || !adminPage.classList.contains('active')) return;
-  const sport = document.getElementById('f-sport').value;
-  const date = document.getElementById('f-date').value;
-  const grid = document.getElementById('games-grid');
-  const loader = document.getElementById('games-loader');
-  const fetchBtn = document.getElementById('fetch-btn');
+  var sport = document.getElementById('f-sport').value;
+  var date = document.getElementById('f-date').value;
+  var grid = document.getElementById('games-grid');
+  var loader = document.getElementById('games-loader');
+  var fetchBtn = document.getElementById('fetch-btn');
   if (!date || !sport || isFetching) return;
-  const fetchKey = sport + '|' + date;
+  var fetchKey = sport + '|' + date;
   if (fetchKey === lastFetchKey) return;
   lastFetchKey = fetchKey;
   isFetching = true;
@@ -603,50 +607,51 @@ async function fetchGames() {
   loader.style.display = 'block';
   fetchBtn.textContent = '⏳ Loading...';
   fetchBtn.disabled = true;
-  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-  const resetBtn = label => { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; };
-  const espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
-  const espnPath = espnMap[sport];
-  if (!espnPath) { resetBtn('🔄 Try Again'); lastFetchKey = ''; grid.innerHTML = `<div class="games-empty">Sport not supported — enter teams manually.</div>`; return; }
-  const espnDate = date.replace(/-/g, '');
-  const directUrl = `https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard?dates=${espnDate}`;
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-  const tryFetch = async url => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
+  var dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  function resetBtn(label) { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; };
+  var espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
+  var espnPath = espnMap[sport];
+  if (!espnPath) { resetBtn('Refresh'); lastFetchKey = ''; grid.innerHTML = '<div class="games-empty">Sport not supported - enter teams manually.</div>'; return; }
+  var espnDate = date.replace(/-/g, '');
+  var directUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + espnDate;
+  var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+  function tryFetch(url) { var r = fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
   try {
-    let data;
-    try { data = await tryFetch(directUrl); } catch(e) { data = await tryFetch(proxyUrl); }
-    const events = data.events || [];
-    if (!events.length) { resetBtn('🔄 Refresh'); grid.innerHTML = `<div class="games-empty">No ${sport} games on ${dateLabel}. Enter teams manually.</div>`; return; }
-    const upcoming = [], started = [];
-    events.forEach(e => {
-      const comp = e.competitions?.[0]; if (!comp) return;
-      const aw = comp.competitors?.find(c => c.homeAway === 'away');
-      const hm = comp.competitors?.find(c => c.homeAway === 'home');
+    var data;
+    try { data = tryFetch(directUrl); } catch(e) { data = tryFetch(proxyUrl); }
+    var events = data.events || [];
+    if (!events.length) { resetBtn('Refresh'); grid.innerHTML = '<div class="games-empty">No ' + sport + ' games on ' + dateLabel + '. Enter teams manually.</div>'; return; }
+    var upcoming = [], started = [];
+    events.forEach(function(e) {
+      var comp = (e.competitions && e.competitions[0]); if (!comp) return;
+      var aw = comp.competitors && comp.competitors.find(function(c) { return c.homeAway === 'away'; });
+      var hm = comp.competitors && comp.competitors.find(function(c) { return c.homeAway === 'home'; });
       if (!aw || !hm) return;
-      const time = new Date(e.date).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short', timeZone:'America/New_York' });
-      const state = comp.status?.type?.state || 'pre';
+      var time = new Date(e.date).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short', timeZone:'America/New_York' });
+      var state = (comp.status && comp.status.type && comp.status.type.state) || 'pre';
       (state === 'pre' ? upcoming : started).push({ away: aw.team.displayName||aw.team.name, home: hm.team.displayName||hm.team.name, time });
     });
     resetBtn('🔄 Refresh');
-    let html = '';
+    var html = '';
     if (upcoming.length) {
-      html += upcoming.map(g => `<button class="game-pill" onclick="selectGame(this)" data-away="${g.away}" data-home="${g.home}"><span class="gp-sport">${sport}</span><strong>${g.away}</strong><span style="opacity:0.4;font-size:11px;">@</span><strong>${g.home}</strong><span class="gp-time">${g.time}</span></button>`).join('');
+      html += upcoming.map(function(g) { return '<button class="game-pill" onclick="selectGame(this)" data-away="' + g.away + '" data-home="' + g.home + '"><span class="gp-sport">' + sport + '</span><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span class="gp-time">' + g.time + '</span></button>'; }).join('');
     } else {
-      html += `<div class="games-empty">All ${sport} games today have already started.</div>`;
+      html += '<div class="games-empty">All ' + sport + ' games today have already started.</div>';
     }
     if (started.length) {
-      html += `<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${started.map(g => `<span class="game-pill" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><strong>${g.away}</strong><span style="opacity:0.4;">@</span><strong>${g.home}</strong><span style="color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;">LIVE</span></span>`).join('')}</div></div>`;
+      var startedHTML = started.map(function(g) { return '<span class="game-pill" style="opacity:0.3;cursor:not-allowed;"><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span style="color:var(--danger);font-size:10px;"> LIVE</span></span>'; }).join('');
+      html += '<div style="width:100%;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"><div style="font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">' + startedHTML + '</div></div>';
     }
     grid.innerHTML = html;
   } catch(err) {
     resetBtn('🔄 Try Again');
     lastFetchKey = '';
-    grid.innerHTML = `<div class="games-empty" style="color:var(--danger);">⚠ Could not load — enter teams manually. (${err.message})</div>`;
+    grid.innerHTML = '<div class="games-empty" style="color:var(--danger);">Could not load - enter teams manually. (' + err.message + ')</div>';
   }
 }
 
 function selectGame(el) {
-  document.querySelectorAll('.game-pill').forEach(p => p.classList.remove('selected'));
+  document.querySelectorAll('.game-pill').forEach(function(p) { p.classList.remove('selected'); });
   el.classList.add('selected');
   document.getElementById('f-away').value = el.dataset.away;
   document.getElementById('f-home').value = el.dataset.home;
@@ -654,54 +659,54 @@ function selectGame(el) {
 }
 
 function savePickInline() {
-  const sport = document.getElementById('f-sport').value;
-  const date = document.getElementById('f-date').value;
-  const away = document.getElementById('f-away').value.trim();
-  const home = document.getElementById('f-home').value.trim();
-  const type = document.getElementById('f-type').value;
-  const selection = document.getElementById('f-selection').value.trim();
-  const odds = document.getElementById('f-odds').value.trim();
-  const units = document.getElementById('f-units').value || 1;
-  const notes = document.getElementById('f-notes').value.trim();
-  const errEl = document.getElementById('add-pick-error');
-  if (!away || !home || !selection) { errEl.textContent = 'Away, Home and Selection are required.'; errEl.style.display = 'block'; setTimeout(() => errEl.style.display = 'none', 3000); return; }
-  const picks = getPicks();
+  var sport = document.getElementById('f-sport').value;
+  var date = document.getElementById('f-date').value;
+  var away = document.getElementById('f-away').value.trim();
+  var home = document.getElementById('f-home').value.trim();
+  var type = document.getElementById('f-type').value;
+  var selection = document.getElementById('f-selection').value.trim();
+  var odds = document.getElementById('f-odds').value.trim();
+  var units = document.getElementById('f-units').value || 1;
+  var notes = document.getElementById('f-notes').value.trim();
+  var errEl = document.getElementById('add-pick-error');
+  if (!away || !home || !selection) { errEl.textContent = 'Away, Home and Selection are required.'; errEl.style.display = 'block'; setTimeout(function() { errEl.style.display = 'none'; }, 3000); return; }
+  var picks = getPicks();
   picks.push({ id:'p'+Date.now(), sport, date, away, home, type, selection, odds, units, notes, result:'PENDING', createdBy:currentUser.username, created:new Date().toISOString() });
   savePicks(picks);
-  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
+  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('f-units').value = 1;
   errEl.style.display = 'none';
-  const btn = document.querySelector('[onclick="savePickInline()"]');
-  const orig = btn.textContent;
+  var btn = document.querySelector('[onclick="savePickInline()"]');
+  var orig = btn.textContent;
   btn.textContent = '✓ Pick Saved!';
-  setTimeout(() => { btn.textContent = orig; }, 1800);
+  setTimeout(function() { btn.textContent = orig; }, 1800);
   loadPicksForDate(currentDateView); renderAdminPicks(); renderStats(); renderHistory();
 }
 
 function clearPickForm() {
-  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
+  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('f-units').value = 1;
   document.getElementById('add-pick-error').style.display = 'none';
 }
 
 function deletePick(id) {
   if (!confirm('Delete this pick?')) return;
-  savePicks(getPicks().filter(p => p.id !== id));
+  savePicks(getPicks().filter(function(p) { return p.id !== id; }));
   renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
 }
 
 function openResultModal(id) {
   document.getElementById('result-pick-id').value = id;
-  const pick = getPicks().find(p => p.id === id);
+  var pick = getPicks().find(function(p) { return p.id === id; });
   if (pick) document.getElementById('result-select').value = pick.result || 'PENDING';
   openModal('modal-result');
 }
 
 function saveResult() {
-  const id = document.getElementById('result-pick-id').value;
-  const result = document.getElementById('result-select').value;
-  const picks = getPicks();
-  const idx = picks.findIndex(p => p.id === id);
+  var id = document.getElementById('result-pick-id').value;
+  var result = document.getElementById('result-select').value;
+  var picks = getPicks();
+  var idx = picks.findIndex(function(p) { return p.id === id; });
   if (idx !== -1) picks[idx].result = result;
   savePicks(picks);
   closeModal('modal-result');
@@ -709,73 +714,73 @@ function saveResult() {
 }
 
 function renderHistory() {
-  const sport = document.getElementById('hist-sport')?.value || 'ALL';
-  const result = document.getElementById('hist-result')?.value || 'ALL';
-  let picks = getPicks();
-  if (sport !== 'ALL') picks = picks.filter(p => p.sport === sport);
-  if (result !== 'ALL') picks = picks.filter(p => (p.result || 'PENDING') === result);
-  picks.sort((a,b) => b.date.localeCompare(a.date));
-  const c = document.getElementById('history-container');
+  var sport = document.getElementById('hist-sport') ? document.getElementById('hist-sport').value : 'ALL' || 'ALL';
+  var result = document.getElementById('hist-result') ? document.getElementById('hist-result').value : 'ALL' || 'ALL';
+  var picks = getPicks();
+  if (sport !== 'ALL') picks = picks.filter(function(p) { return p.sport === sport; });
+  if (result !== 'ALL') picks = picks.filter(function(p) { return (p.result || 'PENDING') === result; });
+  picks.sort(function(a,b) { return b.date.localeCompare(a.date); });
+  var c = document.getElementById('history-container');
   c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon">📋</div>No picks match the filter</div>`
-    : picks.map(p => pickCardHTML(p, false)).join('');
+    ? '<div class="empty-state"><div class="icon">&#128203;</div>No picks match the filter</div>'
+    : picks.map(function(p) { return pickCardHTML(p, false); }).join('');
 }
 
 function renderStats() {
-  const picks = getPicks().filter(p => p.result && p.result !== 'PENDING');
-  const wins = picks.filter(p => p.result === 'WIN').length;
-  const losses = picks.filter(p => p.result === 'LOSS').length;
-  const pushes = picks.filter(p => p.result === 'PUSH').length;
-  const total = wins + losses;
-  const pct = total > 0 ? Math.round((wins/total)*100) : 0;
-  document.getElementById('overall-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ${pct>=55?'green':pct<45&&total>0?'red':''}">${pct}%</div></div>
-    <div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">${picks.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">${wins}</div></div>
-    <div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">${losses}</div></div>
-    <div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">${pushes}</div></div>
-    <div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">${wins}-${losses}</div></div>`;
-  const sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
-  document.getElementById('sport-stats').innerHTML = sports.map(s => {
-    const sp = picks.filter(p => p.sport === s);
-    const sw = sp.filter(p => p.result === 'WIN').length;
-    const sl = sp.filter(p => p.result === 'LOSS').length;
-    const spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
-    return `<div class="stat-card" style="border-top:2px solid var(--${s.toLowerCase()});"><div class="stat-label">${s}</div><div class="stat-value" style="font-size:28px;">${sw}-${sl}</div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${spct}% · ${sp.length} picks</div></div>`;
+  var picks = getPicks().filter(function(p) { return p.result && p.result !== 'PENDING'; });
+  var wins = picks.filter(function(p) { return p.result === 'WIN'; }).length;
+  var losses = picks.filter(function(p) { return p.result === 'LOSS'; }).length;
+  var pushes = picks.filter(function(p) { return p.result === 'PUSH'; }).length;
+  var total = wins + losses;
+  var pct = total > 0 ? Math.round((wins/total)*100) : 0;
+  document.getElementById('overall-stats').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ' + (pct>=55?'green':pct<45&&total>0?'red':'') + '">' + pct + '%</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">' + picks.length + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">' + wins + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">' + losses + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">' + pushes + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">' + wins + '-' + losses + '</div></div>';
+  var sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
+  document.getElementById('sport-stats').innerHTML = sports.map(function(s) {
+    var sp = picks.filter(function(p) { return p.sport === s; });
+    var sw = sp.filter(function(p) { return p.result === 'WIN'; }).length;
+    var sl = sp.filter(function(p) { return p.result === 'LOSS'; }).length;
+    var spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
+    return '<div class="stat-card" style="border-top:2px solid var(--' + s.toLowerCase() + ');"><div class="stat-label">' + s + '</div><div class="stat-value" style="font-size:28px;">' + sw + '-' + sl + '</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">' + spct + '% - ' + sp.length + ' picks</div></div>';
   }).join('');
 }
 
 function renderAdminPicks() {
-  const picks = getPicks().sort((a,b) => b.date.localeCompare(a.date));
-  const c = document.getElementById('admin-picks-container');
+  var picks = getPicks().sort(function(a,b) { return b.date.localeCompare(a.date); });
+  var c = document.getElementById('admin-picks-container');
   if (!c) return;
   c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon">📋</div>No picks yet. Add your first pick!</div>`
-    : picks.map(p => pickCardHTML(p, true)).join('');
+    ? '<div class="empty-state"><div class="icon">&#128203;</div>No picks yet. Add your first pick!</div>'
+    : picks.map(function(p) { return pickCardHTML(p, true); }).join('');
 }
 
 function renderUsersTable() {
-  const users = getData('ss_users', []);
-  const pending = users.filter(u => u.status === 'pending');
-  const active = users.filter(u => u.status !== 'pending');
-  const pendingSection = document.getElementById('pending-section');
-  const pendingTbody = document.getElementById('pending-tbody');
+  var users = getData('ss_users', []);
+  var pending = users.filter(function(u) { return u.status === 'pending'; });
+  var active = users.filter(function(u) { return u.status !== 'pending'; });
+  var pendingSection = document.getElementById('pending-section');
+  var pendingTbody = document.getElementById('pending-tbody');
   if (!pendingTbody) return;
   if (pending.length > 0) {
     pendingSection.style.display = 'block';
-    pendingTbody.innerHTML = pending.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">✕ Reject</button></div></td></tr>`).join('');
+    pendingTbody.innerHTML = pending.map(function(u) { return '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser(\'' + u.id + '\')">&check; Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser(\'' + u.id + '\')">&times; Reject</button></div></td></tr>'; }).join('');
   } else { pendingSection.style.display = 'none'; }
-  document.getElementById('users-tbody').innerHTML = active.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'—'}</td><td><span class="role-tag ${u.role!=='admin'?'user-role':''}">${u.role}</span></td><td><span class="pick-result ${u.status==='active'?'result-win':'result-loss'}">${u.status}</span></td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${u.username!=='admin'?`<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status==='active'?'Deactivate':'Activate'}</button><button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span style="color:var(--muted);font-size:11px;">Protected</span>'}</div></td></tr>`).join('');
+  document.getElementById('users-tbody').innerHTML = active.map(function(u) { var btns = u.username !== 'admin' ? '<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus(\'' + u.id + '\')">' + (u.status==='active'?'Deactivate':'Activate') + '</button> <button class="btn btn-secondary btn-sm" onclick="openEditUser(\'' + u.id + '\')" >Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\')" >Delete</button>' : '<span style="color:var(--muted);font-size:11px;">Protected</span>'; return '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td><span class="role-tag ' + (u.role!=='admin'?'user-role':'') + '">' + u.role + '</span></td><td><span class="pick-result ' + (u.status==='active'?'result-win':'result-loss') + '">' + u.status + '</span></td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">' + btns + '</div></td></tr>'; }).join('');
 }
 
-function approveUser(id) { const users = getData('ss_users',[]); const idx = users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status='active'; setData('ss_users',users); renderUsersTable(); updatePendingBadge(); }
-function rejectUser(id) { if(!confirm('Reject and delete this request?')) return; setData('ss_users', getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
+function approveUser(id) { var users = getData('ss_users',[]); var idx = users.findIndex(function(u) { return u.id === id; }); if(idx!==-1) users[idx].status='active'; setData('ss_users',users); renderUsersTable(); updatePendingBadge(); }
+function rejectUser(id) { if(!confirm('Reject and delete this request?')) return; setData('ss_users', getData('ss_users',[]).filter(function(u) { return u.id !== id; })); renderUsersTable(); updatePendingBadge(); }
 
 function openAddUserModal() {
   editingUserId = null;
   document.getElementById('user-modal-title').textContent = 'ADD USER';
   document.getElementById('save-user-btn').textContent = 'Add User';
-  ['new-first','new-last','new-email','new-username','new-password'].forEach(id => document.getElementById(id).value = '');
+  ['new-first','new-last','new-email','new-username','new-password'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('new-role').value = 'user';
   document.getElementById('user-error').style.display = 'none';
   openModal('modal-add-user');
@@ -783,7 +788,7 @@ function openAddUserModal() {
 
 function openEditUser(id) {
   editingUserId = id;
-  const user = getData('ss_users', []).find(u => u.id === id);
+  var user = getData('ss_users', []).find(function(u) { return u.id === id; });
   if (!user) return;
   document.getElementById('user-modal-title').textContent = 'EDIT USER';
   document.getElementById('save-user-btn').textContent = 'Save Changes';
@@ -798,22 +803,22 @@ function openEditUser(id) {
 }
 
 function saveUser() {
-  const first = document.getElementById('new-first').value.trim();
-  const last = document.getElementById('new-last').value.trim();
-  const email = document.getElementById('new-email').value.trim();
-  const username = document.getElementById('new-username').value.trim();
-  const password = document.getElementById('new-password').value;
-  const role = document.getElementById('new-role').value;
-  const errEl = document.getElementById('user-error');
-  const show = txt => { errEl.textContent = txt; errEl.style.display = 'block'; };
+  var first = document.getElementById('new-first').value.trim();
+  var last = document.getElementById('new-last').value.trim();
+  var email = document.getElementById('new-email').value.trim();
+  var username = document.getElementById('new-username').value.trim();
+  var password = document.getElementById('new-password').value;
+  var role = document.getElementById('new-role').value;
+  var errEl = document.getElementById('user-error');
+  function show(txt) { errEl.textContent = txt; errEl.style.display = 'block'; };
   if (!username) return show('Username is required.');
   if (!editingUserId && !password) return show('Password is required.');
-  const users = getData('ss_users', []);
+  var users = getData('ss_users', []);
   if (editingUserId) {
-    const idx = users.findIndex(u => u.id === editingUserId);
+    var idx = users.findIndex(function(u) { return u.id === editingUserId; });
     if (idx !== -1) { users[idx] = { ...users[idx], firstName:first, lastName:last, email, username, role }; if (password) users[idx].password = password; }
   } else {
-    if (users.find(u => u.username === username)) return show('Username already exists.');
+    if (users.find(function(u) { return u.username === username; })) return show('Username already exists.');
     users.push({ id:'u'+Date.now(), username, password, firstName:first, lastName:last, email, role, status:'active', created:new Date().toISOString() });
   }
   setData('ss_users', users);
@@ -822,11 +827,11 @@ function saveUser() {
   updatePendingBadge();
 }
 
-function toggleUserStatus(id) { const users=getData('ss_users',[]); const idx=users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status=users[idx].status==='active'?'inactive':'active'; setData('ss_users',users); renderUsersTable(); }
-function deleteUser(id) { if(!confirm('Permanently delete this user?')) return; setData('ss_users',getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
+function toggleUserStatus(id) { var users=getData('ss_users',[]); var idx=users.findIndex(function(u) { return u.id===id; }); if(idx!==-1) users[idx].status=users[idx].status==='active'?'inactive':'active'; setData('ss_users',users); renderUsersTable(); }
+function deleteUser(id) { if(!confirm('Permanently delete this user?')) return; setData('ss_users',getData('ss_users',[]).filter(function(u) { return u.id !== id; })); renderUsersTable(); updatePendingBadge(); }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+document.querySelectorAll('.modal-overlay').forEach(function(m) { m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('open'); }); });
 
 // ABOUT PAGE
 function getAboutData() {
@@ -838,8 +843,9 @@ function getAboutData() {
 }
 
 function renderAboutPage() {
+  try {
   var container = document.getElementById('about-content');
-  if (!container) return;
+  if (!container) { alert('about-content not found'); return; }
   var about = getAboutData();
   var html = '<div class="about-hero">';
   if (about.avatar) {
@@ -880,6 +886,7 @@ function renderAboutPage() {
     html += '</div>';
   }
   container.innerHTML = html;
+  } catch(e) { document.getElementById('about-content').innerHTML = '<div style="color:red;padding:20px;">ERROR: ' + e.message + '</div>'; }
 }
 
 function openAboutEditor() {
