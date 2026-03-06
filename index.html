@@ -9,18 +9,18 @@
   @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
-–bg: #0a0c10;
-–surface: #10141c;
-–surface2: #161c28;
-–border: #1e2636;
+–bg: #000000;
+–surface: #0d0d0d;
+–surface2: #141414;
+–border: #1f2f1f;
 –accent: #c8f535;
 –accent2: #3b82f6;
 –danger: #ef4444;
-–success: #22c55e;
+–success: #c8f535;
 –text: #e8eaf0;
-–muted: #5a6278;
+–muted: #4a5f4a;
 –nfl: #d97706;
-–nba: #2563eb;
+–nba: #3b82f6;
 –mlb: #dc2626;
 –nhl: #0891b2;
 –ncaaf: #7c3aed;
@@ -44,7 +44,7 @@ display: flex;
 align-items: center;
 justify-content: center;
 position: relative;
-background: radial-gradient(ellipse at 30% 50%, #1a2040 0%, var(–bg) 60%);
+background: radial-gradient(ellipse at 30% 50%, #0a1a08 0%, var(–bg) 60%);
 }
 
 .login-grid-bg {
@@ -64,7 +64,7 @@ padding: 48px 44px;
 width: 100%;
 max-width: 420px;
 position: relative;
-box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,245,53,0.08);
+box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 40px rgba(200,245,53,0.06), 0 0 0 1px rgba(200,245,53,0.12);
 animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1);
 }
 
@@ -178,8 +178,8 @@ font-family: ‘DM Mono’, monospace;
 #app { display: none; min-height: 100vh; }
 
 .topbar {
-background: var(–surface);
-border-bottom: 1px solid var(–border);
+background: #000000;
+border-bottom: 1px solid #1a2e1a;
 padding: 0 32px;
 display: flex; align-items: center; justify-content: space-between;
 height: 60px;
@@ -218,8 +218,8 @@ color: var(–accent2); border-color: rgba(59,130,246,0.25);
 /* NAV TABS */
 .nav-tabs {
 display: flex; gap: 0;
-background: var(–surface2);
-border-bottom: 1px solid var(–border);
+background: #000000;
+border-bottom: 1px solid #1a2e1a;
 padding: 0 32px;
 overflow-x: auto;
 }
@@ -294,16 +294,17 @@ font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–m
 
 .pick-card {
 background: var(–surface);
-border: 1px solid var(–border);
+border: 1px solid #1a2e1a;
+border-left: 2px solid var(–accent2);
 border-radius: 2px;
 padding: 18px 20px;
 display: grid;
 grid-template-columns: 80px 1fr 120px 120px 100px 80px;
 align-items: center; gap: 16px;
-transition: border-color 0.2s;
+transition: all 0.2s;
 }
 
-.pick-card:hover { border-color: rgba(200,245,53,0.2); }
+.pick-card:hover { border-color: rgba(200,245,53,0.35); background: #0d150d; }
 
 .pick-sport-badge {
 font-family: ‘Bebas Neue’, sans-serif;
@@ -377,7 +378,7 @@ margin-bottom: 8px;
 
 .stat-value {
 font-family: ‘Bebas Neue’, sans-serif;
-font-size: 36px; letter-spacing: 1px; color: var(–accent);
+font-size: 36px; letter-spacing: 1px; color: var(–accent2);
 }
 
 .stat-value.green { color: var(–success); }
