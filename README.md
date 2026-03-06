@@ -1,2 +1,1 @@
-# SharpSelections
-Beta sharp
+SharpSelections
