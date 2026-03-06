@@ -4,650 +4,1307 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sharp Selections</title>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<title>$harp $elections — Daily Selections</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { background: #0a0c0e; min-height: 100vh; color: #e8edf2; font-family: 'Rajdhani', sans-serif; }
+  @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-.neon-title {
+:root {
+–bg: #0a0c10;
+–surface: #10141c;
+–surface2: #161c28;
+–border: #1e2636;
+–accent: #c8f535;
+–accent2: #3b82f6;
+–danger: #ef4444;
+–success: #22c55e;
+–text: #e8eaf0;
+–muted: #5a6278;
+–nfl: #d97706;
+–nba: #2563eb;
+–mlb: #dc2626;
+–nhl: #0891b2;
+–ncaaf: #7c3aed;
+–ncaam: #be185d;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘DM Sans’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* LOGIN */
+#login-screen {
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+background: radial-gradient(ellipse at 30% 50%, #1a2040 0%, var(–bg) 60%);
+}
+
+.login-grid-bg {
+position: absolute; inset: 0;
+background-image:
+linear-gradient(rgba(200,245,53,0.04) 1px, transparent 1px),
+linear-gradient(90deg, rgba(200,245,53,0.04) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+}
+
+.login-box {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 48px 44px;
+width: 100%;
+max-width: 420px;
+position: relative;
+box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,245,53,0.08);
+animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+
+.login-box::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+background: linear-gradient(90deg, transparent, var(–accent), transparent);
+}
+
+.login-logo {
 font-family: ‘Pacifico’, cursive;
+font-size: 42px;
 color: #c8f535;
 -webkit-text-stroke: 2px #3b82f6;
 paint-order: stroke fill;
 text-shadow: 0 0 20px rgba(200,245,53,0.5), 0 0 50px rgba(200,245,53,0.2);
+text-align: center;
+margin-bottom: 4px;
+line-height: 1.15;
 }
 
-.btn-green {
-display: block; width: 100%; cursor: pointer;
-background: #c8f535; color: #0a0c0e;
-font-family: ‘Bebas Neue’, sans-serif; font-size: 1rem; letter-spacing: 0.08em;
-border: none; border-radius: 6px; padding: 12px 20px;
+.login-tagline {
+text-align: center;
+color: var(–muted);
+font-size: 11px;
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-bottom: 36px;
+font-family: ‘DM Mono’, monospace;
 }
-.btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-blue { cursor: pointer; background: transparent; color: #3b82f6; font-family: ‘Bebas Neue’, sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; border: 1px solid #3b82f6; border-radius: 6px; padding: 6px 14px; }
-.btn-red  { cursor: pointer; background: transparent; color: #ff4444; font-family: ‘Bebas Neue’, sans-serif; font-size: 0.78rem; border: 1px solid #ff4444; border-radius: 4px; padding: 5px 11px; }
-.btn-lime { cursor: pointer; background: transparent; color: #c8f535; font-family: ‘Bebas Neue’, sans-serif; font-size: 0.78rem; border: 1px solid #c8f535; border-radius: 4px; padding: 5px 11px; }
 
-.inp {
-background: #0d1117; border: 1px solid #2a3344; border-radius: 6px;
-color: #e8edf2; font-family: ‘Rajdhani’, sans-serif; font-size: 0.95rem;
-padding: 10px 13px; width: 100%; -webkit-appearance: none; appearance: none;
+.field { margin-bottom: 18px; }
+
+.field label {
+display: block;
+font-size: 11px;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–muted);
+font-family: ‘DM Mono’, monospace;
+margin-bottom: 8px;
 }
-.inp:focus { outline: none; border-color: #3b82f6; }
-textarea.inp { resize: vertical; }
-.lbl { display: block; font-size: 0.72rem; letter-spacing: 0.05em; color: #6b7a8d; text-transform: uppercase; margin-bottom: 5px; }
 
-.card { background: #111518; border: 1px solid #1e2530; border-radius: 12px; padding: 20px; }
+.field input, .field select, .field textarea {
+width: 100%;
+background: var(–bg);
+border: 1px solid var(–border);
+color: var(–text);
+padding: 12px 16px;
+font-family: ‘DM Sans’, sans-serif;
+font-size: 14px;
+border-radius: 2px;
+outline: none;
+transition: border-color 0.2s;
+}
 
-.tab { background: transparent; color: #6b7a8d; font-family: ‘Bebas Neue’, sans-serif; font-size: 0.95rem; letter-spacing: 0.08em; border: none; border-bottom: 2px solid transparent; padding: 10px 16px; cursor: pointer; white-space: nowrap; }
-.tab.on { color: #c8f535; border-bottom-color: #c8f535; }
+.field input:focus, .field select:focus, .field textarea:focus {
+border-color: var(–accent);
+box-shadow: 0 0 0 2px rgba(200,245,53,0.08);
+}
 
-#hdr { background: #0d1015; border-bottom: 1px solid #1e2530; position: -webkit-sticky; position: sticky; top: 0; z-index: 100; }
-.hdr-in { max-width: 1200px; margin: 0 auto; padding: 13px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.field select option { background: var(–surface); }
 
-.deco { height: 2px; background: #3b82f6; width: 160px; margin: 3px auto 2px; }
+.btn {
+display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+padding: 13px 24px;
+border: none; cursor: pointer; border-radius: 2px;
+font-family: ‘DM Mono’, monospace;
+font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+font-weight: 500; transition: all 0.2s;
+}
 
-.stats { display: flex; gap: 12px; margin-bottom: 28px; }
-.stat  { background: #0d1117; border: 1px solid #1e2530; border-radius: 8px; padding: 14px; text-align: center; flex: 1; }
+.btn-primary {
+background: var(–accent); color: #0a0c10;
+width: 100%;
+}
+.btn-primary:hover { background: #d4f550; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,245,53,0.25); }
 
-.filters { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 22px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.btn-secondary {
+background: var(–surface2); color: var(–text);
+border: 1px solid var(–border);
+}
+.btn-secondary:hover { border-color: var(–accent); color: var(–accent); }
 
-.picks-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-.pick-card  { background: #111518; border: 1px solid #1e2530; border-radius: 12px; overflow: hidden; width: calc(50% - 8px); min-width: 280px; }
-@media (max-width: 640px) { .pick-card { width: 100%; } }
+.btn-danger {
+background: rgba(239,68,68,0.12); color: var(–danger);
+border: 1px solid rgba(239,68,68,0.25);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
 
-.sbadge { font-family: ‘Bebas Neue’, sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; padding: 3px 9px; border-radius: 4px; display: inline-block; }
-.rbadge { font-family: ‘Bebas Neue’, sans-serif; font-size: 0.82rem; letter-spacing: 0.1em; padding: 4px 11px; border-radius: 4px; }
+.btn-success {
+background: rgba(34,197,94,0.12); color: var(–success);
+border: 1px solid rgba(34,197,94,0.25);
+}
+.btn-success:hover { background: rgba(34,197,94,0.2); }
 
-.err  { color: #ff4444; font-size: 0.83rem; background: rgba(255,68,68,0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,68,68,0.25); margin-top: 6px; }
-.warn { color: #f0c040; font-size: 0.8rem; background: rgba(240,192,64,0.08); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(240,192,64,0.2); margin-top: 6px; }
-.ok   { color: #c8f535; font-size: 0.85rem; text-align: center; padding: 6px; }
+.btn-sm { padding: 8px 14px; font-size: 10px; }
 
-.two-col { display: flex; gap: 24px; flex-wrap: wrap; }
-.two-col > div { flex: 1; min-width: 280px; }
-.form-col { display: flex; flex-direction: column; gap: 13px; }
-.form-row { display: flex; gap: 12px; }
-.form-row > div { flex: 1; }
-.form-row3 { display: flex; gap: 10px; flex-wrap: wrap; }
-.form-row3 > div { flex: 1; min-width: 80px; }
+.error-msg {
+background: rgba(239,68,68,0.1);
+border: 1px solid rgba(239,68,68,0.3);
+color: var(–danger);
+padding: 10px 14px; border-radius: 2px;
+font-size: 13px; margin-top: 12px;
+font-family: ‘DM Mono’, monospace;
+}
 
-.manage-list { display: flex; flex-direction: column; gap: 7px; }
-.manage-row  { background: #0d1117; border: 1px solid #1e2530; border-radius: 8px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* MAIN APP */
+#app { display: none; min-height: 100vh; }
 
-.games-scroll { max-height: 320px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.game-row { padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: #0d1117; border: 1px solid #1e2530; }
-.game-row.sel { background: rgba(200,245,53,0.08); border-color: rgba(200,245,53,0.35); }
+.topbar {
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+padding: 0 32px;
+display: flex; align-items: center; justify-content: space-between;
+height: 60px;
+position: sticky; top: 0; z-index: 100;
+}
 
-.urow { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #1a2030; flex-wrap: wrap; gap: 10px; }
-.urow:last-child { border-bottom: none; }
+.topbar-logo {
+font-family: ‘Pacifico’, cursive;
+font-size: 22px;
+color: #c8f535;
+-webkit-text-stroke: 1.5px #3b82f6;
+paint-order: stroke fill;
+text-shadow: 0 0 12px rgba(200,245,53,0.4);
+}
 
-.page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
-footer { border-top: 1px solid #1e2530; padding: 20px; text-align: center; margin-top: 40px; }
-.demo { margin-top: 14px; padding: 11px; background: #0d1117; border-radius: 7px; font-size: 0.74rem; color: #6b7a8d; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+
+.user-badge {
+display: flex; align-items: center; gap: 8px;
+font-size: 12px; font-family: ‘DM Mono’, monospace;
+color: var(–muted);
+}
+
+.user-badge .role-tag {
+background: rgba(200,245,53,0.12);
+color: var(–accent); border: 1px solid rgba(200,245,53,0.25);
+padding: 2px 8px; border-radius: 20px; font-size: 10px;
+letter-spacing: 1px; text-transform: uppercase;
+}
+
+.role-tag.user-role {
+background: rgba(59,130,246,0.12);
+color: var(–accent2); border-color: rgba(59,130,246,0.25);
+}
+
+/* NAV TABS */
+.nav-tabs {
+display: flex; gap: 0;
+background: var(–surface2);
+border-bottom: 1px solid var(–border);
+padding: 0 32px;
+overflow-x: auto;
+}
+
+.nav-tab {
+padding: 14px 20px;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+color: var(–muted); cursor: pointer;
+border-bottom: 2px solid transparent;
+transition: all 0.2s; white-space: nowrap;
+background: none; border-top: none; border-left: none; border-right: none;
+}
+
+.nav-tab:hover { color: var(–text); }
+.nav-tab.active { color: var(–accent); border-bottom-color: var(–accent); }
+
+/* CONTENT */
+.content { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.3s ease; }
+
+/* DATE BAR */
+.date-bar {
+display: flex; align-items: center; justify-content: space-between;
+margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+}
+
+.date-display {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 32px; letter-spacing: 2px; color: var(–accent);
+}
+
+.date-sub {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px; color: var(–muted); letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* SPORT TABS */
+.sport-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+
+.sport-chip {
+padding: 6px 16px;
+border-radius: 2px;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+cursor: pointer; border: 1px solid var(–border);
+background: transparent; color: var(–muted); transition: all 0.2s;
+}
+
+.sport-chip[data-sport=“ALL”].active  { color: var(–accent); border-color: var(–accent); background: rgba(200,245,53,0.08); }
+.sport-chip[data-sport=“NFL”].active, .sport-chip[data-sport=“NFL”]:hover   { color: var(–nfl);   border-color: var(–nfl);   background: rgba(217,119,6,0.08); }
+.sport-chip[data-sport=“NBA”].active, .sport-chip[data-sport=“NBA”]:hover   { color: var(–nba);   border-color: var(–nba);   background: rgba(37,99,235,0.08); }
+.sport-chip[data-sport=“MLB”].active, .sport-chip[data-sport=“MLB”]:hover   { color: var(–mlb);   border-color: var(–mlb);   background: rgba(220,38,38,0.08); }
+.sport-chip[data-sport=“NHL”].active, .sport-chip[data-sport=“NHL”]:hover   { color: var(–nhl);   border-color: var(–nhl);   background: rgba(8,145,178,0.08); }
+.sport-chip[data-sport=“NCAAF”].active,.sport-chip[data-sport=“NCAAF”]:hover{ color: var(–ncaaf); border-color: var(–ncaaf); background: rgba(124,58,237,0.08); }
+.sport-chip[data-sport=“NCAAM”].active,.sport-chip[data-sport=“NCAAM”]:hover{ color: var(–ncaam); border-color: var(–ncaam); background: rgba(190,24,93,0.08); }
+
+/* PICKS TABLE */
+.section-header {
+display: flex; align-items: center; justify-content: space-between;
+margin-bottom: 16px;
+}
+
+.section-title {
+font-family: ‘DM Mono’, monospace;
+font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(–muted);
+}
+
+.picks-grid { display: flex; flex-direction: column; gap: 10px; }
+
+.pick-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 18px 20px;
+display: grid;
+grid-template-columns: 80px 1fr 120px 120px 100px 80px;
+align-items: center; gap: 16px;
+transition: border-color 0.2s;
+}
+
+.pick-card:hover { border-color: rgba(200,245,53,0.2); }
+
+.pick-sport-badge {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16px; letter-spacing: 2px;
+padding: 4px 10px; border-radius: 2px; text-align: center;
+}
+
+.sport-NFL   { color: var(–nfl);   background: rgba(217,119,6,0.1);  border: 1px solid rgba(217,119,6,0.2); }
+.sport-NBA   { color: var(–nba);   background: rgba(37,99,235,0.1);   border: 1px solid rgba(37,99,235,0.2); }
+.sport-MLB   { color: var(–mlb);   background: rgba(220,38,38,0.1);   border: 1px solid rgba(220,38,38,0.2); }
+.sport-NHL   { color: var(–nhl);   background: rgba(8,145,178,0.1);   border: 1px solid rgba(8,145,178,0.2); }
+.sport-NCAAF { color: var(–ncaaf); background: rgba(124,58,237,0.1);  border: 1px solid rgba(124,58,237,0.2); }
+.sport-NCAAM { color: var(–ncaam); background: rgba(190,24,93,0.1);   border: 1px solid rgba(190,24,93,0.2); }
+
+.pick-teams { font-weight: 500; font-size: 14px; }
+.pick-teams .matchup { color: var(–muted); font-size: 12px; margin-top: 2px; font-family: ‘DM Mono’, monospace; }
+
+.pick-type { font-family: ‘DM Mono’, monospace; font-size: 12px; color: var(–muted); }
+.pick-selection { font-weight: 600; font-size: 14px; }
+.pick-odds { font-family: ‘DM Mono’, monospace; font-size: 13px; color: var(–accent); }
+
+.pick-result {
+font-family: ‘DM Mono’, monospace; font-size: 12px;
+padding: 4px 10px; border-radius: 2px; text-align: center;
+}
+
+.result-win     { background: rgba(34,197,94,0.12);  color: var(–success); border: 1px solid rgba(34,197,94,0.2); }
+.result-loss    { background: rgba(239,68,68,0.12);   color: var(–danger);  border: 1px solid rgba(239,68,68,0.2); }
+.result-push    { background: rgba(90,98,120,0.2);    color: var(–muted);   border: 1px solid var(–border); }
+.result-pending { background: rgba(200,245,53,0.08);  color: var(–accent);  border: 1px solid rgba(200,245,53,0.15); }
+
+/* ADD PICK FORM */
+.add-pick-form {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 28px; margin-bottom: 28px;
+position: relative;
+}
+
+.add-pick-form::before {
+content: ‘’;
+position: absolute; top: 0; left: 0; right: 0; height: 2px;
+background: linear-gradient(90deg, var(–accent), transparent);
+}
+
+.form-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+gap: 16px;
+}
+
+/* STATS */
+.stats-row {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+gap: 12px; margin-bottom: 28px;
+}
+
+.stat-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px; padding: 20px;
+}
+
+.stat-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(–muted);
+margin-bottom: 8px;
+}
+
+.stat-value {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 36px; letter-spacing: 1px; color: var(–accent);
+}
+
+.stat-value.green { color: var(–success); }
+.stat-value.red   { color: var(–danger); }
+
+/* ADMIN USERS */
+.users-table {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px; overflow: hidden;
+}
+
+.users-table table { width: 100%; border-collapse: collapse; }
+
+.users-table th {
+background: var(–surface2);
+padding: 12px 16px; text-align: left;
+font-family: ‘DM Mono’, monospace; font-size: 10px;
+letter-spacing: 2px; text-transform: uppercase; color: var(–muted);
+border-bottom: 1px solid var(–border);
+}
+
+.users-table td {
+padding: 14px 16px;
+border-bottom: 1px solid var(–border);
+font-size: 13px;
+}
+
+.users-table tr:last-child td { border-bottom: none; }
+.users-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* MODAL */
+.modal-overlay {
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+display: flex; align-items: center; justify-content: center;
+z-index: 1000; padding: 20px;
+opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 36px; width: 100%; max-width: 480px;
+position: relative;
+transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 28px; letter-spacing: 2px; color: var(–accent);
+margin-bottom: 24px;
+}
+
+.modal-close {
+position: absolute; top: 16px; right: 16px;
+background: none; border: none; color: var(–muted);
+cursor: pointer; font-size: 20px; padding: 4px 8px;
+transition: color 0.2s;
+}
+.modal-close:hover { color: var(–text); }
+
+/* EMPTY STATE */
+.empty-state {
+text-align: center; padding: 60px 20px;
+color: var(–muted); font-family: ‘DM Mono’, monospace;
+font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+border: 1px dashed var(–border); border-radius: 2px;
+}
+
+.empty-state .icon { font-size: 36px; margin-bottom: 16px; opacity: 0.3; }
+
+/* ANIMATIONS */
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(–bg); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+.content { padding: 16px; }
+.topbar { padding: 0 16px; }
+.nav-tabs { padding: 0 16px; }
+.pick-card { grid-template-columns: 1fr 1fr; font-size: 12px; }
+.pick-type, .pick-odds { display: none; }
+}
+
+.note-card {
+background: var(–surface); border: 1px solid var(–border);
+border-radius: 2px; padding: 16px 20px; margin-bottom: 8px;
+font-size: 13px; line-height: 1.6;
+}
+
+.note-card .note-meta {
+font-family: ‘DM Mono’, monospace; font-size: 10px;
+color: var(–muted); letter-spacing: 1px; margin-bottom: 6px;
+}
+
+.pick-actions { display: flex; gap: 6px; }
+
+.inline-edit { background: transparent; border: none; color: var(–text); font-family: inherit; font-size: inherit; width: 100%; cursor: pointer; }
 </style>
 
 </head>
 <body>
 
-<div id="app"></div>
+<!-- LOGIN SCREEN -->
 
-<!-- ALL JS at bottom of body so DOM is guaranteed ready -->
+<div id="login-screen">
+  <div class="login-grid-bg"></div>
+  <div class="login-box">
+    <div class="login-logo">$harp $elections</div>
+    <div class="login-tagline">Bet $harp</div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">Sign In &rarr;</button>
+    <div id="login-error" class="error-msg" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">$harp $elections</div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <span id="topbar-username"></span>
+        <span class="role-tag" id="topbar-role"></span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
+    <button class="nav-tab" onclick="showPage('history', this)">History</button>
+    <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
+    <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
+    <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;">User Management</button>
+  </div>
+
+  <div class="content">
+
+```
+<!-- TODAY'S PICKS -->
+<div class="page active" id="page-picks">
+  <div class="date-bar">
+    <div>
+      <div class="date-display" id="today-date"></div>
+      <div class="date-sub">Today's Selections</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input type="date" id="pick-date-selector" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="loadPicksForDate(this.value)">
+      <button class="btn btn-secondary btn-sm admin-only" onclick="openAddPickModal()" style="display:none;" id="add-pick-btn">+ Add Pick</button>
+    </div>
+  </div>
+  <div class="sport-tabs" id="sport-filter-tabs">
+    <button class="sport-chip active" data-sport="ALL"   onclick="filterSport('ALL', this)">All Sports</button>
+    <button class="sport-chip"        data-sport="NFL"   onclick="filterSport('NFL', this)">NFL</button>
+    <button class="sport-chip"        data-sport="NBA"   onclick="filterSport('NBA', this)">NBA</button>
+    <button class="sport-chip"        data-sport="MLB"   onclick="filterSport('MLB', this)">MLB</button>
+    <button class="sport-chip"        data-sport="NHL"   onclick="filterSport('NHL', this)">NHL</button>
+    <button class="sport-chip"        data-sport="NCAAF" onclick="filterSport('NCAAF', this)">NCAAF</button>
+    <button class="sport-chip"        data-sport="NCAAM" onclick="filterSport('NCAAM', this)">NCAAM</button>
+  </div>
+  <div id="picks-container" class="picks-grid"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="date-bar">
+    <div>
+      <div class="date-display">HISTORY</div>
+      <div class="date-sub">All Past Selections</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <select id="hist-sport" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
+        <option value="ALL">All Sports</option>
+        <option value="NFL">NFL</option><option value="NBA">NBA</option>
+        <option value="MLB">MLB</option><option value="NHL">NHL</option>
+        <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+      </select>
+      <select id="hist-result" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
+        <option value="ALL">All Results</option>
+        <option value="WIN">Wins</option><option value="LOSS">Losses</option>
+        <option value="PUSH">Pushes</option><option value="PENDING">Pending</option>
+      </select>
+    </div>
+  </div>
+  <div id="history-container" class="picks-grid"></div>
+</div>
+
+<!-- STATS -->
+<div class="page" id="page-stats">
+  <div class="date-bar">
+    <div>
+      <div class="date-display">STATISTICS</div>
+      <div class="date-sub">Season Performance</div>
+    </div>
+  </div>
+  <div class="stats-row" id="overall-stats"></div>
+  <div class="section-header" style="margin-top:16px;">
+    <div class="section-title">By Sport</div>
+  </div>
+  <div id="sport-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="page" id="page-admin">
+  <div class="date-bar">
+    <div>
+      <div class="date-display">ADMIN PANEL</div>
+      <div class="date-sub">Manage Picks &amp; Settings</div>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="openAddPickModal()">+ Add Pick</button>
+  </div>
+  <div class="section-header">
+    <div class="section-title">All Picks &mdash; Update Results</div>
+  </div>
+  <div id="admin-picks-container" class="picks-grid"></div>
+</div>
+
+<!-- USER MANAGEMENT -->
+<div class="page" id="page-users">
+  <div class="date-bar">
+    <div>
+      <div class="date-display">USER MANAGEMENT</div>
+      <div class="date-sub">Credentials &amp; Access Control</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+  </div>
+  <div class="users-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </div>
+</div>
+```
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- ADD PICK MODAL -->
+
+<div class="modal-overlay" id="modal-add-pick">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-pick')">&#10005;</button>
+    <div class="modal-title">ADD PICK</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Sport</label>
+        <select id="pick-sport">
+          <option value="NFL">NFL</option><option value="NBA">NBA</option>
+          <option value="MLB">MLB</option><option value="NHL">NHL</option>
+          <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="pick-form-date">
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-secondary" id="btn-load-games" onclick="loadESPNGames()" style="width:100%;margin-bottom:10px;">&#128260; Load Games from ESPN</button>
+      <div id="espn-status" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;display:none;"></div>
+      <div id="espn-games-list" style="display:none;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:2px;"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Away Team</label>
+        <input type="text" id="pick-away" placeholder="e.g. Cowboys">
+      </div>
+      <div class="field">
+        <label>Home Team</label>
+        <input type="text" id="pick-home" placeholder="e.g. Eagles">
+      </div>
+      <div class="field">
+        <label>Bet Type</label>
+        <select id="pick-type">
+          <option value="Spread">Spread</option>
+          <option value="Moneyline">Moneyline</option>
+          <option value="Total (O/U)">Total (O/U)</option>
+          <option value="Parlay">Parlay</option>
+          <option value="Prop">Prop</option>
+          <option value="Futures">Futures</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Selection</label>
+        <input type="text" id="pick-selection" placeholder="e.g. Cowboys -3.5">
+      </div>
+      <div class="field">
+        <label>Odds</label>
+        <input type="text" id="pick-odds" placeholder="e.g. -110">
+      </div>
+      <div class="field">
+        <label>Units</label>
+        <input type="number" id="pick-units" placeholder="1" min="0.5" step="0.5" value="1">
+      </div>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Analysis / Notes</label>
+      <textarea id="pick-notes" rows="3" placeholder="Brief analysis or reasoning..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="savePick()" style="flex:1;">Save Pick</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-pick')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-user')">&#10005;</button>
+    <div class="modal-title" id="user-modal-title">ADD USER</div>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="new-username" placeholder="Enter username" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="new-password" placeholder="Enter password" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Role</label>
+      <select id="new-role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveUser()" style="flex:1;" id="save-user-btn">Add User</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-user')">Cancel</button>
+    </div>
+    <div id="user-error" class="error-msg" style="display:none;margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- RESULT MODAL -->
+
+<div class="modal-overlay" id="modal-result">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-result')">&#10005;</button>
+    <div class="modal-title">UPDATE RESULT</div>
+    <input type="hidden" id="result-pick-id">
+    <div class="field">
+      <label>Result</label>
+      <select id="result-select">
+        <option value="PENDING">Pending</option>
+        <option value="WIN">Win &#10003;</option>
+        <option value="LOSS">Loss &#10007;</option>
+        <option value="PUSH">Push ~</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveResult()" style="flex:1;">Save Result</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-result')">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
-
-// ── DATA ──────────────────────────────────────────────────────────────────
-var USERS = [
-  { id:1, username:"admin",      password:"admin123", role:"admin", active:true,  email:"admin@sharpselections.com", joined:"2024-01-01" },
-  { id:2, username:"john_doe",   password:"pass123",  role:"user",  active:true,  email:"john@example.com",          joined:"2024-03-01" },
-  { id:3, username:"jane_smith", password:"pass123",  role:"user",  active:false, email:"jane@example.com",          joined:"2024-03-10" }
-];
-
-var PICKS = [
-  { id:1, sport:"NBA", date:"2026-03-06", homeTeam:"Los Angeles Lakers", awayTeam:"Boston Celtics",
-    pick:"Boston Celtics -3.5", betType:"Spread", odds:"-110",
-    analysis:"Celtics have won 8 straight and Lakers are shorthanded. Fade the home chalk.",
-    result:"WIN", gameTime:"7:30 PM ET", active:true },
-  { id:2, sport:"NHL", date:"2026-03-06", homeTeam:"Colorado Avalanche", awayTeam:"Vegas Golden Knights",
-    pick:"Over 6.5", betType:"Total", odds:"-115",
-    analysis:"Both teams averaging 4+ goals at home this month. Expect a shootout.",
-    result:"PENDING", gameTime:"9:00 PM ET", active:true },
-  { id:3, sport:"NFL", date:"2026-03-06", homeTeam:"Kansas City Chiefs", awayTeam:"Buffalo Bills",
-    pick:"Chiefs ML", betType:"Moneyline", odds:"-130",
-    analysis:"Chiefs at home in the playoffs. Mahomes elevates every big spot.",
-    result:"WIN", gameTime:"4:25 PM ET", active:true }
-];
-
-var ESPN_MAP = {
-  NFL:  { s:"football",   l:"nfl" },
-  NBA:  { s:"basketball", l:"nba" },
-  NHL:  { s:"hockey",     l:"nhl" },
-  MLB:  { s:"baseball",   l:"mlb" },
-  NCAAF:{ s:"football",   l:"college-football" },
-  NCAAM:{ s:"basketball", l:"mens-college-basketball" }
-};
-
-var SPORT_COLORS = { NFL:"#d4380d", NBA:"#c41230", NHL:"#1560bd", MLB:"#003087", NCAAF:"#bf5700", NCAAM:"#4b0082" };
-
-// ── STATE ─────────────────────────────────────────────────────────────────
-var curUser  = null;
-var curPage  = "picks";
-var adminTab = "add";
-var sfilt    = "ALL";
-var authMode = "login";
-
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function ge(id)    { return document.getElementById(id); }
-function val(id)   { var el = ge(id); return el ? el.value : ""; }
-function sv(id, v) { var el = ge(id); if (el) el.value = v; }
-
-function esc(s) {
-  if (s == null) return "";
-  s = String(s);
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+var _memStore = {};
+function getData(key, def) {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) {}
+  return _memStore.hasOwnProperty(key) ? _memStore[key] : def;
 }
+function setData(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  _memStore[key] = val;
+}
+
+function initUsers() {
+  var users = getData('sp_users', null);
+  if (!users) {
+    setData('sp_users', [
+      { id: 'u1', username: 'admin', password: 'admin123', role: 'admin', status: 'active', created: new Date().toISOString() },
+      { id: 'u2', username: 'user1', password: 'user123',  role: 'user',  status: 'active', created: new Date().toISOString() }
+    ]);
+  }
+}
+
+initUsers();
+
+var currentUser        = null;
+var currentSportFilter = 'ALL';
+var currentDateView    = todayStr();
+var editingUserId      = null;
 
 function todayStr() {
-  var d  = new Date();
-  var mm = d.getMonth() + 1;
-  var dd = d.getDate();
-  return d.getFullYear() + "-" + (mm < 10 ? "0"+mm : mm) + "-" + (dd < 10 ? "0"+dd : dd);
+  return new Date().toISOString().split('T')[0];
 }
 
-function rcol(r) {
-  if (r === "WIN")  return "#39ff14";
-  if (r === "LOSS") return "#ff3b3b";
-  return "#f0c040";
+function formatDateDisplay(d) {
+  var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var parts = d.split('-');
+  return months[parseInt(parts[1], 10) - 1] + ' ' + parseInt(parts[2], 10) + ', ' + parts[0];
 }
 
-function fmtDate() {
-  try { return new Date().toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" }); }
-  catch(e) { return ""; }
+function doLogin() {
+  var u     = document.getElementById('login-user').value.trim();
+  var p     = document.getElementById('login-pass').value;
+  var errEl = document.getElementById('login-error');
+  var users = getData('sp_users', []);
+  var found = null;
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].username === u && users[i].password === p && users[i].status === 'active') {
+      found = users[i]; break;
+    }
+  }
+  if (!found) {
+    errEl.textContent = 'Invalid credentials. Please try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  currentUser = found;
+  errEl.style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  setupAppForRole();
 }
 
-function clamp(el, fn) {
-  var nodes = document.querySelectorAll(el);
-  for (var i = 0; i < nodes.length; i++) fn(nodes[i], i);
+function doLogout() {
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  showPage('picks', document.querySelector('.nav-tab'));
 }
 
-// ── ESPN ──────────────────────────────────────────────────────────────────
-function espnFetch(sport, date, cb) {
-  var map = ESPN_MAP[sport];
-  if (!map) { cb([]); return; }
-  var ds  = date.replace(/-/g, "");
-  var url = "https://site.api.espn.com/apis/site/v2/sports/" + map.s + "/" + map.l + "/scoreboard?dates=" + ds;
+function setupAppForRole() {
+  document.getElementById('topbar-username').textContent = currentUser.username;
+  var roleEl = document.getElementById('topbar-role');
+  roleEl.textContent = currentUser.role;
+  roleEl.className = 'role-tag' + (currentUser.role === 'admin' ? '' : ' user-role');
+
+  var adminEls = document.querySelectorAll('.admin-only');
+  for (var i = 0; i < adminEls.length; i++) {
+    adminEls[i].style.display = currentUser.role === 'admin' ? '' : 'none';
+  }
+
+  var today = todayStr();
+  currentDateView = today;
+  document.getElementById('today-date').textContent = formatDateDisplay(today);
+  document.getElementById('pick-date-selector').value = today;
+  document.getElementById('pick-form-date').value = today;
+
+  showPage('picks', document.querySelectorAll('.nav-tab')[0]);
+  loadPicksForDate(today);
+  renderHistory();
+  renderStats();
+  if (currentUser.role === 'admin') {
+    renderAdminPicks();
+    renderUsersTable();
+  }
+}
+
+function showPage(name, tab) {
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  var tabs = document.querySelectorAll('.nav-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  document.getElementById('page-' + name).classList.add('active');
+  if (tab) tab.classList.add('active');
+  if (name === 'admin')   renderAdminPicks();
+  if (name === 'users')   renderUsersTable();
+  if (name === 'stats')   renderStats();
+  if (name === 'history') renderHistory();
+}
+
+function getPicks() { return getData('sp_picks', []); }
+function savePicks(picks) { setData('sp_picks', picks); }
+
+function loadPicksForDate(date) {
+  currentDateView = date;
+  document.getElementById('today-date').textContent = formatDateDisplay(date);
+  renderPicks();
+}
+
+function filterSport(sport, el) {
+  currentSportFilter = sport;
+  var chips = document.querySelectorAll('.sport-chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+  el.classList.add('active');
+  renderPicks();
+}
+
+function renderPicks() {
+  var all      = getPicks();
+  var filtered = [];
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].date === currentDateView && (currentSportFilter === 'ALL' || all[i].sport === currentSportFilter)) {
+      filtered.push(all[i]);
+    }
+  }
+  var container = document.getElementById('picks-container');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">&#127919;</div>No picks for this date' + (currentSportFilter !== 'ALL' ? ' / sport' : '') + '</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < filtered.length; i++) html += pickCardHTML(filtered[i], false);
+  container.innerHTML = html;
+}
+
+function pickCardHTML(p, adminMode) {
+  var resultMap = { WIN: 'result-win', LOSS: 'result-loss', PUSH: 'result-push', PENDING: 'result-pending' };
+  var resultClass = resultMap[p.result] || 'result-pending';
+  var resultLabel = p.result || 'PENDING';
+
+  var html = '<div class="pick-card">'
+    + '<div class="pick-sport-badge sport-' + p.sport + '">' + p.sport + '</div>'
+    + '<div class="pick-teams">' + p.away + ' @ ' + p.home + '<div class="matchup">' + formatDateDisplay(p.date) + '</div></div>'
+    + '<div class="pick-type">' + p.type + '</div>'
+    + '<div class="pick-selection">' + p.selection + '</div>'
+    + '<div class="pick-odds">' + (p.odds || '&mdash;') + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
+    + '<span class="pick-result ' + resultClass + '">' + resultLabel + '</span>';
+
+  if (adminMode) {
+    html += '<div class="pick-actions">'
+      + '<button class="btn btn-secondary btn-sm" onclick="openResultModal(\'' + p.id + '\')">Result</button>'
+      + '<button class="btn btn-danger btn-sm" onclick="deletePick(\'' + p.id + '\')">&#10005;</button>'
+      + '</div>';
+  }
+
+  html += '</div></div>';
+
+  if (p.notes) {
+    html += '<div class="note-card"><div class="note-meta">' + p.sport + ' &middot; ' + p.type + ' &middot; ' + (p.units || 1) + 'u</div>' + p.notes + '</div>';
+  }
+
+  return html;
+}
+
+function openAddPickModal() {
+  document.getElementById('pick-form-date').value = currentDateView;
+  document.getElementById('espn-status').style.display = 'none';
+  document.getElementById('espn-games-list').style.display = 'none';
+  document.getElementById('espn-games-list').innerHTML = '';
+  document.getElementById('btn-load-games').textContent = 'Load Games from ESPN';
+  openModal('modal-add-pick');
+}
+
+function savePick() {
+  var sport     = document.getElementById('pick-sport').value;
+  var date      = document.getElementById('pick-form-date').value;
+  var away      = document.getElementById('pick-away').value.trim();
+  var home      = document.getElementById('pick-home').value.trim();
+  var type      = document.getElementById('pick-type').value;
+  var selection = document.getElementById('pick-selection').value.trim();
+  var odds      = document.getElementById('pick-odds').value.trim();
+  var units     = document.getElementById('pick-units').value || 1;
+  var notes     = document.getElementById('pick-notes').value.trim();
+
+  if (!away || !home || !selection) { alert('Please fill in all required fields.'); return; }
+
+  var picks = getPicks();
+  picks.push({
+    id: 'p' + Date.now(),
+    sport: sport, date: date, away: away, home: home, type: type,
+    selection: selection, odds: odds, units: units,
+    notes: notes, result: 'PENDING', createdBy: currentUser.username, created: new Date().toISOString()
+  });
+  savePicks(picks);
+  closeModal('modal-add-pick');
+
+  document.getElementById('pick-away').value      = '';
+  document.getElementById('pick-home').value      = '';
+  document.getElementById('pick-selection').value = '';
+  document.getElementById('pick-odds').value      = '';
+  document.getElementById('pick-notes').value     = '';
+  document.getElementById('pick-units').value     = 1;
+
+  loadPicksForDate(currentDateView);
+  renderAdminPicks();
+  renderStats();
+  renderHistory();
+}
+
+function deletePick(id) {
+  if (!confirm('Delete this pick?')) return;
+  var picks = getPicks();
+  var next  = [];
+  for (var i = 0; i < picks.length; i++) { if (picks[i].id !== id) next.push(picks[i]); }
+  savePicks(next);
+  renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
+}
+
+function openResultModal(id) {
+  document.getElementById('result-pick-id').value = id;
+  var picks = getPicks();
+  for (var i = 0; i < picks.length; i++) {
+    if (picks[i].id === id) {
+      document.getElementById('result-select').value = picks[i].result || 'PENDING';
+      break;
+    }
+  }
+  openModal('modal-result');
+}
+
+function saveResult() {
+  var id     = document.getElementById('result-pick-id').value;
+  var result = document.getElementById('result-select').value;
+  var picks  = getPicks();
+  for (var i = 0; i < picks.length; i++) {
+    if (picks[i].id === id) { picks[i].result = result; break; }
+  }
+  savePicks(picks);
+  closeModal('modal-result');
+  renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
+}
+
+function renderHistory() {
+  var sportEl  = document.getElementById('hist-sport');
+  var resultEl = document.getElementById('hist-result');
+  var sport    = sportEl  ? sportEl.value  : 'ALL';
+  var result   = resultEl ? resultEl.value : 'ALL';
+
+  var all      = getPicks();
+  var filtered = [];
+  for (var i = 0; i < all.length; i++) {
+    var p = all[i];
+    if ((sport === 'ALL' || p.sport === sport) && (result === 'ALL' || (p.result || 'PENDING') === result)) {
+      filtered.push(p);
+    }
+  }
+  filtered.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+  var container = document.getElementById('history-container');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div>No picks match the filter</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < filtered.length; i++) html += pickCardHTML(filtered[i], false);
+  container.innerHTML = html;
+}
+
+function renderStats() {
+  var all     = getPicks();
+  var settled = [];
+  for (var i = 0; i < all.length; i++) { if (all[i].result !== 'PENDING') settled.push(all[i]); }
+
+  var wins = 0, losses = 0, pushes = 0;
+  for (var i = 0; i < settled.length; i++) {
+    if (settled[i].result === 'WIN')  wins++;
+    else if (settled[i].result === 'LOSS')  losses++;
+    else if (settled[i].result === 'PUSH')  pushes++;
+  }
+  var total = wins + losses;
+  var pct   = total > 0 ? Math.round((wins / total) * 100) : 0;
+  var pctClass = pct >= 55 ? 'green' : (pct < 45 && total > 0 ? 'red' : '');
+
+  document.getElementById('overall-stats').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ' + pctClass + '">' + pct + '%</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">' + settled.length + '</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">' + wins + '</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">' + losses + '</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">' + pushes + '</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">' + wins + '-' + losses + '</div></div>';
+
+  var sports     = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
+  var sportVars  = { NFL:'--nfl', NBA:'--nba', MLB:'--mlb', NHL:'--nhl', NCAAF:'--ncaaf', NCAAM:'--ncaam' };
+  var shtml      = '';
+  for (var s = 0; s < sports.length; s++) {
+    var sp = sports[s];
+    var sw = 0, sl = 0, sc = 0;
+    for (var i = 0; i < settled.length; i++) {
+      if (settled[i].sport === sp) {
+        sc++;
+        if (settled[i].result === 'WIN')  sw++;
+        else if (settled[i].result === 'LOSS') sl++;
+      }
+    }
+    var spct = (sw + sl) > 0 ? Math.round((sw / (sw + sl)) * 100) : 0;
+    shtml += '<div class="stat-card" style="border-top:2px solid var(' + sportVars[sp] + ')">'
+      + '<div class="stat-label">' + sp + '</div>'
+      + '<div class="stat-value" style="font-size:28px">' + sw + '-' + sl + '</div>'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted);margin-top:4px">' + spct + '% &middot; ' + sc + ' picks</div>'
+      + '</div>';
+  }
+  document.getElementById('sport-stats').innerHTML = shtml;
+}
+
+function renderAdminPicks() {
+  var container = document.getElementById('admin-picks-container');
+  if (!container) return;
+  var picks = getPicks();
+  picks.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  if (picks.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div>No picks yet. Add your first pick!</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < picks.length; i++) html += pickCardHTML(picks[i], true);
+  container.innerHTML = html;
+}
+
+function renderUsersTable() {
+  var tbody = document.getElementById('users-tbody');
+  if (!tbody) return;
+  var users = getData('sp_users', []);
+  var html  = '';
+  for (var i = 0; i < users.length; i++) {
+    var u = users[i];
+    var isAdmin = u.username === 'admin';
+    html += '<tr>'
+      + '<td style="font-family:\'DM Mono\',monospace;font-size:13px">' + u.username + '</td>'
+      + '<td><span class="role-tag' + (u.role !== 'admin' ? ' user-role' : '') + '">' + u.role + '</span></td>'
+      + '<td><span class="pick-result ' + (u.status === 'active' ? 'result-win' : 'result-loss') + '">' + u.status + '</span></td>'
+      + '<td style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--muted)">' + u.created.split('T')[0] + '</td>'
+      + '<td><div style="display:flex;gap:6px">'
+      + (isAdmin
+          ? '<span style="color:var(--muted);font-size:12px;font-family:\'DM Mono\',monospace">Protected</span>'
+          : '<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus(\'' + u.id + '\')">' + (u.status === 'active' ? 'Deactivate' : 'Activate') + '</button>'
+            + '<button class="btn btn-secondary btn-sm" onclick="openEditUser(\'' + u.id + '\')">Edit</button>'
+            + '<button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\')">Delete</button>')
+      + '</div></td></tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function openAddUserModal() {
+  editingUserId = null;
+  document.getElementById('user-modal-title').textContent = 'ADD USER';
+  document.getElementById('save-user-btn').textContent    = 'Add User';
+  document.getElementById('new-username').value           = '';
+  document.getElementById('new-password').value           = '';
+  document.getElementById('new-role').value               = 'user';
+  document.getElementById('user-error').style.display     = 'none';
+  openModal('modal-add-user');
+}
+
+function openEditUser(id) {
+  editingUserId  = id;
+  var users = getData('sp_users', []);
+  var user  = null;
+  for (var i = 0; i < users.length; i++) { if (users[i].id === id) { user = users[i]; break; } }
+  if (!user) return;
+  document.getElementById('user-modal-title').textContent = 'EDIT USER';
+  document.getElementById('save-user-btn').textContent    = 'Save Changes';
+  document.getElementById('new-username').value           = user.username;
+  document.getElementById('new-password').value           = '';
+  document.getElementById('new-role').value               = user.role;
+  document.getElementById('user-error').style.display     = 'none';
+  openModal('modal-add-user');
+}
+
+function saveUser() {
+  var username = document.getElementById('new-username').value.trim();
+  var password = document.getElementById('new-password').value;
+  var role     = document.getElementById('new-role').value;
+  var errEl    = document.getElementById('user-error');
+
+  if (!username) { errEl.textContent = 'Username is required.'; errEl.style.display = 'block'; return; }
+  if (!editingUserId && !password) { errEl.textContent = 'Password is required.'; errEl.style.display = 'block'; return; }
+
+  var users = getData('sp_users', []);
+  if (editingUserId) {
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].id === editingUserId) {
+        users[i].username = username;
+        users[i].role     = role;
+        if (password) users[i].password = password;
+        break;
+      }
+    }
+  } else {
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === username) { errEl.textContent = 'Username already exists.'; errEl.style.display = 'block'; return; }
+    }
+    users.push({ id: 'u' + Date.now(), username: username, password: password, role: role, status: 'active', created: new Date().toISOString() });
+  }
+  setData('sp_users', users);
+  closeModal('modal-add-user');
+  renderUsersTable();
+}
+
+function toggleUserStatus(id) {
+  var users = getData('sp_users', []);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].id === id) { users[i].status = users[i].status === 'active' ? 'inactive' : 'active'; break; }
+  }
+  setData('sp_users', users);
+  renderUsersTable();
+}
+
+function deleteUser(id) {
+  if (!confirm('Delete this user permanently?')) return;
+  var users = getData('sp_users', []);
+  var next  = [];
+  for (var i = 0; i < users.length; i++) { if (users[i].id !== id) next.push(users[i]); }
+  setData('sp_users', next);
+  renderUsersTable();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+var overlays = document.querySelectorAll('.modal-overlay');
+for (var i = 0; i < overlays.length; i++) {
+  overlays[i].addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+}
+
+var ESPN_MAP = {
+  NFL:   { s: 'football',   l: 'nfl' },
+  NBA:   { s: 'basketball', l: 'nba' },
+  NHL:   { s: 'hockey',     l: 'nhl' },
+  MLB:   { s: 'baseball',   l: 'mlb' },
+  NCAAF: { s: 'football',   l: 'college-football' },
+  NCAAM: { s: 'basketball', l: 'mens-college-basketball' }
+};
+
+function loadESPNGames() {
+  var sport   = document.getElementById('pick-sport').value;
+  var date    = document.getElementById('pick-form-date').value;
+  var btn     = document.getElementById('btn-load-games');
+  var status  = document.getElementById('espn-status');
+  var list    = document.getElementById('espn-games-list');
+  var map     = ESPN_MAP[sport];
+
+  if (!map) { status.textContent = 'Sport not supported for ESPN lookup.'; status.style.display = 'block'; return; }
+  if (!date) { status.textContent = 'Please select a date first.'; status.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Loading...';
+  btn.disabled = true;
+  status.textContent = 'Fetching games from ESPN...';
+  status.style.color = 'var(--muted)';
+  status.style.display = 'block';
+  list.style.display = 'none';
+  list.innerHTML = '';
+
+  var ds  = date.replace(/-/g, '');
+  var url = 'https://site.api.espn.com/apis/site/v2/sports/' + map.s + '/' + map.l + '/scoreboard?dates=' + ds;
+
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", url, true);
+  xhr.open('GET', url, true);
   xhr.timeout = 10000;
   xhr.onreadystatechange = function() {
     if (xhr.readyState !== 4) return;
+    btn.textContent = 'Load Games from ESPN';
+    btn.disabled = false;
     try {
-      var data = JSON.parse(xhr.responseText);
-      var out  = [];
-      var evts = data.events || [];
+      var data  = JSON.parse(xhr.responseText);
+      var evts  = data.events || [];
+      if (!evts.length) {
+        status.textContent = 'No ' + sport + ' games found for ' + date + '.';
+        status.style.color = 'var(--danger)';
+        return;
+      }
+      var games = [];
       for (var i = 0; i < evts.length; i++) {
         var ev   = evts[i];
         var comp = ev.competitions && ev.competitions[0] ? ev.competitions[0] : {};
         var ctrs = comp.competitors || [];
         var home = null, away = null;
         for (var j = 0; j < ctrs.length; j++) {
-          if (ctrs[j].homeAway === "home") home = ctrs[j];
-          else                              away = ctrs[j];
+          if (ctrs[j].homeAway === 'home') home = ctrs[j];
+          else away = ctrs[j];
         }
-        var t = "";
+        var t = '';
         if (comp.date) {
-          try { t = new Date(comp.date).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit", timeZoneName:"short" }); }
-          catch(ignore) {}
+          try { t = new Date(comp.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); } catch(e) {}
         }
-        out.push({
-          homeTeam: home && home.team && home.team.displayName ? home.team.displayName : "Home",
-          awayTeam: away && away.team && away.team.displayName ? away.team.displayName : "Away",
-          gameTime: t,
-          venue:    comp.venue && comp.venue.fullName ? comp.venue.fullName : ""
+        games.push({
+          home: home && home.team ? (home.team.displayName || 'Home') : 'Home',
+          away: away && away.team ? (away.team.displayName || 'Away') : 'Away',
+          time: t,
+          venue: comp.venue && comp.venue.fullName ? comp.venue.fullName : ''
         });
       }
-      cb(out);
-    } catch(err) { cb([]); }
+      status.textContent = evts.length + ' game' + (evts.length !== 1 ? 's' : '') + ' found. Click to select.';
+      status.style.color = 'var(--accent)';
+      list.style.display = 'block';
+      var html = '';
+      for (var i = 0; i < games.length; i++) {
+        var g = games[i];
+        html += '<div class="espn-game-row" data-away="' + g.away.replace(/"/g,'&quot;') + '" data-home="' + g.home.replace(/"/g,'&quot;') + '" onclick="selectESPNGame(this)"'
+          + ' style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">'
+          + '<div style="font-weight:600;font-size:13px;">' + g.away + ' @ ' + g.home + '</div>'
+          + '<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);margin-top:2px;">' + (g.time || 'TBD') + (g.venue ? ' &middot; ' + g.venue : '') + '</div>'
+          + '</div>';
+      }
+      list.innerHTML = html;
+    } catch(e) {
+      status.textContent = 'Error loading games. Check your connection.';
+      status.style.color = 'var(--danger)';
+    }
   };
-  xhr.onerror   = function() { cb([]); };
-  xhr.ontimeout = function() { cb([]); };
+  xhr.onerror   = function() { btn.textContent = 'Load Games from ESPN'; btn.disabled = false; status.textContent = 'Network error. Try again.'; status.style.color = 'var(--danger)'; };
+  xhr.ontimeout = function() { btn.textContent = 'Load Games from ESPN'; btn.disabled = false; status.textContent = 'Request timed out. Try again.'; status.style.color = 'var(--danger)'; };
   xhr.send();
 }
 
-// ── LOGO ──────────────────────────────────────────────────────────────────
-function logoHTML(titleSz, subSz) {
-  return ''
-    + '<div id="logo-btn" style="cursor:pointer">'
-    + '<div class="neon-title" style="font-size:' + titleSz + ';line-height:1">$harp $elections</div>'
-    + '<div class="deco"></div>'
-    + '<div style="color:#c8f535;font-family:Bebas Neue,sans-serif;letter-spacing:0.25em;text-align:center;font-size:' + subSz + ';margin-top:1px">BET $HARP</div>'
-    + '</div>';
+function selectESPNGame(row) {
+  var rows = document.querySelectorAll('.espn-game-row');
+  for (var i = 0; i < rows.length; i++) rows[i].style.background = '';
+  row.style.background = 'rgba(200,245,53,0.08)';
+  document.getElementById('pick-away').value = row.getAttribute('data-away');
+  document.getElementById('pick-home').value = row.getAttribute('data-home');
 }
-
-// ── RENDER ────────────────────────────────────────────────────────────────
-function render() {
-  var app = ge("app");
-  if (!app) return;
-  if (curUser) {
-    app.innerHTML = buildHeader() + '<main id="main">' + (curPage === "admin" && curUser.role === "admin" ? buildAdmin() : buildPicks()) + '</main>' + buildFooter();
-  } else {
-    app.innerHTML = buildAuth();
-  }
-  bindAll();
-}
-
-// ── AUTH PAGE ─────────────────────────────────────────────────────────────
-function buildAuth() {
-  var isReg = authMode === "register";
-  var h = '';
-  h += '<div style="min-height:100vh;background:#0a0c0e;display:flex;align-items:center;justify-content:center;padding:20px">';
-  h += '<div style="width:100%;max-width:420px">';
-  h += '<div style="text-align:center;margin-bottom:28px">' + logoHTML("2.8rem","0.85rem") + '</div>';
-  h += '<div class="card" style="border-color:#2a3344">';
-  h += '<div style="display:flex;border-bottom:1px solid #1e2530;margin-bottom:20px">';
-  h += '<button class="tab ' + (authMode==="login" ? "on" : "") + '" id="tab-login">LOGIN</button>';
-  h += '<button class="tab ' + (isReg ? "on" : "") + '" id="tab-reg">REGISTER</button>';
-  h += '</div>';
-  h += '<div class="form-col">';
-  h += '<div><span class="lbl">Username</span><input class="inp" id="a-user" placeholder="Enter username" autocomplete="username"></div>';
-  if (isReg) h += '<div><span class="lbl">Email</span><input class="inp" id="a-email" type="email" placeholder="Enter email"></div>';
-  h += '<div><span class="lbl">Password</span><input class="inp" id="a-pass" type="password" placeholder="Enter password" autocomplete="current-password"></div>';
-  if (isReg) h += '<div><span class="lbl">Confirm Password</span><input class="inp" id="a-conf" type="password" placeholder="Confirm password"></div>';
-  h += '<div id="a-err"></div>';
-  h += '<button class="btn-green" id="btn-auth" style="font-size:1.1rem;padding:12px">' + (isReg ? "CREATE ACCOUNT" : "LOGIN") + '</button>';
-  h += '</div>';
-  if (!isReg) h += '<div class="demo"><strong style="color:#c8f535">Demo:</strong> admin / admin123</div>';
-  h += '</div></div></div>';
-  return h;
-}
-
-// ── HEADER ────────────────────────────────────────────────────────────────
-function buildHeader() {
-  var h = '<header id="hdr"><div class="hdr-in">';
-  h += logoHTML("1.5rem","0.52rem");
-  h += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
-  if (curUser.role === "admin") {
-    h += '<button class="tab ' + (curPage==="admin" ? "on" : "") + '" id="btn-admin">&#9881; ADMIN</button>';
-  }
-  h += '<button class="tab ' + (curPage==="picks" ? "on" : "") + '" id="btn-picks">PICKS</button>';
-  h += '<div style="text-align:right"><div style="font-size:0.68rem;color:#6b7a8d">Logged in as</div>';
-  h += '<div style="font-size:0.88rem;color:#c8f535;font-weight:700">' + esc(curUser.username) + '</div></div>';
-  h += '<button class="btn-blue" id="btn-logout">LOGOUT</button>';
-  h += '</div></div></header>';
-  return h;
-}
-
-function buildFooter() {
-  return '<footer><div class="neon-title" style="font-size:0.95rem;display:inline">$harp $elections</div><div style="color:#6b7a8d;font-size:0.68rem;margin-top:6px">Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div></footer>';
-}
-
-// ── PICKS PAGE ────────────────────────────────────────────────────────────
-function buildPicks() {
-  var sports = ["ALL","NFL","NBA","NHL","MLB","NCAAF","NCAAM"];
-  var active = [], shown = [], w=0, l=0, p=0;
-  for (var i=0; i<PICKS.length; i++) if (PICKS[i].active) active.push(PICKS[i]);
-  for (var i=0; i<active.length; i++) {
-    if (sfilt === "ALL" || active[i].sport === sfilt) shown.push(active[i]);
-    if (active[i].result === "WIN") w++;
-    else if (active[i].result === "LOSS") l++;
-    else p++;
-  }
-
-  var h = '<div class="page-wrap">';
-
-  h += '<div class="stats">';
-  h += '<div class="stat"><div style="color:#39ff14;font-family:Bebas Neue,sans-serif;font-size:2rem">' + w + '</div><div style="color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em">WINS</div></div>';
-  h += '<div class="stat"><div style="color:#ff4444;font-family:Bebas Neue,sans-serif;font-size:2rem">' + l + '</div><div style="color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em">LOSSES</div></div>';
-  h += '<div class="stat"><div style="color:#f0c040;font-family:Bebas Neue,sans-serif;font-size:2rem">' + p + '</div><div style="color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em">PENDING</div></div>';
-  h += '</div>';
-
-  h += '<div class="filters">';
-  for (var i=0; i<sports.length; i++) {
-    h += '<button class="tab sf ' + (sfilt===sports[i] ? "on" : "") + '" data-sp="' + sports[i] + '" style="font-size:0.83rem">' + sports[i] + '</button>';
-  }
-  h += '</div>';
-
-  h += '<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px">';
-  h += '<h2 style="font-family:Bebas Neue,sans-serif;font-size:1.5rem;letter-spacing:0.08em">TODAY\'S PICKS</h2>';
-  h += '<span style="color:#6b7a8d;font-size:0.84rem">' + fmtDate() + '</span>';
-  h += '</div>';
-
-  if (!shown.length) {
-    h += '<div style="text-align:center;padding:60px 20px;color:#6b7a8d">';
-    h += '<div style="font-size:3rem;margin-bottom:12px">&#128203;</div>';
-    h += '<div style="font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:0.08em">NO PICKS AVAILABLE</div>';
-    h += '</div>';
-  } else {
-    h += '<div class="picks-grid">';
-    for (var i=0; i<shown.length; i++) h += buildPickCard(shown[i]);
-    h += '</div>';
-  }
-  h += '</div>';
-  return h;
-}
-
-function buildPickCard(p) {
-  var sc  = SPORT_COLORS[p.sport] || "#6b7a8d";
-  var col = rcol(p.result);
-  var rbg = p.result==="WIN" ? "rgba(57,255,20,0.12)" : p.result==="LOSS" ? "rgba(255,60,60,0.12)" : "rgba(240,192,64,0.12)";
-  var rbd = p.result==="WIN" ? "#39ff14" : p.result==="LOSS" ? "#ff3b3b" : "#f0c040";
-  var cb  = p.result==="WIN" ? "rgba(57,255,20,0.25)" : p.result==="LOSS" ? "rgba(255,60,60,0.25)" : "#1e2530";
-
-  var h = '<div class="pick-card" style="border-color:' + cb + '">';
-  h += '<div style="height:3px;background:linear-gradient(90deg,' + sc + ',transparent)"></div>';
-  h += '<div style="padding:16px">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">';
-  h += '<span class="sbadge" style="background:' + sc + '22;color:' + sc + ';border:1px solid ' + sc + '55">' + esc(p.sport) + '</span>';
-  h += '<span class="rbadge" style="background:' + rbg + ';color:' + col + ';border:1px solid ' + rbd + '55">' + esc(p.result) + '</span>';
-  h += '</div>';
-  h += '<div style="margin-bottom:11px">';
-  h += '<div style="font-size:0.73rem;color:#6b7a8d;margin-bottom:3px">' + esc(p.gameTime) + '</div>';
-  h += '<div style="font-family:Bebas Neue,sans-serif;font-size:0.98rem;letter-spacing:0.04em;line-height:1.3">' + esc(p.awayTeam) + ' <span style="color:#6b7a8d;font-size:0.78rem">@</span> ' + esc(p.homeTeam) + '</div>';
-  h += '</div>';
-  h += '<div style="background:rgba(200,245,53,0.06);border:1px solid rgba(200,245,53,0.18);border-radius:8px;padding:10px 13px;margin-bottom:11px">';
-  h += '<div style="font-size:0.68rem;color:#6b7a8d;letter-spacing:0.08em;margin-bottom:3px">SHARP PICK</div>';
-  h += '<div style="color:#c8f535;font-family:Bebas Neue,sans-serif;font-size:1.18rem;letter-spacing:0.04em">' + esc(p.pick) + '</div>';
-  h += '<div style="display:flex;gap:12px;margin-top:4px">';
-  h += '<span style="font-size:0.73rem;color:#6b7a8d">' + esc(p.betType) + '</span>';
-  h += '<span style="font-size:0.73rem;color:#3b82f6">' + esc(p.odds) + '</span>';
-  h += '</div></div>';
-  h += '<p style="font-size:0.81rem;color:#8a9ab0;line-height:1.55">' + esc(p.analysis) + '</p>';
-  h += '</div></div>';
-  return h;
-}
-
-// ── ADMIN ─────────────────────────────────────────────────────────────────
-function buildAdmin() {
-  var h = '<div class="page-wrap">';
-  h += '<div style="margin-bottom:22px"><h1 style="font-family:Bebas Neue,sans-serif;font-size:2rem;letter-spacing:0.1em;color:#c8f535">ADMIN PANEL</h1><p style="color:#6b7a8d;font-size:0.84rem">Manage picks, users, and settings</p></div>';
-  h += '<div style="display:flex;gap:4px;border-bottom:1px solid #1e2530;margin-bottom:26px">';
-  h += '<button class="tab at ' + (adminTab==="add"?"on":"") + '" data-at="add">ADD PICKS</button>';
-  h += '<button class="tab at ' + (adminTab==="manage"?"on":"") + '" data-at="manage">MANAGE PICKS</button>';
-  h += '<button class="tab at ' + (adminTab==="users"?"on":"") + '" data-at="users">USERS</button>';
-  h += '</div><div id="ac">' + buildAdminTab() + '</div></div>';
-  return h;
-}
-
-function buildAdminTab() {
-  if (adminTab === "manage") return buildManagePicks();
-  if (adminTab === "users")  return buildManageUsers();
-  return buildAddPick();
-}
-
-function buildAddPick() {
-  var h = '<div class="two-col">';
-  h += '<div>';
-  h += '<div class="card" style="margin-bottom:15px">';
-  h += '<h3 style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#3b82f6">1. SELECT SPORT &amp; DATE</h3>';
-  h += '<div class="form-row" style="margin-bottom:15px">';
-  h += '<div><span class="lbl">Sport</span><select class="inp" id="p-sport"><option>NFL</option><option>NBA</option><option>NHL</option><option>MLB</option><option>NCAAF</option><option>NCAAM</option></select></div>';
-  h += '<div><span class="lbl">Date</span><input class="inp" type="date" id="p-date" value="' + todayStr() + '"></div>';
-  h += '</div>';
-  h += '<button class="btn-green" id="btn-load">&#128260; LOAD GAMES</button>';
-  h += '<div id="g-err"></div>';
-  h += '</div>';
-  h += '<div class="card" id="g-card" style="display:none">';
-  h += '<h3 id="g-title" style="font-family:Bebas Neue,sans-serif;font-size:1.05rem;letter-spacing:0.08em;margin-bottom:11px;color:#3b82f6">2. SELECT GAME</h3>';
-  h += '<div id="g-list" class="games-scroll"></div>';
-  h += '</div></div>';
-  h += '<div class="card"><h3 style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#c8f535">3. PICK DETAILS</h3>';
-  h += '<div class="form-col">';
-  h += '<div class="form-row"><div><span class="lbl">Away Team</span><input class="inp" id="p-away" placeholder="Away team"></div><div><span class="lbl">Home Team</span><input class="inp" id="p-home" placeholder="Home team"></div></div>';
-  h += '<div><span class="lbl">Your Pick</span><input class="inp" id="p-pick" placeholder="e.g. Boston Celtics -3.5"></div>';
-  h += '<div class="form-row3">';
-  h += '<div><span class="lbl">Bet Type</span><select class="inp" id="p-btype"><option>Spread</option><option>Moneyline</option><option>Total</option><option>Prop</option><option>Parlay</option></select></div>';
-  h += '<div><span class="lbl">Odds</span><input class="inp" id="p-odds" value="-110"></div>';
-  h += '<div><span class="lbl">Result</span><select class="inp" id="p-result"><option>PENDING</option><option>WIN</option><option>LOSS</option><option>PUSH</option></select></div>';
-  h += '</div>';
-  h += '<div><span class="lbl">Game Time</span><input class="inp" id="p-gtime" placeholder="e.g. 7:30 PM ET"></div>';
-  h += '<div><span class="lbl">Analysis</span><textarea class="inp" id="p-analysis" rows="4" placeholder="Write your analysis..."></textarea></div>';
-
-h += ‘<button class="btn-green" id="btn-pub" style="font-size:1.08rem;padding:13px">PUBLISH PICK</button>’;
-h += ‘<div id="p-saved"></div>’;
-h += ‘</div></div></div>’;
-return h;
-}
-
-function buildManagePicks() {
-var sorted = PICKS.slice().reverse();
-var h = ‘<div class="card">’;
-h += ‘<h3 style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#c8f535">ALL PICKS (’ + PICKS.length + ‘)</h3>’;
-if (!PICKS.length) {
-h += ‘<div style="color:#6b7a8d;text-align:center;padding:32px">No picks yet.</div>’;
-} else {
-h += ‘<div class="manage-list">’;
-for (var i=0; i<sorted.length; i++) {
-var p = sorted[i];
-var sc = SPORT_COLORS[p.sport] || “#555”;
-h += ‘<div class="manage-row">’;
-h += ‘<span class="sbadge" style="background:' + sc + '22;color:' + sc + ';border:1px solid ' + sc + '44;font-size:0.68rem">’ + esc(p.sport) + ‘</span>’;
-h += ‘<div style="flex:1;min-width:150px">’;
-h += ‘<div style="font-size:0.83rem;font-family:Bebas Neue,sans-serif;letter-spacing:0.04em">’ + esc(p.awayTeam) + ’ @ ’ + esc(p.homeTeam) + ‘</div>’;
-h += ‘<div style="font-size:0.73rem;color:#c8f535">’ + esc(p.pick) + ‘</div>’;
-h += ‘<div style="font-size:0.68rem;color:#6b7a8d">’ + esc(p.date) + ‘</div>’;
-h += ‘</div>’;
-h += ‘<select class="inp" data-pr="' + p.id + '" style="width:105px;font-size:0.78rem;padding:5px 8px;color:' + rcol(p.result) + '">’;
-var opts = [“PENDING”,“WIN”,“LOSS”,“PUSH”];
-for (var j=0; j<opts.length; j++) h += ‘<option’ + (p.result===opts[j]?” selected”:””) + ‘>’ + opts[j] + ‘</option>’;
-h += ‘</select>’;
-h += ‘<button class=”’ + (p.active?“btn-red”:“btn-lime”) + ‘” data-tp=”’ + p.id + ‘”>’ + (p.active?“DEACTIVATE”:“ACTIVATE”) + ‘</button>’;
-h += ‘<button class="btn-red" data-dp="' + p.id + '">DELETE</button>’;
-h += ‘</div>’;
-}
-h += ‘</div>’;
-}
-h += ‘</div>’;
-return h;
-}
-
-function buildManageUsers() {
-var na = [], act = 0;
-for (var i=0; i<USERS.length; i++) if (USERS[i].role !== “admin”) na.push(USERS[i]);
-for (var i=0; i<na.length; i++) if (na[i].active) act++;
-
-var h = ‘<div class="card">’;
-h += ‘<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">’;
-h += ‘<h3 style="font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;color:#c8f535">REGISTERED USERS (’ + na.length + ‘)</h3>’;
-h += ‘<div style="display:flex;gap:14px;font-size:0.78rem"><span style="color:#c8f535">● ’ + act + ’ Active</span><span style="color:#ff4444">● ’ + (na.length-act) + ’ Inactive</span></div>’;
-h += ‘</div>’;
-if (!na.length) {
-h += ‘<div style="color:#6b7a8d;text-align:center;padding:40px">No registered users.</div>’;
-} else {
-for (var i=0; i<na.length; i++) {
-var u = na[i];
-var uc = u.active ? “#c8f535” : “#ff4444”;
-h += ‘<div class="urow">’;
-h += ‘<div style="display:flex;align-items:center;gap:11px">’;
-h += ‘<div style=“width:35px;height:35px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:0.95rem;background:’ + (u.active?“rgba(200,245,53,0.1)”:“rgba(255,68,68,0.1)”) + ’;border:2px solid ’ + uc + ‘;color:’ + uc + ‘”>’ + esc(u.username.charAt(0).toUpperCase()) + ‘</div>’;
-h += ‘<div><div style="font-weight:700;font-size:0.93rem">’ + esc(u.username) + ‘</div><div style="font-size:0.72rem;color:#6b7a8d">’ + esc(u.email) + ’ · Joined ’ + esc(u.joined) + ‘</div></div>’;
-h += ‘</div>’;
-h += ‘<div style="display:flex;align-items:center;gap:10px">’;
-h += ‘<span style=“font-size:0.72rem;padding:3px 9px;border-radius:4px;font-family:Bebas Neue,sans-serif;letter-spacing:0.05em;color:’ + uc + ‘;background:’ + (u.active?“rgba(200,245,53,0.08)”:“rgba(255,68,68,0.08)”) + ’;border:1px solid ’ + (u.active?“rgba(200,245,53,0.25)”:“rgba(255,68,68,0.25)”) + ‘”>’ + (u.active?“ACTIVE”:“INACTIVE”) + ‘</span>’;
-h += ‘<button class=”’ + (u.active?“btn-red”:“btn-lime”) + ‘” data-tu=”’ + u.id + ‘”>’ + (u.active?“DEACTIVATE”:“ACTIVATE”) + ‘</button>’;
-h += ‘</div></div>’;
-}
-}
-h += ‘<div style="margin-top:18px;padding:12px 15px;background:rgba(59,130,246,0.05);border:1px dashed rgba(59,130,246,0.25);border-radius:8px">’;
-h += ‘<div style="font-size:0.72rem;color:#3b82f6;font-family:Bebas Neue,sans-serif;letter-spacing:0.06em;margin-bottom:4px">🔮 COMING SOON</div>’;
-h += ‘<div style="font-size:0.78rem;color:#6b7a8d">Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>’;
-h += ‘</div></div>’;
-return h;
-}
-
-// ── BIND ALL EVENTS ───────────────────────────────────────────────────────
-function bindAll() {
-var el;
-
-el = ge(“tab-login”); if (el) el.onclick = function() { authMode = “login”;    render(); };
-el = ge(“tab-reg”);   if (el) el.onclick = function() { authMode = “register”; render(); };
-el = ge(“btn-auth”);  if (el) el.onclick = doAuth;
-
-el = ge(“logo-btn”);  if (el) el.onclick = function() { curPage = “picks”; render(); };
-el = ge(“btn-picks”); if (el) el.onclick = function() { curPage = “picks”; render(); };
-el = ge(“btn-admin”); if (el) el.onclick = function() { curPage = “admin”; adminTab = “add”; render(); };
-el = ge(“btn-logout”);if (el) el.onclick = function() { curUser = null; authMode = “login”; render(); };
-
-clamp(”.sf”, function(btn) {
-btn.onclick = function() { sfilt = btn.getAttribute(“data-sp”); render(); };
-});
-
-clamp(”.at”, function(btn) {
-btn.onclick = function() { adminTab = btn.getAttribute(“data-at”); refreshAC(); };
-});
-
-bindAC();
-}
-
-function bindAC() {
-var el;
-el = ge(“btn-load”); if (el) el.onclick = doLoadGames;
-el = ge(“btn-pub”);  if (el) el.onclick = doPublish;
-
-clamp(”[data-pr]”, function(sel) {
-sel.onchange = function() {
-var id = parseInt(sel.getAttribute(“data-pr”), 10);
-for (var i=0; i<PICKS.length; i++) if (PICKS[i].id===id) { PICKS[i].result = sel.value; break; }
-refreshAC();
-};
-});
-
-clamp(”[data-tp]”, function(btn) {
-btn.onclick = function() {
-var id = parseInt(btn.getAttribute(“data-tp”), 10);
-for (var i=0; i<PICKS.length; i++) if (PICKS[i].id===id) { PICKS[i].active = !PICKS[i].active; break; }
-refreshAC();
-};
-});
-
-clamp(”[data-dp]”, function(btn) {
-btn.onclick = function() {
-var id = parseInt(btn.getAttribute(“data-dp”), 10);
-PICKS = PICKS.filter(function(p) { return p.id !== id; });
-refreshAC();
-};
-});
-
-clamp(”[data-tu]”, function(btn) {
-btn.onclick = function() {
-var id = parseInt(btn.getAttribute(“data-tu”), 10);
-for (var i=0; i<USERS.length; i++) if (USERS[i].id===id) { USERS[i].active = !USERS[i].active; break; }
-refreshAC();
-};
-});
-}
-
-function refreshAC() {
-var ac = ge(“ac”);
-if (ac) { ac.innerHTML = buildAdminTab(); bindAC(); }
-}
-
-// ── AUTH LOGIC ────────────────────────────────────────────────────────────
-function doAuth() {
-var errEl = ge(“a-err”);
-if (errEl) errEl.innerHTML = “”;
-var username = val(“a-user”).trim();
-var password = val(“a-pass”).trim();
-
-if (authMode === “login”) {
-var found = null;
-for (var i=0; i<USERS.length; i++) {
-if (USERS[i].username===username && USERS[i].password===password) { found=USERS[i]; break; }
-}
-if (!found)         { if (errEl) errEl.innerHTML=’<div class="err">Invalid username or password.</div>’; return; }
-if (!found.active)  { if (errEl) errEl.innerHTML=’<div class="err">Account deactivated. Contact support.</div>’; return; }
-curUser = found; curPage = “picks”; render();
-} else {
-var email = val(“a-email”).trim(), confirm = val(“a-conf”).trim();
-if (!username||!email||!password) { if (errEl) errEl.innerHTML=’<div class="err">All fields required.</div>’; return; }
-if (password!==confirm)           { if (errEl) errEl.innerHTML=’<div class="err">Passwords do not match.</div>’; return; }
-for (var i=0; i<USERS.length; i++) {
-if (USERS[i].username===username) { if (errEl) errEl.innerHTML=’<div class="err">Username taken.</div>’; return; }
-}
-var nu = { id:Date.now(), username:username, email:email, password:password, role:“user”, active:true, joined:todayStr() };
-USERS.push(nu);
-curUser = nu; curPage = “picks”; render();
-}
-}
-
-// ── LOAD GAMES ────────────────────────────────────────────────────────────
-function doLoadGames() {
-var btn = ge(“btn-load”); if (!btn) return;
-var sport = val(“p-sport”) || “NBA”;
-var date  = val(“p-date”)  || todayStr();
-var errEl = ge(“g-err”);
-var card  = ge(“g-card”);
-
-btn.disabled  = true;
-btn.textContent = “LOADING…”;
-if (errEl) errEl.innerHTML = “”;
-if (card)  card.style.display = “none”;
-
-espnFetch(sport, date, function(games) {
-btn.disabled    = false;
-btn.textContent = “LOAD GAMES”;
-
-```
-if (!games || !games.length) {
-  if (errEl) errEl.innerHTML = '<div class="warn">No ' + esc(sport) + ' games found for ' + esc(date) + '. Try another date.</div>';
-  return;
-}
-
-var title = ge("g-title");
-var list  = ge("g-list");
-if (card)  card.style.display = "block";
-if (title) title.textContent  = "2. SELECT GAME (" + games.length + ")";
-if (!list) return;
-
-var h = "";
-for (var i=0; i<games.length; i++) {
-  var g = games[i];
-  h += '<div class="game-row" data-home="' + esc(g.homeTeam) + '" data-away="' + esc(g.awayTeam) + '" data-time="' + esc(g.gameTime) + '">';
-  h += '<div style="font-family:Bebas Neue,sans-serif;font-size:0.93rem;letter-spacing:0.04em">' + esc(g.awayTeam) + ' @ ' + esc(g.homeTeam) + '</div>';
-  h += '<div style="font-size:0.68rem;color:#6b7a8d;margin-top:2px">' + esc(g.gameTime) + (g.venue ? " &middot; " + esc(g.venue) : "") + '</div>';
-  h += '</div>';
-}
-list.innerHTML = h;
-
-var rows = list.querySelectorAll(".game-row");
-for (var i=0; i<rows.length; i++) {
-  (function(row) {
-    row.onclick = function() {
-      for (var j=0; j<rows.length; j++) rows[j].className = "game-row";
-      row.className = "game-row sel";
-      sv("p-home",  row.getAttribute("data-home"));
-      sv("p-away",  row.getAttribute("data-away"));
-      sv("p-gtime", row.getAttribute("data-time"));
-    };
-  })(rows[i]);
-}
-```
-
-});
-}
-
-// ── PUBLISH PICK ──────────────────────────────────────────────────────────
-function doPublish() {
-var home = val(“p-home”).trim(), away = val(“p-away”).trim(), pick = val(“p-pick”).trim();
-var sv2  = ge(“p-saved”);
-if (!home||!away||!pick) { if (sv2) sv2.innerHTML=’<div class="err">Away, home, and pick are required.</div>’; return; }
-PICKS.push({
-id:Date.now(), sport:val(“p-sport”)||“NBA”, date:val(“p-date”)||todayStr(),
-homeTeam:home, awayTeam:away, pick:pick,
-betType:val(“p-btype”)||“Spread”, odds:val(“p-odds”)||”-110”,
-result:val(“p-result”)||“PENDING”, gameTime:val(“p-gtime”),
-analysis:val(“p-analysis”), active:true
-});
-var ids = [“p-home”,“p-away”,“p-pick”,“p-odds”,“p-gtime”,“p-analysis”];
-for (var i=0; i<ids.length; i++) sv(ids[i], “”);
-sv(“p-result”,“PENDING”);
-var gc = ge(“g-card”); if (gc) gc.style.display = “none”;
-var gl = ge(“g-list”);  if (gl) gl.innerHTML = “”;
-if (sv2) { sv2.innerHTML=’<div class="ok">✓ Pick published!</div>’; setTimeout(function(){ var e=ge(“p-saved”); if(e) e.innerHTML=””; },2500); }
-}
-
-// ── BOOT — script is at bottom of body so DOM is already ready ────────────
-render();
 
 </script>
+
 </body>
 </html>
