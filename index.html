@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sharp Selections — Daily Selections</title>
+<title>Sharp Selections - Daily Selections</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
   :root {
@@ -164,7 +164,7 @@
     <div class="auth-tagline">Bet $harp</div>
     <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="off"></div>
     <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+    <button class="btn btn-primary" onclick="doLogin()">Sign In -></button>
     <div id="login-error" class="msg msg-error" style="display:none;"></div>
     <div class="auth-toggle">Don't have an account? <a onclick="showScreen('register-screen')">Create one</a></div>
   </div>
@@ -189,7 +189,7 @@
     <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="Choose a username" autocomplete="off"></div>
     <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min. 6 characters" oninput="checkStrength(this.value)"><div class="strength-bar" id="strength-bar"></div></div>
     <div class="field"><label>Confirm Password</label><input type="password" id="reg-pass2" placeholder="Repeat password"></div>
-    <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+    <button class="btn btn-primary" onclick="doRegister()">Create Account -></button>
     <div id="reg-msg" class="msg" style="display:none;"></div>
     <div class="auth-toggle">Already have an account? <a onclick="showScreen('login-screen')">Sign in</a></div>
   </div>
@@ -206,10 +206,10 @@
       <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
     </svg>
     <hr class="divider">
-    <div class="pending-icon">⏳</div>
+    <div class="pending-icon"></div>
     <div class="pending-title">AWAITING APPROVAL</div>
     <p class="pending-text">Your account has been submitted and is pending admin approval.<br><br>You'll be able to log in once an administrator approves your registration.</p>
-    <button class="btn btn-secondary" onclick="showScreen('login-screen')" style="width:100%;">← Back to Login</button>
+    <button class="btn btn-secondary" onclick="showScreen('login-screen')" style="width:100%;"><- Back to Login</button>
   </div>
 </div>
 
@@ -278,8 +278,8 @@
   <div class="admin-add-panel">
     <div class="admin-add-header" onclick="toggleAddPanel()">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span class="add-panel-icon">＋</span>
-        <div><div class="add-panel-title">ADD NEW PICK</div><div class="add-panel-sub">Click to expand · Add selections for any sport</div></div>
+        <span class="add-panel-icon">+</span>
+        <div><div class="add-panel-title">ADD NEW PICK</div><div class="add-panel-sub">Click to expand - Add selections for any sport</div></div>
       </div>
       <div class="sport-quick-btns" onclick="event.stopPropagation()">
         <button class="sport-quick" data-s="NFL" onclick="quickSport('NFL')">NFL</button>
@@ -289,14 +289,14 @@
         <button class="sport-quick" data-s="NCAAF" onclick="quickSport('NCAAF')">NCAAF</button>
         <button class="sport-quick" data-s="NCAAM" onclick="quickSport('NCAAM')">NCAAM</button>
       </div>
-      <span class="panel-chevron" id="panel-chevron">▼</span>
+      <span class="panel-chevron" id="panel-chevron">v</span>
     </div>
     <div class="admin-add-body" id="admin-add-body">
       <div style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
           <div class="section-title" style="margin:0;">Select a Game</div>
-          <input type="date" id="f-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="lastFetchKey='';document.getElementById('games-grid').innerHTML='';document.getElementById('fetch-btn').textContent='🔄 Load Games';">
-          <button class="btn btn-secondary btn-sm" onclick="lastFetchKey='';fetchGames()" id="fetch-btn">🔄 Load Games</button>
+          <input type="date" id="f-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="lastFetchKey='';document.getElementById('games-grid').innerHTML='';document.getElementById('fetch-btn').textContent=' Load Games';">
+          <button class="btn btn-secondary btn-sm" onclick="lastFetchKey='';fetchGames()" id="fetch-btn"> Load Games</button>
         </div>
         <div id="games-loader" style="display:none;padding:14px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;">LOADING SCHEDULE...</div>
         <div id="games-grid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;"><div class="games-empty">Select a date and sport, then tap Load Games.</div></div>
@@ -314,12 +314,12 @@
       <div class="field" style="margin-top:4px;"><label>Analysis / Notes</label><textarea id="f-notes" rows="2" placeholder="Brief analysis or reasoning..."></textarea></div>
       <div id="add-pick-error" class="msg msg-error" style="display:none;margin-top:8px;"></div>
       <div style="display:flex;gap:10px;margin-top:16px;">
-        <button class="btn btn-primary" onclick="savePickInline()" style="flex:1;">＋ Save Pick</button>
+        <button class="btn btn-primary" onclick="savePickInline()" style="flex:1;">+ Save Pick</button>
         <button class="btn btn-secondary" onclick="clearPickForm()">Clear</button>
       </div>
     </div>
   </div>
-  <div class="section-header"><div class="section-title">All Picks — Update Results</div></div>
+  <div class="section-header"><div class="section-title">All Picks - Update Results</div></div>
   <div id="admin-picks-container" class="picks-grid"></div>
 </div>
 
@@ -330,7 +330,7 @@
   </div>
 
   <div id="pending-section" style="margin-bottom:28px;display:none;">
-    <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
+    <div class="section-header"><div class="section-title" style="color:var(--accent2);">! Pending Approval</div></div>
     <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
   </div>
   <div class="section-header"><div class="section-title">All Users</div></div>
@@ -343,7 +343,7 @@
 
 <div class="modal-overlay" id="modal-add-user">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    <button class="modal-close" onclick="closeModal('modal-add-user')">x</button>
     <div class="modal-title" id="user-modal-title">ADD USER</div>
     <div class="form-grid">
       <div class="field"><label>First Name</label><input type="text" id="new-first" placeholder="First name"></div>
@@ -363,10 +363,10 @@
 
 <div class="modal-overlay" id="modal-result">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-result')">✕</button>
+    <button class="modal-close" onclick="closeModal('modal-result')">x</button>
     <div class="modal-title">UPDATE RESULT</div>
     <input type="hidden" id="result-pick-id">
-    <div class="field"><label>Result</label><select id="result-select"><option value="PENDING">Pending</option><option value="WIN">Win ✓</option><option value="LOSS">Loss ✗</option><option value="PUSH">Push ~</option></select></div>
+    <div class="field"><label>Result</label><select id="result-select"><option value="PENDING">Pending</option><option value="WIN">Win OK</option><option value="LOSS">Loss x</option><option value="PUSH">Push ~</option></select></div>
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button class="btn btn-primary" onclick="saveResult()" style="flex:1;">Save Result</button>
       <button class="btn btn-secondary" onclick="closeModal('modal-result')">Cancel</button>
@@ -567,7 +567,7 @@ function fetchGames() {
   isFetching = true;
   grid.innerHTML = '';
   loader.style.display = 'block';
-  fetchBtn.textContent = '⏳ Loading...';
+  fetchBtn.textContent = ' Loading...';
   fetchBtn.disabled = true;
   var dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   function resetBtn(label) { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; }
@@ -593,7 +593,7 @@ function fetchGames() {
       var state = (comp.status && comp.status.type && comp.status.type.state) || 'pre';
       (state === 'pre' ? upcoming : started).push({ away: aw.team.displayName||aw.team.name, home: hm.team.displayName||hm.team.name, time });
     });
-    resetBtn('🔄 Refresh');
+    resetBtn(' Refresh');
     var html = '';
     if (upcoming.length) {
       html += upcoming.map(function(g) { return '<button class="game-pill" onclick="selectGame(this)" data-away="' + g.away + '" data-home="' + g.home + '"><span class="gp-sport">' + sport + '</span><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span class="gp-time">' + g.time + '</span></button>'; }).join('');
@@ -605,7 +605,7 @@ function fetchGames() {
     }
     grid.innerHTML = html;
   } catch(err) {
-    resetBtn('🔄 Try Again');
+    resetBtn(' Try Again');
     lastFetchKey = '';
     grid.innerHTML = '<div class="games-empty" style="color:var(--danger);">Could not load - enter teams manually. (' + err.message + ')</div>';
   }
@@ -639,7 +639,7 @@ function savePickInline() {
   errEl.style.display = 'none';
   var btn = document.querySelector('[onclick="savePickInline()"]');
   var orig = btn.textContent;
-  btn.textContent = '✓ Pick Saved!';
+  btn.textContent = 'OK Pick Saved!';
   setTimeout(function() { btn.textContent = orig; }, 1800);
   loadPicksForDate(currentDateView); renderAdminPicks(); renderStats(); renderHistory();
 }
