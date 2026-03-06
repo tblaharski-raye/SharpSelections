@@ -4,636 +4,751 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$harp $elections</title>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Sharp Selections</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#0a0c0e;min-height:100%;color:#e8edf2;font-family:'Rajdhani',sans-serif}
-:root{
-  --green:#c8f535;--blue:#3b82f6;--bg:#0a0c0e;--card:#111518;
-  --border:#1e2530;--muted:#6b7a8d;
-  --gg:0 0 20px rgba(200,245,53,.4),0 0 40px rgba(200,245,53,.15);
-  --gb:0 0 20px rgba(59,130,246,.4),0 0 40px rgba(59,130,246,.15);
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #0a0c0e; min-height: 100vh; color: #e8edf2; font-family: 'Rajdhani', sans-serif; font-size: 16px; }
+#app { min-height: 100vh; background: #0a0c0e; }
+
+.neon-title {
+font-family: ‘Pacifico’, cursive;
+color: #c8f535;
+-webkit-text-stroke: 2px #3b82f6;
+paint-order: stroke fill;
+text-shadow: 0 0 20px rgba(200,245,53,0.5), 0 0 40px rgba(200,245,53,0.2);
 }
-#app{min-height:100vh;background:#0a0c0e}
 
-/* ── NEON TITLE ── */
-.neon-title{
-font-family:‘Pacifico’,cursive;color:var(–green);
-text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3);
--webkit-text-stroke:2px var(–blue);paint-order:stroke fill;
--webkit-animation:glow 3s ease-in-out infinite;animation:glow 3s ease-in-out infinite;
+/* buttons */
+.btn-green {
+display: block; width: 100%; cursor: pointer;
+background: #c8f535; color: #0a0c0e;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 1rem; letter-spacing: 0.08em;
+border: none; border-radius: 6px; padding: 12px 20px;
+-webkit-transition: opacity 0.2s; transition: opacity 0.2s;
 }
-@-webkit-keyframes glow{0%,100%{text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3)}50%{text-shadow:0 0 30px rgba(200,245,53,.9),0 0 70px rgba(200,245,53,.5)}}
-@keyframes glow{0%,100%{text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3)}50%{text-shadow:0 0 30px rgba(200,245,53,.9),0 0 70px rgba(200,245,53,.5)}}
+.btn-green:hover { opacity: 0.85; }
+.btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
 
-@-webkit-keyframes fadeUp{from{opacity:0;-webkit-transform:translateY(14px)}to{opacity:1;-webkit-transform:translateY(0)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{-webkit-animation:fadeUp .4s ease forwards;animation:fadeUp .4s ease forwards}
+.btn-blue {
+cursor: pointer; background: transparent; color: #3b82f6;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 0.85rem; letter-spacing: 0.08em;
+border: 1px solid #3b82f6; border-radius: 6px; padding: 6px 14px;
+}
+.btn-red {
+cursor: pointer; background: transparent; color: #ff4444;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 0.78rem; letter-spacing: 0.06em;
+border: 1px solid #ff4444; border-radius: 4px; padding: 5px 11px;
+}
+.btn-lime {
+cursor: pointer; background: transparent; color: #c8f535;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 0.78rem; letter-spacing: 0.06em;
+border: 1px solid #c8f535; border-radius: 4px; padding: 5px 11px;
+}
 
-@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{display:inline-block;vertical-align:middle;margin-right:6px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(200,245,53,.2);border-top-color:var(–green);-webkit-animation:spin .8s linear infinite;animation:spin .8s linear infinite}
+/* inputs */
+.inp {
+background: #0d1117; border: 1px solid #2a3344; border-radius: 6px;
+color: #e8edf2; font-family: ‘Rajdhani’, sans-serif; font-size: 0.95rem;
+padding: 10px 13px; width: 100%;
+-webkit-appearance: none; appearance: none;
+}
+.inp:focus { outline: none; border-color: #3b82f6; }
+select.inp { padding-right: 30px; }
+textarea.inp { resize: vertical; }
+.lbl { display: block; font-size: 0.72rem; letter-spacing: 0.05em; color: #6b7a8d; text-transform: uppercase; margin-bottom: 5px; }
 
-/* ── BUTTONS ── */
-.btn-primary{display:block;width:100%;cursor:pointer;border:none;border-radius:6px;font-family:‘Bebas Neue’,sans-serif;letter-spacing:.08em;-webkit-transition:all .2s;transition:all .2s;background:-webkit-linear-gradient(135deg,#c8f535,#a8e020);background:linear-gradient(135deg,#c8f535,#a8e020);color:#0a0c0e;font-size:1rem;padding:11px 24px;box-shadow:var(–gg)}
-.btn-primary:hover{-webkit-transform:translateY(-1px);transform:translateY(-1px);box-shadow:0 0 30px rgba(200,245,53,.7)}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed;-webkit-transform:none;transform:none}
-.btn-secondary{cursor:pointer;border-radius:6px;font-family:‘Bebas Neue’,sans-serif;letter-spacing:.08em;-webkit-transition:all .2s;transition:all .2s;background:transparent;color:var(–blue);border:1px solid var(–blue);font-size:.85rem;padding:6px 14px}
-.btn-secondary:hover{background:rgba(59,130,246,.12);-webkit-box-shadow:var(–gb);box-shadow:var(–gb)}
-.btn-danger{cursor:pointer;background:transparent;color:#ff4444;border:1px solid #ff4444;font-family:‘Bebas Neue’,sans-serif;font-size:.78rem;padding:5px 11px;border-radius:4px;-webkit-transition:all .2s;transition:all .2s}
-.btn-danger:hover{background:rgba(255,68,68,.15)}
-.btn-success{cursor:pointer;background:transparent;color:var(–green);border:1px solid var(–green);font-family:‘Bebas Neue’,sans-serif;font-size:.78rem;padding:5px 11px;border-radius:4px;-webkit-transition:all .2s;transition:all .2s}
-.btn-success:hover{background:rgba(200,245,53,.1)}
+/* layout */
+.card { background: #111518; border: 1px solid #1e2530; border-radius: 12px; padding: 20px; }
+.row  { display: -webkit-flex; display: flex; gap: 12px; }
+.row > * { -webkit-flex: 1; flex: 1; }
+.col  { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 13px; }
+.wrap { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 16px; }
+.wrap > .pick-card { width: calc(50% - 8px); min-width: 280px; }
+@media (max-width: 640px) { .wrap > .pick-card { width: 100%; } .row { -webkit-flex-wrap: wrap; flex-wrap: wrap; } }
 
-/* ── INPUTS ── */
-.input-field{background:#0d1117;border:1px solid #2a3344;border-radius:6px;color:#e8edf2;font-family:‘Rajdhani’,sans-serif;font-size:.95rem;padding:10px 13px;width:100%;-webkit-transition:border-color .2s;transition:border-color .2s;-webkit-appearance:none;appearance:none}
-.input-field:focus{outline:none;border-color:var(–blue);-webkit-box-shadow:0 0 0 2px rgba(59,130,246,.2);box-shadow:0 0 0 2px rgba(59,130,246,.2)}
-select.input-field{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘10’ height=‘6’%3E%3Cpath d=‘M0 0l5 6 5-6z’ fill=’%236b7a8d’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-textarea.input-field{resize:vertical}
-label{display:block;font-size:.73rem;letter-spacing:.05em;color:var(–muted);text-transform:uppercase;margin-bottom:5px}
+/* tabs */
+.tab {
+background: transparent; color: #6b7a8d;
+font-family: ‘Bebas Neue’, sans-serif; font-size: 0.95rem; letter-spacing: 0.08em;
+border: none; border-bottom: 2px solid transparent;
+padding: 10px 16px; cursor: pointer; white-space: nowrap;
+}
+.tab.on { color: #c8f535; border-bottom-color: #c8f535; }
 
-/* ── CARD ── */
-.card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:20px}
+/* header */
+#hdr {
+background: #0d1015; border-bottom: 1px solid #1e2530;
+position: -webkit-sticky; position: sticky; top: 0; z-index: 100;
+}
+.hdr-in {
+max-width: 1200px; margin: 0 auto; padding: 13px 20px;
+display: -webkit-flex; display: flex;
+-webkit-align-items: center; align-items: center;
+-webkit-justify-content: space-between; justify-content: space-between;
+gap: 10px;
+}
 
-/* ── TABS ── */
-.tab-btn{background:transparent;color:var(–muted);font-family:‘Bebas Neue’,sans-serif;font-size:.95rem;letter-spacing:.08em;border:none;border-bottom:2px solid transparent;padding:10px 16px;cursor:pointer;white-space:nowrap;-webkit-transition:all .2s;transition:all .2s}
-.tab-btn.active{color:var(–green);border-bottom-color:var(–green)}
-.tab-btn:hover{color:#e8edf2}
-.tab-btn.active:hover{color:var(–green)}
+/* pick card */
+.pick-card { background: #111518; border: 1px solid #1e2530; border-radius: 12px; overflow: hidden; }
 
-/* ── HEADER ── */
-#hdr{background:rgba(10,12,14,.96);border-bottom:1px solid var(–border);position:-webkit-sticky;position:sticky;top:0;z-index:100;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.hdr-inner{max-width:1200px;margin:0 auto;padding:13px 20px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;gap:10px}
+/* stats */
+.stats { display: -webkit-flex; display: flex; gap: 12px; margin-bottom: 28px; }
+.stat  { background: #0d1117; border: 1px solid #1e2530; border-radius: 8px; padding: 14px; text-align: center; -webkit-flex: 1; flex: 1; }
 
-/* ── ARROW DECO ── */
-.deco-row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;margin:3px auto 2px;width:160px}
-.deco-line{-webkit-flex:1;flex:1;height:2px;background:var(–blue);-webkit-box-shadow:var(–gb);box-shadow:var(–gb)}
-.deco-arrow{color:var(–blue);font-size:9px;text-shadow:var(–gb);padding:0 2px;line-height:1}
+/* sport filter */
+.filters { display: -webkit-flex; display: flex; gap: 4px; overflow-x: auto; margin-bottom: 22px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
 
-/* ── PICKS ── */
-.picks-grid{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:16px}
-.pick-card{background:var(–card);border:1px solid var(–border);border-radius:12px;overflow:hidden;-webkit-transition:transform .2s,box-shadow .2s;transition:transform .2s,box-shadow .2s;width:calc(50% - 8px);min-width:280px}
-.pick-card:hover{-webkit-transform:translateY(-2px);transform:translateY(-2px);-webkit-box-shadow:0 8px 32px rgba(0,0,0,.5);box-shadow:0 8px 32px rgba(0,0,0,.5)}
-@media(max-width:680px){.pick-card{width:100%}}
+/* alerts */
+.err  { color: #ff4444; font-size: 0.83rem; background: rgba(255,68,68,0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,68,68,0.25); }
+.warn { color: #f0c040; font-size: 0.8rem;  background: rgba(240,192,64,0.08); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(240,192,64,0.2); }
+.ok   { color: #c8f535; font-size: 0.85rem; text-align: center; padding: 6px; }
 
-/* ── BADGES ── */
-.sport-badge{font-family:‘Bebas Neue’,sans-serif;font-size:.7rem;letter-spacing:.1em;padding:3px 9px;border-radius:4px;display:inline-block}
-.result-badge{font-family:‘Bebas Neue’,sans-serif;font-size:.82rem;letter-spacing:.1em;padding:4px 11px;border-radius:4px}
+/* admin two col */
+.two-col { display: -webkit-flex; display: flex; gap: 24px; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.two-col > div { -webkit-flex: 1; flex: 1; min-width: 280px; }
 
-/* ── STAT ── */
-.stat-grid{display:-webkit-flex;display:flex;gap:12px;margin-bottom:28px}
-.stat-box{background:#0d1117;border:1px solid var(–border);border-radius:8px;padding:14px;text-align:center;-webkit-flex:1;flex:1}
+/* users */
+.urow { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #1a2030; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 10px; }
+.urow:last-child { border-bottom: none; }
 
-/* ── ADMIN LAYOUT ── */
-.two-col{display:-webkit-flex;display:flex;gap:24px;-webkit-flex-wrap:wrap;flex-wrap:wrap}
-.two-col > div{-webkit-flex:1;flex:1;min-width:280px}
-.grid2{display:-webkit-flex;display:flex;gap:12px}
-.grid2 > div{-webkit-flex:1;flex:1}
-.grid3{display:-webkit-flex;display:flex;gap:10px}
-.grid3 > div{-webkit-flex:1;flex:1}
-
-/* ── USERS ── */
-.user-row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1a2030;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px}
-.user-row:last-child{border-bottom:none}
-
-/* ── ALERTS ── */
-.err-box{color:#ff4444;font-size:.83rem;background:rgba(255,68,68,.1);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,68,68,.25)}
-.warn-box{color:#f0c040;font-size:.8rem;background:rgba(240,192,64,.08);padding:8px 12px;border-radius:6px;border:1px solid rgba(240,192,64,.2)}
-.ok-box{color:var(–green);font-size:.85rem;text-align:center;padding:6px}
-
-/* ── MISC ── */
-.sport-tabs{display:-webkit-flex;display:flex;gap:4px;overflow-x:auto;margin-bottom:22px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.sport-tabs::-webkit-scrollbar{height:4px}
-.sport-tabs::-webkit-scrollbar-track{background:#0d1117}
-.sport-tabs::-webkit-scrollbar-thumb{background:#2a3344;border-radius:2px}
-.game-list-scroll{max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-footer{border-top:1px solid var(–border);padding:20px;text-align:center;margin-top:40px}
-.demo-hint{margin-top:14px;padding:11px;background:#0d1117;border-radius:7px;font-size:.74rem;color:var(–muted)}
-.logo-wrap{cursor:pointer}
+footer { border-top: 1px solid #1e2530; padding: 20px; text-align: center; margin-top: 40px; }
+.page-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+.demo { margin-top: 14px; padding: 11px; background: #0d1117; border-radius: 7px; font-size: 0.74rem; color: #6b7a8d; }
+.manage-list { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 7px; }
+.manage-row { background: #0d1117; border: 1px solid #1e2530; border-radius: 8px; padding: 11px 14px; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 10px; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.game-row { padding: 10px 12px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; background: #0d1117; border: 1px solid #1e2530; }
+.game-row.sel { background: rgba(200,245,53,0.08); border-color: rgba(200,245,53,0.35); }
+.games-scroll { max-height: 320px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sbadge { font-family: ‘Bebas Neue’, sans-serif; font-size: 0.7rem; letter-spacing: 0.1em; padding: 3px 9px; border-radius: 4px; display: inline-block; }
+.rbadge { font-family: ‘Bebas Neue’, sans-serif; font-size: 0.82rem; letter-spacing: 0.1em; padding: 4px 11px; border-radius: 4px; }
+.deco { height: 2px; background: #3b82f6; width: 160px; margin: 3px auto 2px; }
+.grid3 { display: -webkit-flex; display: flex; gap: 10px; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.grid3 > div { -webkit-flex: 1; flex: 1; min-width: 80px; }
 </style>
 
 </head>
 <body>
-<div id="app"></div>
+<div id="app"><p style="color:#c8f535;padding:40px;">Loading...</p></div>
 
 <script>
-(function(){
-"use strict";
-
-/* ── DATA ── */
-var users = [
-  {id:1,username:"admin",     password:"admin123",role:"admin",active:true, email:"admin@sharpselections.com",joined:"2024-01-01"},
-  {id:2,username:"john_doe",  password:"pass123", role:"user", active:true, email:"john@example.com",         joined:"2024-03-01"},
-  {id:3,username:"jane_smith",password:"pass123", role:"user", active:false,email:"jane@example.com",         joined:"2024-03-10"}
+// ── DATA ──────────────────────────────────────────────────────────────────
+var USERS = [
+  { id:1, username:"admin",      password:"admin123", role:"admin", active:true,  email:"admin@sharpselections.com", joined:"2024-01-01" },
+  { id:2, username:"john_doe",   password:"pass123",  role:"user",  active:true,  email:"john@example.com",          joined:"2024-03-01" },
+  { id:3, username:"jane_smith", password:"pass123",  role:"user",  active:false, email:"jane@example.com",          joined:"2024-03-10" }
 ];
-var picks = [
-  {id:1,sport:"NBA",date:"2026-03-06",homeTeam:"Los Angeles Lakers",awayTeam:"Boston Celtics",
-   pick:"Boston Celtics -3.5",betType:"Spread",odds:"-110",
-   analysis:"Celtics have won 8 straight and Lakers are short-handed. Fade the home chalk.",
-   result:"WIN",gameTime:"7:30 PM ET",active:true},
-  {id:2,sport:"NHL",date:"2026-03-06",homeTeam:"Colorado Avalanche",awayTeam:"Vegas Golden Knights",
-   pick:"Over 6.5",betType:"Total",odds:"-115",
-   analysis:"Both teams averaging 4+ goals at home this month. Expect a shootout tonight.",
-   result:"PENDING",gameTime:"9:00 PM ET",active:true},
-  {id:3,sport:"NFL",date:"2026-03-06",homeTeam:"Kansas City Chiefs",awayTeam:"Buffalo Bills",
-   pick:"Kansas City Chiefs ML",betType:"Moneyline",odds:"-130",
-   analysis:"Chiefs at home in the playoffs? Automatic. Mahomes elevates in big spots.",
-   result:"WIN",gameTime:"4:25 PM ET",active:true}
+var PICKS = [
+  { id:1, sport:"NBA", date:"2026-03-06", homeTeam:"Los Angeles Lakers",  awayTeam:"Boston Celtics",
+    pick:"Boston Celtics -3.5", betType:"Spread",    odds:"-110",
+    analysis:"Celtics have won 8 straight and Lakers are shorthanded. Fade the home chalk.",
+    result:"WIN", gameTime:"7:30 PM ET", active:true },
+  { id:2, sport:"NHL", date:"2026-03-06", homeTeam:"Colorado Avalanche",  awayTeam:"Vegas Golden Knights",
+    pick:"Over 6.5",            betType:"Total",     odds:"-115",
+    analysis:"Both teams averaging 4+ goals at home this month. Expect a shootout.",
+    result:"PENDING", gameTime:"9:00 PM ET", active:true },
+  { id:3, sport:"NFL", date:"2026-03-06", homeTeam:"Kansas City Chiefs",  awayTeam:"Buffalo Bills",
+    pick:"Chiefs ML",           betType:"Moneyline", odds:"-130",
+    analysis:"Chiefs at home in the playoffs. Mahomes elevates every big spot.",
+    result:"WIN", gameTime:"4:25 PM ET", active:true }
 ];
 
 var ESPN_MAP = {
-  NFL:  {sport:"football",  league:"nfl"},
-  NBA:  {sport:"basketball",league:"nba"},
-  NHL:  {sport:"hockey",    league:"nhl"},
-  MLB:  {sport:"baseball",  league:"mlb"},
-  NCAAF:{sport:"football",  league:"college-football"},
-  NCAAM:{sport:"basketball",league:"mens-college-basketball"}
+  NFL:  { s:"football",   l:"nfl" },
+  NBA:  { s:"basketball", l:"nba" },
+  NHL:  { s:"hockey",     l:"nhl" },
+  MLB:  { s:"baseball",   l:"mlb" },
+  NCAAF:{ s:"football",   l:"college-football" },
+  NCAAM:{ s:"basketball", l:"mens-college-basketball" }
 };
-var SC = {NFL:"#d4380d",NBA:"#c41230",NHL:"#1560bd",MLB:"#003087",NCAAF:"#bf5700",NCAAM:"#4b0082"};
+var SC = { NFL:"#d4380d", NBA:"#c41230", NHL:"#1560bd", MLB:"#003087", NCAAF:"#bf5700", NCAAM:"#4b0082" };
 
-var currentUser = null;
-var currentPage = "picks";
-var adminTab    = "add";
-var sportFilter = "ALL";
-var authMode    = "login";
+// ── STATE ─────────────────────────────────────────────────────────────────
+var curUser   = null;
+var curPage   = "picks";
+var adminTab  = "add";
+var sfilt     = "ALL";
+var authMode  = "login";
 
-/* ── UTILS ── */
-function esc(s){
-  return String(s==null?"":s)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+// ── TINY DOM HELPERS ──────────────────────────────────────────────────────
+function ge(id)    { return document.getElementById(id); }
+function val(id)   { var el = ge(id); return el ? el.value : ""; }
+function sv(id, v) { var el = ge(id); if (el) el.value = v; }
+
+function esc(s) {
+  s = s == null ? "" : String(s);
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-function todayStr(){ return new Date().toISOString().split("T")[0]; }
-function rc(r){ return r==="WIN"?"#39ff14":r==="LOSS"?"#ff3b3b":"#f0c040"; }
-function ge(id){ return document.getElementById(id); }
-function val(id){ var el=ge(id); return el?el.value.trim():""; }
-function sv(id,v){ var el=ge(id); if(el) el.value=v; }
-function on(id,ev,fn){ var el=ge(id); if(el) el.addEventListener(ev,fn); }
-function qsa(sel){ return document.querySelectorAll(sel); }
+function todayStr() {
+  var d = new Date();
+  var mm = d.getMonth() + 1;
+  var dd = d.getDate();
+  return d.getFullYear() + "-" + (mm < 10 ? "0"+mm : mm) + "-" + (dd < 10 ? "0"+dd : dd);
+}
+function rcol(r) { return r === "WIN" ? "#39ff14" : r === "LOSS" ? "#ff3b3b" : "#f0c040"; }
+function fmtDate() {
+  return new Date().toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" });
+}
 
-/* ── ESPN XHR (no fetch, avoids Safari CORS edge cases) ── */
-function espnFetch(sport, date, cb){
+// ── ESPN XHR ──────────────────────────────────────────────────────────────
+function espnFetch(sport, date, cb) {
   var map = ESPN_MAP[sport];
-  if(!map){ cb([]); return; }
-  var ds  = date.replace(/-/g,"");
-  var url = "https://site.api.espn.com/apis/site/v2/sports/"+map.sport+"/"+map.league+"/scoreboard?dates="+ds;
-  var x = new XMLHttpRequest();
-  x.open("GET", url, true);
-  x.timeout = 9000;
-  x.onreadystatechange = function(){
-    if(x.readyState !== 4) return;
-    if(x.status >= 200 && x.status < 300){
-      try{
-        var d = JSON.parse(x.responseText);
-        var out = (d.events||[]).map(function(e){
-          var comp = (e.competitions||[])[0] || {};
-          var competitors = comp.competitors || [];
-          var home=null, away=null;
-          for(var i=0;i<competitors.length;i++){
-            if(competitors[i].homeAway==="home") home=competitors[i];
-            else away=competitors[i];
-          }
-          var t="";
-          if(comp.date){
-            try{ t=new Date(comp.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}); }catch(ignored){}
-          }
-          return {
-            id: e.id||("g"+Math.random()),
-            homeTeam:(home&&home.team&&home.team.displayName)||"Home",
-            awayTeam:(away&&away.team&&away.team.displayName)||"Away",
-            gameTime:t,
-            venue:(comp.venue&&comp.venue.fullName)||""
-          };
+  if (!map) { cb([]); return; }
+  var ds  = date.replace(/-/g, "");
+  var url = "https://site.api.espn.com/apis/site/v2/sports/" + map.s + "/" + map.l + "/scoreboard?dates=" + ds;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.timeout = 10000;
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState !== 4) return;
+    try {
+      var data = JSON.parse(xhr.responseText);
+      var out  = [];
+      var evts = data.events || [];
+      for (var i = 0; i < evts.length; i++) {
+        var e    = evts[i];
+        var comp = e.competitions && e.competitions[0] ? e.competitions[0] : {};
+        var ctrs = comp.competitors || [];
+        var home = null, away = null;
+        for (var j = 0; j < ctrs.length; j++) {
+          if (ctrs[j].homeAway === "home") home = ctrs[j];
+          else                              away = ctrs[j];
+        }
+        var t = "";
+        if (comp.date) {
+          try { t = new Date(comp.date).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit", timeZoneName:"short" }); }
+          catch(ignore) {}
+        }
+        out.push({
+          id:       e.id || ("x" + i),
+          homeTeam: home && home.team ? home.team.displayName || "Home" : "Home",
+          awayTeam: away && away.team ? away.team.displayName || "Away" : "Away",
+          gameTime: t,
+          venue:    comp.venue && comp.venue.fullName ? comp.venue.fullName : ""
         });
-        cb(out);
-      }catch(err){ cb([]); }
-    } else { cb([]); }
+      }
+      cb(out);
+    } catch(err) { cb([]); }
   };
-  x.onerror   = function(){ cb([]); };
-  x.ontimeout = function(){ cb([]); };
-  try{ x.send(); }catch(e){ cb([]); }
+  xhr.onerror   = function() { cb([]); };
+  xhr.ontimeout = function() { cb([]); };
+  xhr.send();
 }
 
-/* ── LOGO ── */
-function logo(sz, sub){
-  sz  = sz  || "1.6rem";
-  sub = sub || "0.55rem";
-  return "<div class='logo-wrap' id='logo-home'>"
-    +"<div class='neon-title' style='font-size:"+sz+";line-height:1'>$harp $elections</div>"
-    +"<div class='deco-row'><div class='deco-line'></div>"
-    +"<span class='deco-arrow'>&#9664;</span>"
-    +"<div class='deco-line' style='-webkit-flex:3;flex:3'></div>"
-    +"<span class='deco-arrow'>&#9654;</span>"
-    +"<div class='deco-line'></div></div>"
-    +"<div style='color:var(--green);font-family:Bebas Neue,sans-serif;letter-spacing:.25em;text-align:center;font-size:"+sub+";margin-top:1px'>BET $HARP</div>"
-    +"</div>";
+// ── LOGO ──────────────────────────────────────────────────────────────────
+function logoHTML(titleSize, subSize) {
+  return "<div id='logo-btn' style='cursor:pointer;text-align:left'>"
+       + "<div class='neon-title' style='font-size:" + titleSize + ";line-height:1'>$harp $elections</div>"
+       + "<div class='deco'></div>"
+       + "<div style='color:#c8f535;font-family:Bebas Neue,sans-serif;letter-spacing:0.25em;text-align:center;font-size:" + subSize + ";margin-top:1px'>BET $HARP</div>"
+       + "</div>";
 }
 
-/* ══════════════════════════════════════════════
-   RENDER
-══════════════════════════════════════════════ */
-function render(){
-  var app = ge("app");
-  if(!app) return;
-  app.innerHTML = currentUser ? appHTML() : authHTML();
-  bind();
-}
-
-/* ── AUTH ── */
-function authHTML(){
-  var r = authMode==="register";
-  return "<div style='min-height:100vh;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;padding:20px;background:#0a0c0e'>"
-    +"<div class='fade-in' style='width:100%;max-width:420px'>"
-    +"<div style='text-align:center;margin-bottom:30px'>"+logo("3rem","0.9rem")+"</div>"
-    +"<div class='card' style='border-color:#2a3344'>"
-    +"<div style='display:-webkit-flex;display:flex;border-bottom:1px solid var(--border);margin-bottom:22px'>"
-    +"<button class='tab-btn"+(authMode==="login"?" active":"")+"' id='t-login'>LOGIN</button>"
-    +"<button class='tab-btn"+(r?" active":"")+"' id='t-reg'>REGISTER</button>"
-    +"</div>"
-    +"<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:14px'>"
-    +"<div><label>Username</label><input class='input-field' id='a-user' placeholder='Enter username' autocomplete='username'></div>"
-    +(r?"<div><label>Email</label><input class='input-field' id='a-email' type='email' placeholder='Enter email' autocomplete='email'></div>":"")
-    +"<div><label>Password</label><input class='input-field' id='a-pass' type='password' placeholder='Enter password' autocomplete='current-password'></div>"
-    +(r?"<div><label>Confirm Password</label><input class='input-field' id='a-conf' type='password' placeholder='Confirm password'></div>":"")
-    +"<div id='a-err'></div>"
-    +"<button class='btn-primary' id='a-sub' style='margin-top:4px;font-size:1.1rem;padding:12px'>"+(authMode==="login"?"LOGIN":"CREATE ACCOUNT")+"</button>"
-    +"</div>"
-    +(!r?"<div class='demo-hint'><strong style='color:var(--green)'>Demo:</strong> admin / admin123</div>":"")
-    +"</div></div></div>";
-}
-
-/* ── APP ── */
-function appHTML(){
-  return headerHTML()
-    +"<main id='main'>"+(currentPage==="admin"&&currentUser.role==="admin"?adminHTML():picksHTML())+"</main>"
-    +"<footer>"
-    +"<div class='neon-title' style='font-size:.95rem;display:inline'>$harp $elections</div>"
-    +"<div style='color:var(--muted);font-size:.68rem;margin-top:6px'>Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div>"
-    +"</footer>";
-}
-
-function headerHTML(){
-  return "<header id='hdr'><div class='hdr-inner'>"
-    +logo("1.55rem","0.54rem")
-    +"<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;-webkit-flex-wrap:wrap;flex-wrap:wrap'>"
-    +(currentUser.role==="admin"?"<button class='tab-btn"+(currentPage==="admin"?" active":"")+"' id='nav-admin' style='font-size:.82rem'>&#9881; ADMIN</button>":"")
-    +"<button class='tab-btn"+(currentPage==="picks"?" active":"")+"' id='nav-picks' style='font-size:.82rem'>PICKS</button>"
-    +"<div style='text-align:right'>"
-    +"<div style='font-size:.68rem;color:var(--muted)'>Logged in as</div>"
-    +"<div style='font-size:.88rem;color:var(--green);font-weight:600'>"+esc(currentUser.username)+"</div>"
-    +"</div>"
-    +"<button class='btn-secondary' id='btn-logout'>LOGOUT</button>"
-    +"</div></div></header>";
-}
-
-/* ── PICKS PAGE ── */
-function picksHTML(){
-  var sports=["ALL","NFL","NBA","NHL","MLB","NCAAF","NCAAM"];
-  var active=picks.filter(function(p){return p.active;});
-  var shown=sportFilter==="ALL"?active:active.filter(function(p){return p.sport===sportFilter;});
-  var w=0,l=0,pd=0;
-  active.forEach(function(p){if(p.result==="WIN")w++;else if(p.result==="LOSS")l++;else pd++;});
-
-  var h="<div style='max-width:1200px;margin:0 auto;padding:24px 20px'>"
-    +"<div class='stat-grid'>"
-    +"<div class='stat-box'><div style='color:var(--green);font-family:Bebas Neue,sans-serif;font-size:2rem'>"+w+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>WINS</div></div>"
-    +"<div class='stat-box'><div style='color:#ff4444;font-family:Bebas Neue,sans-serif;font-size:2rem'>"+l+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>LOSSES</div></div>"
-    +"<div class='stat-box'><div style='color:#f0c040;font-family:Bebas Neue,sans-serif;font-size:2rem'>"+pd+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>PENDING</div></div>"
-    +"</div>"
-    +"<div class='sport-tabs'>";
-  sports.forEach(function(s){
-    h+="<button class='tab-btn sf"+(sportFilter===s?" active":"")+"' data-s='"+s+"' style='font-size:.83rem'>"+s+"</button>";
-  });
-  h+="</div>"
-    +"<div style='display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;gap:12px;margin-bottom:16px'>"
-    +"<h2 style='font-family:Bebas Neue,sans-serif;font-size:1.55rem;letter-spacing:.08em'>TODAY'S PICKS</h2>"
-    +"<span style='color:var(--muted);font-size:.84rem'>"+new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})+"</span>"
-    +"</div>";
-
-  if(!shown.length){
-    h+="<div style='text-align:center;padding:60px 20px;color:var(--muted)'>"
-      +"<div style='font-size:3rem;margin-bottom:12px'>&#128203;</div>"
-      +"<div style='font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:.08em'>NO PICKS AVAILABLE</div>"
-      +"<div style='font-size:.84rem;margin-top:8px'>Check back soon for today's sharp selections.</div></div>";
-  } else {
-    h+="<div class='picks-grid'>";
-    shown.forEach(function(p,i){ h+=pickCard(p,i); });
-    h+="</div>";
+// ── MAIN RENDER ───────────────────────────────────────────────────────────
+function render() {
+  try {
+    var app = ge("app");
+    if (!app) { setTimeout(render, 50); return; }
+    if (curUser) {
+      app.innerHTML = buildHeader() + "<main id='main'>" + (curPage === "admin" && curUser.role === "admin" ? buildAdmin() : buildPicks()) + "</main>" + buildFooter();
+    } else {
+      app.innerHTML = buildAuth();
+    }
+    attachEvents();
+  } catch(e) {
+    var app2 = ge("app");
+    if (app2) app2.innerHTML = "<p style='color:#ff4444;padding:40px;font-size:1.2rem'>Error: " + e.message + "</p>";
   }
-  return h+"</div>";
 }
 
-function pickCard(p,i){
-  var color = SC[p.sport]||"#6b7a8d";
-  var col   = rc(p.result);
-  var rbg   = p.result==="WIN"?"rgba(57,255,20,.12)":p.result==="LOSS"?"rgba(255,60,60,.12)":"rgba(240,192,64,.12)";
-  var rbd   = p.result==="WIN"?"#39ff14":p.result==="LOSS"?"#ff3b3b":"#f0c040";
-  var cbrdr = p.result==="WIN"?"rgba(57,255,20,.22)":p.result==="LOSS"?"rgba(255,60,60,.22)":"var(--border)";
-  return "<div class='pick-card fade-in' style='-webkit-animation-delay:"+i*55+"ms;animation-delay:"+i*55+"ms;border-color:"+cbrdr+"'>"
-    +"<div style='height:3px;background:-webkit-linear-gradient(left,"+color+",transparent);background:linear-gradient(90deg,"+color+",transparent)'></div>"
-    +"<div style='padding:16px'>"
-    +"<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:11px'>"
-    +"<span class='sport-badge' style='background:"+color+"22;color:"+color+";border:1px solid "+color+"55'>"+esc(p.sport)+"</span>"
-    +"<span class='result-badge' style='background:"+rbg+";color:"+col+";border:1px solid "+rbd+"55'>"+esc(p.result)+"</span>"
-    +"</div>"
-    +"<div style='margin-bottom:11px'>"
-    +"<div style='font-size:.73rem;color:var(--muted);margin-bottom:3px'>"+esc(p.gameTime)+"</div>"
-    +"<div style='font-family:Bebas Neue,sans-serif;font-size:.98rem;letter-spacing:.04em;line-height:1.3'>"+esc(p.awayTeam)+" <span style='color:var(--muted);font-size:.78rem'>@</span> "+esc(p.homeTeam)+"</div>"
-    +"</div>"
-    +"<div style='background:rgba(200,245,53,.06);border:1px solid rgba(200,245,53,.16);border-radius:8px;padding:10px 13px;margin-bottom:11px'>"
-    +"<div style='font-size:.68rem;color:var(--muted);letter-spacing:.08em;margin-bottom:3px'>SHARP PICK</div>"
-    +"<div style='color:var(--green);font-family:Bebas Neue,sans-serif;font-size:1.18rem;letter-spacing:.04em'>"+esc(p.pick)+"</div>"
-    +"<div style='display:-webkit-flex;display:flex;gap:12px;margin-top:4px'>"
-    +"<span style='font-size:.73rem;color:var(--muted)'>"+esc(p.betType)+"</span>"
-    +"<span style='font-size:.73rem;color:var(--blue)'>"+esc(p.odds)+"</span>"
-    +"</div></div>"
-    +"<p style='font-size:.81rem;color:#8a9ab0;line-height:1.55'>"+esc(p.analysis)+"</p>"
-    +"</div></div>";
+// ── AUTH ──────────────────────────────────────────────────────────────────
+function buildAuth() {
+  var isReg = (authMode === "register");
+  var html = "<div style='min-height:100vh;background:#0a0c0e;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;padding:20px'>";
+  html += "<div style='width:100%;max-width:420px'>";
+  html += "<div style='text-align:center;margin-bottom:28px'>" + logoHTML("2.8rem","0.85rem") + "</div>";
+  html += "<div class='card' style='border-color:#2a3344'>";
+  html += "<div style='display:-webkit-flex;display:flex;border-bottom:1px solid #1e2530;margin-bottom:20px'>";
+  html += "<button class='tab " + (authMode==="login"?"on":"") + "' id='btn-tab-login'>LOGIN</button>";
+  html += "<button class='tab " + (isReg?"on":"") + "' id='btn-tab-reg'>REGISTER</button>";
+  html += "</div>";
+  html += "<div class='col'>";
+  html += "<div><span class='lbl'>Username</span><input class='inp' id='a-user' placeholder='Enter username' autocomplete='username'></div>";
+  if (isReg) { html += "<div><span class='lbl'>Email</span><input class='inp' id='a-email' type='email' placeholder='Enter email'></div>"; }
+  html += "<div><span class='lbl'>Password</span><input class='inp' id='a-pass' type='password' placeholder='Enter password' autocomplete='current-password'></div>";
+  if (isReg) { html += "<div><span class='lbl'>Confirm Password</span><input class='inp' id='a-conf' type='password' placeholder='Confirm password'></div>"; }
+  html += "<div id='a-err'></div>";
+  html += "<button class='btn-green' id='btn-auth' style='font-size:1.1rem;padding:12px'>" + (isReg ? "CREATE ACCOUNT" : "LOGIN") + "</button>";
+  html += "</div>";
+  if (!isReg) { html += "<div class='demo'><strong style='color:#c8f535'>Demo:</strong> admin / admin123</div>"; }
+  html += "</div></div></div>";
+  return html;
 }
 
-/* ── ADMIN ── */
-function adminHTML(){
-  return "<div style='max-width:1200px;margin:0 auto;padding:24px 20px'>"
-    +"<div style='margin-bottom:22px'>"
-    +"<h1 style='font-family:Bebas Neue,sans-serif;font-size:2rem;letter-spacing:.1em;color:var(--green)'>ADMIN PANEL</h1>"
-    +"<p style='color:var(--muted);font-size:.84rem'>Manage picks, users, and settings</p></div>"
-    +"<div style='display:-webkit-flex;display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:26px'>"
-    +"<button class='tab-btn at"+(adminTab==="add"?" active":"")+"' data-t='add'>ADD PICKS</button>"
-    +"<button class='tab-btn at"+(adminTab==="manage"?" active":"")+"' data-t='manage'>MANAGE PICKS</button>"
-    +"<button class='tab-btn at"+(adminTab==="users"?" active":"")+"' data-t='users'>USERS</button>"
-    +"</div>"
-    +"<div id='ac'>"+(adminTab==="add"?addPickHTML():adminTab==="manage"?managePicksHTML():manageUsersHTML())+"</div>"
-    +"</div>";
+// ── HEADER ────────────────────────────────────────────────────────────────
+function buildHeader() {
+  var html = "<header id='hdr'><div class='hdr-in'>";
+  html += logoHTML("1.5rem","0.52rem");
+  html += "<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;-webkit-flex-wrap:wrap;flex-wrap:wrap'>";
+  if (curUser.role === "admin") {
+    html += "<button class='tab " + (curPage==="admin"?"on":"") + "' id='btn-admin'>&#9881; ADMIN</button>";
+  }
+  html += "<button class='tab " + (curPage==="picks"?"on":"") + "' id='btn-picks'>PICKS</button>";
+  html += "<div style='text-align:right'><div style='font-size:0.68rem;color:#6b7a8d'>Logged in as</div><div style='font-size:0.88rem;color:#c8f535;font-weight:700'>" + esc(curUser.username) + "</div></div>";
+  html += "<button class='btn-blue' id='btn-logout'>LOGOUT</button>";
+  html += "</div></div></header>";
+  return html;
 }
 
-function addPickHTML(){
-  return "<div class='two-col'>"
-    +"<div>"
-    +"<div class='card' style='margin-bottom:15px'>"
-    +"<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--blue)'>1. SELECT SPORT &amp; DATE</h3>"
-    +"<div class='grid2' style='margin-bottom:15px'>"
-    +"<div><label>Sport</label><select class='input-field' id='p-sport'>"+["NFL","NBA","NHL","MLB","NCAAF","NCAAM"].map(function(s){return "<option>"+s+"</option>";}).join("")+"</select></div>"
-    +"<div><label>Date</label><input class='input-field' type='date' id='p-date' value='"+todayStr()+"'></div>"
-    +"</div>"
-    +"<button class='btn-primary' id='btn-load'>&#128260; LOAD GAMES</button>"
-    +"<div id='g-err' style='margin-top:11px'></div>"
-    +"</div>"
-    +"<div class='card' id='g-card' style='display:none'>"
-    +"<h3 id='g-title' style='font-family:Bebas Neue,sans-serif;font-size:1.05rem;letter-spacing:.08em;margin-bottom:11px;color:var(--blue)'>2. SELECT GAME</h3>"
-    +"<div id='g-list' class='game-list-scroll'></div>"
-    +"</div></div>"
-    +"<div class='card'>"
-    +"<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--green)'>3. PICK DETAILS</h3>"
-    +"<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:13px'>"
-    +"<div class='grid2'><div><label>Away Team</label><input class='input-field' id='p-away' placeholder='Away team'></div><div><label>Home Team</label><input class='input-field' id='p-home' placeholder='Home team'></div></div>"
-    +"<div><label>Your Pick</label><input class='input-field' id='p-pick' placeholder='e.g. Boston Celtics -3.5'></div>"
-    +"<div class='grid3'>"
-    +"<div><label>Bet Type</label><select class='input-field' id='p-btype'>"+["Spread","Moneyline","Total","Prop","Parlay"].map(function(b){return "<option>"+b+"</option>";}).join("")+"</select></div>"
-    +"<div><label>Odds</label><input class='input-field' id='p-odds' value='-110'></div>"
-    +"<div><label>Result</label><select class='input-field' id='p-result'>"+["PENDING","WIN","LOSS","PUSH"].map(function(r){return "<option>"+r+"</option>";}).join("")+"</select></div>"
-    +"</div>"
-    +"<div><label>Game Time</label><input class='input-field' id='p-gtime' placeholder='e.g. 7:30 PM ET'></div>"
-    +"<div><label>Analysis</label><textarea class='input-field' id='p-analysis' rows='4' placeholder='Write your analysis...'></textarea></div>"
-
-```
-+"<button class='btn-primary' id='btn-pub' style='padding:13px;font-size:1.08rem'>PUBLISH PICK</button>"
-+"<div id='p-saved'></div>"
-+"</div></div></div>";
-```
-
+function buildFooter() {
+  return "<footer><div class='neon-title' style='font-size:0.95rem;display:inline'>$harp $elections</div><div style='color:#6b7a8d;font-size:0.68rem;margin-top:6px'>Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div></footer>";
 }
 
-function managePicksHTML(){
-var sorted=picks.slice().reverse();
-var rows=sorted.map(function(p){
-var c=SC[p.sport]||”#555”;
-return “<div style='background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;-webkit-flex-wrap:wrap;flex-wrap:wrap'>”
-+”<span class='sport-badge' style='background:"+c+"22;color:"+c+";border:1px solid "+c+"44;font-size:.68rem'>”+esc(p.sport)+”</span>”
-+”<div style='-webkit-flex:1;flex:1;min-width:150px'>”
-+”<div style='font-size:.83rem;font-family:Bebas Neue,sans-serif;letter-spacing:.04em'>”+esc(p.awayTeam)+” @ “+esc(p.homeTeam)+”</div>”
-+”<div style='font-size:.73rem;color:var(--green)'>”+esc(p.pick)+”</div>”
-+”<div style='font-size:.68rem;color:var(--muted)'>”+esc(p.date)+”</div>”
-+”</div>”
-+”<select class='input-field' data-pr='"+p.id+"' style='width:105px;font-size:.78rem;padding:5px 8px;color:"+rc(p.result)+"'>”
-+[“PENDING”,“WIN”,“LOSS”,“PUSH”].map(function(r){return “<option”+(p.result===r?” selected”:””)+”>”+r+”</option>”;}).join(””)
-+”</select>”
-+”<button class='"+(p.active?"btn-danger":"btn-success")+"' data-tp='"+p.id+"'>”+(p.active?“DEACTIVATE”:“ACTIVATE”)+”</button>”
-+”<button class='btn-danger' data-dp='"+p.id+"'>DELETE</button>”
-+”</div>”;
+// ── PICKS PAGE ────────────────────────────────────────────────────────────
+function buildPicks() {
+  var sports  = ["ALL","NFL","NBA","NHL","MLB","NCAAF","NCAAM"];
+  var active  = [];
+  for (var i = 0; i < PICKS.length; i++) { if (PICKS[i].active) active.push(PICKS[i]); }
+  var shown   = [];
+  for (var i = 0; i < active.length; i++) { if (sfilt === "ALL" || active[i].sport === sfilt) shown.push(active[i]); }
+  var w=0, l=0, p=0;
+  for (var i = 0; i < active.length; i++) {
+    if (active[i].result==="WIN") w++; else if (active[i].result==="LOSS") l++; else p++;
+  }
+
+  var html = "<div class='page-wrap'>";
+
+  // stats
+  html += "<div class='stats'>";
+  html += "<div class='stat'><div style='color:#39ff14;font-family:Bebas Neue,sans-serif;font-size:2rem'>" + w + "</div><div style='color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em'>WINS</div></div>";
+  html += "<div class='stat'><div style='color:#ff4444;font-family:Bebas Neue,sans-serif;font-size:2rem'>" + l + "</div><div style='color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em'>LOSSES</div></div>";
+  html += "<div class='stat'><div style='color:#f0c040;font-family:Bebas Neue,sans-serif;font-size:2rem'>" + p + "</div><div style='color:#6b7a8d;font-size:0.72rem;letter-spacing:0.08em'>PENDING</div></div>";
+  html += "</div>";
+
+  // filters
+  html += "<div class='filters'>";
+  for (var i = 0; i < sports.length; i++) {
+    html += "<button class='tab sf " + (sfilt===sports[i]?"on":"") + "' data-sp='" + sports[i] + "' style='font-size:0.83rem'>" + sports[i] + "</button>";
+  }
+  html += "</div>";
+
+  html += "<div style='display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;gap:12px;margin-bottom:16px'>";
+  html += "<h2 style='font-family:Bebas Neue,sans-serif;font-size:1.5rem;letter-spacing:0.08em'>TODAY'S PICKS</h2>";
+  html += "<span style='color:#6b7a8d;font-size:0.84rem'>" + fmtDate() + "</span>";
+  html += "</div>";
+
+  if (shown.length === 0) {
+    html += "<div style='text-align:center;padding:60px 20px;color:#6b7a8d'>";
+    html += "<div style='font-size:3rem;margin-bottom:12px'>&#128203;</div>";
+    html += "<div style='font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:0.08em'>NO PICKS AVAILABLE</div>";
+    html += "<div style='font-size:0.84rem;margin-top:8px'>Check back soon for today's sharp selections.</div>";
+    html += "</div>";
+  } else {
+    html += "<div class='wrap'>";
+    for (var i = 0; i < shown.length; i++) { html += buildPickCard(shown[i]); }
+    html += "</div>";
+  }
+
+  html += "</div>";
+  return html;
+}
+
+function buildPickCard(p) {
+  var sc   = SC[p.sport] || "#6b7a8d";
+  var col  = rcol(p.result);
+  var rbg  = p.result==="WIN" ? "rgba(57,255,20,0.12)" : p.result==="LOSS" ? "rgba(255,60,60,0.12)" : "rgba(240,192,64,0.12)";
+  var rbd  = p.result==="WIN" ? "#39ff14" : p.result==="LOSS" ? "#ff3b3b" : "#f0c040";
+  var cbrdr= p.result==="WIN" ? "rgba(57,255,20,0.25)" : p.result==="LOSS" ? "rgba(255,60,60,0.25)" : "#1e2530";
+  var html = "<div class='pick-card' style='border-color:" + cbrdr + "'>";
+  html += "<div style='height:3px;background:-webkit-linear-gradient(left," + sc + ",transparent);background:linear-gradient(90deg," + sc + ",transparent)'></div>";
+  html += "<div style='padding:16px'>";
+  html += "<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:11px'>";
+  html += "<span class='sbadge' style='background:" + sc + "22;color:" + sc + ";border:1px solid " + sc + "55'>" + esc(p.sport) + "</span>";
+  html += "<span class='rbadge' style='background:" + rbg + ";color:" + col + ";border:1px solid " + rbd + "55'>" + esc(p.result) + "</span>";
+  html += "</div>";
+  html += "<div style='margin-bottom:11px'>";
+  html += "<div style='font-size:0.73rem;color:#6b7a8d;margin-bottom:3px'>" + esc(p.gameTime) + "</div>";
+  html += "<div style='font-family:Bebas Neue,sans-serif;font-size:0.98rem;letter-spacing:0.04em;line-height:1.3'>" + esc(p.awayTeam) + " <span style='color:#6b7a8d;font-size:0.78rem'>@</span> " + esc(p.homeTeam) + "</div>";
+  html += "</div>";
+  html += "<div style='background:rgba(200,245,53,0.06);border:1px solid rgba(200,245,53,0.18);border-radius:8px;padding:10px 13px;margin-bottom:11px'>";
+  html += "<div style='font-size:0.68rem;color:#6b7a8d;letter-spacing:0.08em;margin-bottom:3px'>SHARP PICK</div>";
+  html += "<div style='color:#c8f535;font-family:Bebas Neue,sans-serif;font-size:1.18rem;letter-spacing:0.04em'>" + esc(p.pick) + "</div>";
+  html += "<div style='display:-webkit-flex;display:flex;gap:12px;margin-top:4px'>";
+  html += "<span style='font-size:0.73rem;color:#6b7a8d'>" + esc(p.betType) + "</span>";
+  html += "<span style='font-size:0.73rem;color:#3b82f6'>" + esc(p.odds) + "</span>";
+  html += "</div></div>";
+  html += "<p style='font-size:0.81rem;color:#8a9ab0;line-height:1.55'>" + esc(p.analysis) + "</p>";
+  html += "</div></div>";
+  return html;
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────
+function buildAdmin() {
+  var html = "<div class='page-wrap'>";
+  html += "<div style='margin-bottom:22px'><h1 style='font-family:Bebas Neue,sans-serif;font-size:2rem;letter-spacing:0.1em;color:#c8f535'>ADMIN PANEL</h1><p style='color:#6b7a8d;font-size:0.84rem'>Manage picks, users, and settings</p></div>";
+  html += "<div style='display:-webkit-flex;display:flex;gap:4px;border-bottom:1px solid #1e2530;margin-bottom:26px'>";
+  html += "<button class='tab at " + (adminTab==="add"?"on":"") + "' data-at='add'>ADD PICKS</button>";
+  html += "<button class='tab at " + (adminTab==="manage"?"on":"") + "' data-at='manage'>MANAGE PICKS</button>";
+  html += "<button class='tab at " + (adminTab==="users"?"on":"") + "' data-at='users'>USERS</button>";
+  html += "</div>";
+  html += "<div id='ac'>" + buildAdminContent() + "</div>";
+  html += "</div>";
+  return html;
+}
+
+function buildAdminContent() {
+  if (adminTab === "add")    return buildAddPick();
+  if (adminTab === "manage") return buildManagePicks();
+  return buildManageUsers();
+}
+
+function buildAddPick() {
+  var html = "<div class='two-col'>";
+  // left col
+  html += "<div>";
+  html += "<div class='card' style='margin-bottom:15px'>";
+  html += "<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#3b82f6'>1. SELECT SPORT &amp; DATE</h3>";
+  html += "<div class='row' style='margin-bottom:15px'>";
+  html += "<div><span class='lbl'>Sport</span><select class='inp' id='p-sport'><option>NFL</option><option>NBA</option><option>NHL</option><option>MLB</option><option>NCAAF</option><option>NCAAM</option></select></div>";
+  html += "<div><span class='lbl'>Date</span><input class='inp' type='date' id='p-date' value='" + todayStr() + "'></div>";
+  html += "</div>";
+  html += "<button class='btn-green' id='btn-load'>&#128260; LOAD GAMES</button>";
+  html += "<div id='g-err' style='margin-top:11px'></div>";
+  html += "</div>";
+  html += "<div class='card' id='g-card' style='display:none'>";
+  html += "<h3 id='g-title' style='font-family:Bebas Neue,sans-serif;font-size:1.05rem;letter-spacing:0.08em;margin-bottom:11px;color:#3b82f6'>2. SELECT GAME</h3>";
+  html += "<div id='g-list' class='games-scroll'></div>";
+  html += "</div>";
+  html += "</div>";
+  // right col
+  html += "<div class='card'>";
+  html += "<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#c8f535'>3. PICK DETAILS</h3>";
+  html += "<div class='col'>";
+  html += "<div class='row'><div><span class='lbl'>Away Team</span><input class='inp' id='p-away' placeholder='Away team'></div><div><span class='lbl'>Home Team</span><input class='inp' id='p-home' placeholder='Home team'></div></div>";
+  html += "<div><span class='lbl'>Your Pick</span><input class='inp' id='p-pick' placeholder='e.g. Boston Celtics -3.5'></div>";
+  html += "<div class='grid3'>";
+  html += "<div><span class='lbl'>Bet Type</span><select class='inp' id='p-btype'><option>Spread</option><option>Moneyline</option><option>Total</option><option>Prop</option><option>Parlay</option></select></div>";
+  html += "<div><span class='lbl'>Odds</span><input class='inp' id='p-odds' value='-110'></div>";
+  html += "<div><span class='lbl'>Result</span><select class='inp' id='p-result'><option>PENDING</option><option>WIN</option><option>LOSS</option><option>PUSH</option></select></div>";
+  html += "</div>";
+  html += "<div><span class='lbl'>Game Time</span><input class='inp' id='p-gtime' placeholder='e.g. 7:30 PM ET'></div>";
+  html += "<div><span class='lbl'>Analysis</span><textarea class='inp' id='p-analysis' rows='4' placeholder='Write your analysis...'></textarea></div>";
+
+html += “<button class='btn-green' id='btn-pub' style='font-size:1.08rem;padding:13px'>PUBLISH PICK</button>”;
+html += “<div id='p-saved'></div>”;
+html += “</div></div></div>”;
+return html;
+}
+
+function buildManagePicks() {
+var html = “<div class='card'>”;
+html += “<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;margin-bottom:15px;color:#c8f535'>ALL PICKS (” + PICKS.length + “)</h3>”;
+if (PICKS.length === 0) {
+html += “<div style='color:#6b7a8d;text-align:center;padding:32px'>No picks yet.</div>”;
+} else {
+html += “<div class='manage-list'>”;
+var sorted = PICKS.slice().reverse();
+for (var i = 0; i < sorted.length; i++) {
+var p = sorted[i];
+var sc = SC[p.sport] || “#555”;
+html += “<div class='manage-row'>”;
+html += “<span class='sbadge' style='background:" + sc + "22;color:" + sc + ";border:1px solid " + sc + "44;font-size:0.68rem'>” + esc(p.sport) + “</span>”;
+html += “<div style='-webkit-flex:1;flex:1;min-width:150px'>”;
+html += “<div style='font-size:0.83rem;font-family:Bebas Neue,sans-serif;letter-spacing:0.04em'>” + esc(p.awayTeam) + “ @ “ + esc(p.homeTeam) + “</div>”;
+html += “<div style='font-size:0.73rem;color:#c8f535'>” + esc(p.pick) + “</div>”;
+html += “<div style='font-size:0.68rem;color:#6b7a8d'>” + esc(p.date) + “</div>”;
+html += “</div>”;
+html += “<select class='inp' data-pr='" + p.id + "' style='width:105px;font-size:0.78rem;padding:5px 8px;color:" + rcol(p.result) + "'>”;
+var opts = [“PENDING”,“WIN”,“LOSS”,“PUSH”];
+for (var j = 0; j < opts.length; j++) {
+html += “<option” + (p.result===opts[j]?” selected”:””) + “>” + opts[j] + “</option>”;
+}
+html += “</select>”;
+html += “<button class='" + (p.active?"btn-red":"btn-lime") + "' data-tp='" + p.id + "'>” + (p.active?“DEACTIVATE”:“ACTIVATE”) + “</button>”;
+html += “<button class='btn-red' data-dp='" + p.id + "'>DELETE</button>”;
+html += “</div>”;
+}
+html += “</div>”;
+}
+html += “</div>”;
+return html;
+}
+
+function buildManageUsers() {
+var na  = [];
+for (var i = 0; i < USERS.length; i++) { if (USERS[i].role !== “admin”) na.push(USERS[i]); }
+var act = 0;
+for (var i = 0; i < na.length; i++) { if (na[i].active) act++; }
+
+var html = “<div class='card'>”;
+html += “<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;margin-bottom:15px;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px'>”;
+html += “<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.1rem;letter-spacing:0.08em;color:#c8f535'>REGISTERED USERS (” + na.length + “)</h3>”;
+html += “<div style='display:-webkit-flex;display:flex;gap:14px;font-size:0.78rem'><span style='color:#c8f535'>● “ + act + “ Active</span><span style='color:#ff4444'>● “ + (na.length-act) + “ Inactive</span></div>”;
+html += “</div>”;
+
+if (na.length === 0) {
+html += “<div style='color:#6b7a8d;text-align:center;padding:40px'>No registered users.</div>”;
+} else {
+for (var i = 0; i < na.length; i++) {
+var u = na[i];
+html += “<div class='urow'>”;
+html += “<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:11px'>”;
+html += “<div style='width:35px;height:35px;border-radius:50%;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:0.95rem;background:" + (u.active?"rgba(200,245,53,0.1)":"rgba(255,68,68,0.1)") + ";border:2px solid " + (u.active?"#c8f535":"#ff4444") + ";color:" + (u.active?"#c8f535":"#ff4444") + "'>” + esc(u.username.charAt(0).toUpperCase()) + “</div>”;
+html += “<div><div style='font-weight:700;font-size:0.93rem'>” + esc(u.username) + “</div><div style='font-size:0.72rem;color:#6b7a8d'>” + esc(u.email) + “ · Joined “ + esc(u.joined) + “</div></div>”;
+html += “</div>”;
+html += “<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px'>”;
+html += “<span style='font-size:0.72rem;padding:3px 9px;border-radius:4px;font-family:Bebas Neue,sans-serif;letter-spacing:0.05em;color:" + (u.active?"#c8f535":"#ff4444") + ";background:" + (u.active?"rgba(200,245,53,0.08)":"rgba(255,68,68,0.08)") + ";border:1px solid " + (u.active?"rgba(200,245,53,0.25)":"rgba(255,68,68,0.25)") + "'>” + (u.active?“ACTIVE”:“INACTIVE”) + “</span>”;
+html += “<button class='" + (u.active?"btn-red":"btn-lime") + "' data-tu='" + u.id + "'>” + (u.active?“DEACTIVATE”:“ACTIVATE”) + “</button>”;
+html += “</div></div>”;
+}
+}
+
+html += “<div style='margin-top:18px;padding:12px 15px;background:rgba(59,130,246,0.05);border:1px dashed rgba(59,130,246,0.25);border-radius:8px'>”;
+html += “<div style='font-size:0.72rem;color:#3b82f6;font-family:Bebas Neue,sans-serif;letter-spacing:0.06em;margin-bottom:4px'>🔮 COMING SOON</div>”;
+html += “<div style='font-size:0.78rem;color:#6b7a8d'>Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>”;
+html += “</div></div>”;
+return html;
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────
+function attachEvents() {
+// auth tabs
+var tl = ge(“btn-tab-login”), tr = ge(“btn-tab-reg”);
+if (tl) tl.addEventListener(“click”, function() { authMode = “login”;    render(); });
+if (tr) tr.addEventListener(“click”, function() { authMode = “register”; render(); });
+
+// auth submit + enter
+var ab = ge(“btn-auth”);
+if (ab) ab.addEventListener(“click”, doAuth);
+var inputs = document.querySelectorAll(”.inp”);
+for (var i = 0; i < inputs.length; i++) {
+inputs[i].addEventListener(“keydown”, function(e) {
+if (e.keyCode === 13 || e.key === “Enter”) {
+var s = ge(“btn-auth”); if (s) s.click();
+}
 });
-return “<div class='card'>”
-+”<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--green)'>ALL PICKS (”+picks.length+”)</h3>”
-+(picks.length?”<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:7px'>”+rows.join(””)+”</div>”
-:”<div style='color:var(--muted);text-align:center;padding:32px'>No picks yet.</div>”)
-+”</div>”;
 }
 
-function manageUsersHTML(){
-var na=users.filter(function(u){return u.role!==“admin”;});
-var act=na.filter(function(u){return u.active;}).length;
-var rows=na.map(function(u){
-return “<div class='user-row'>”
-+”<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:11px'>”
-+”<div style='width:35px;height:35px;border-radius:50%;background:"+(u.active?"rgba(200,245,53,.1)":"rgba(255,68,68,.1)")+";border:2px solid "+(u.active?"var(--green)":"#ff4444")+";display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:.95rem;color:"+(u.active?"var(--green)":"#ff4444")+"'>”+esc(u.username[0].toUpperCase())+”</div>”
-+”<div><div style='font-weight:600;font-size:.93rem'>”+esc(u.username)+”</div>”
-+”<div style='font-size:.72rem;color:var(--muted)'>”+esc(u.email)+” · Joined “+esc(u.joined)+”</div></div></div>”
-+”<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px'>”
-+”<span style='font-size:.72rem;color:"+(u.active?"var(--green)":"#ff4444")+";background:"+(u.active?"rgba(200,245,53,.08)":"rgba(255,68,68,.08)")+";padding:3px 9px;border-radius:4px;border:1px solid "+(u.active?"rgba(200,245,53,.22)":"rgba(255,68,68,.22)")+";font-family:Bebas Neue,sans-serif;letter-spacing:.05em'>”+(u.active?“ACTIVE”:“INACTIVE”)+”</span>”
-+”<button class='"+(u.active?"btn-danger":"btn-success")+"' data-tu='"+u.id+"'>”+(u.active?“DEACTIVATE”:“ACTIVATE”)+”</button>”
-+”</div></div>”;
-});
-return “<div class='card'>”
-+”<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;margin-bottom:15px;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px'>”
-+”<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;color:var(--green)'>REGISTERED USERS (”+na.length+”)</h3>”
-+”<div style='display:-webkit-flex;display:flex;gap:14px;font-size:.78rem'><span style='color:var(--green)'>● “+act+” Active</span><span style='color:#ff4444'>● “+(na.length-act)+” Inactive</span></div>”
-+”</div>”
-+(na.length?rows.join(””):”<div style='color:var(--muted);text-align:center;padding:40px'>No registered users.</div>”)
-+”<div style='margin-top:18px;padding:12px 15px;background:rgba(59,130,246,.05);border:1px dashed rgba(59,130,246,.25);border-radius:8px'>”
-+”<div style='font-size:.72rem;color:var(--blue);font-family:Bebas Neue,sans-serif;letter-spacing:.06em;margin-bottom:4px'>🔮 COMING SOON</div>”
-+”<div style='font-size:.78rem;color:var(--muted)'>Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>”
-+”</div></div>”;
+// nav
+var lb = ge(“logo-btn”);
+if (lb) lb.addEventListener(“click”, function() { curPage = “picks”; render(); });
+var pb = ge(“btn-picks”);
+if (pb) pb.addEventListener(“click”, function() { curPage = “picks”; render(); });
+var adm = ge(“btn-admin”);
+if (adm) adm.addEventListener(“click”, function() { curPage = “admin”; adminTab = “add”; render(); });
+var lo = ge(“btn-logout”);
+if (lo) lo.addEventListener(“click”, function() { curUser = null; authMode = “login”; render(); });
+
+// sport filters
+var sfs = document.querySelectorAll(”.sf”);
+for (var i = 0; i < sfs.length; i++) {
+(function(btn) {
+btn.addEventListener(“click”, function() { sfilt = btn.getAttribute(“data-sp”); render(); });
+})(sfs[i]);
 }
 
-/* ══════════════════════════════════════════════
-EVENT BINDING
-══════════════════════════════════════════════ */
-function bind(){
-on(“t-login”,“click”,function(){ authMode=“login”;    render(); });
-on(“t-reg”,  “click”,function(){ authMode=“register”; render(); });
-on(“a-sub”,  “click”, doAuth);
-var fs=qsa(”.input-field”);
-for(var i=0;i<fs.length;i++){
-fs[i].addEventListener(“keydown”,function(e){ if(e.key===“Enter”){ var s=ge(“a-sub”); if(s) s.click(); }});
-}
-on(“logo-home”,“click”,function(){ currentPage=“picks”; render(); });
-on(“nav-picks”,“click”,function(){ currentPage=“picks”; render(); });
-on(“nav-admin”,“click”,function(){ currentPage=“admin”; adminTab=“add”; render(); });
-on(“btn-logout”,“click”,function(){ currentUser=null; authMode=“login”; render(); });
-var sfs=qsa(”.sf”);
-for(var i=0;i<sfs.length;i++){
-(function(b){ b.addEventListener(“click”,function(){ sportFilter=b.getAttribute(“data-s”); render(); }); })(sfs[i]);
-}
-var ats=qsa(”.at”);
-for(var i=0;i<ats.length;i++){
-(function(b){ b.addEventListener(“click”,function(){ adminTab=b.getAttribute(“data-t”); refreshAC(); }); })(ats[i]);
-}
-bindAC();
+// admin tabs
+var ats = document.querySelectorAll(”.at”);
+for (var i = 0; i < ats.length; i++) {
+(function(btn) {
+btn.addEventListener(“click”, function() { adminTab = btn.getAttribute(“data-at”); refreshAC(); });
+})(ats[i]);
 }
 
-function bindAC(){
-on(“btn-load”,“click”,doLoadGames);
-on(“btn-pub”, “click”,doPublish);
-var prs=qsa(”[data-pr]”);
-for(var i=0;i<prs.length;i++){
-(function(s){
-s.addEventListener(“change”,function(){
-var id=+s.getAttribute(“data-pr”);
-for(var j=0;j<picks.length;j++){ if(picks[j].id===id){ picks[j].result=s.value; break; }}
+attachACEvents();
+}
+
+function attachACEvents() {
+// load games
+var bl = ge(“btn-load”);
+if (bl) bl.addEventListener(“click”, doLoadGames);
+
+// publish pick
+var bp = ge(“btn-pub”);
+if (bp) bp.addEventListener(“click”, doPublish);
+
+// result selects
+var prs = document.querySelectorAll(”[data-pr]”);
+for (var i = 0; i < prs.length; i++) {
+(function(sel) {
+sel.addEventListener(“change”, function() {
+var id = parseInt(sel.getAttribute(“data-pr”), 10);
+for (var j = 0; j < PICKS.length; j++) { if (PICKS[j].id === id) { PICKS[j].result = sel.value; break; } }
 refreshAC();
 });
 })(prs[i]);
 }
-var tps=qsa(”[data-tp]”);
-for(var i=0;i<tps.length;i++){
-(function(b){
-b.addEventListener(“click”,function(){
-var id=+b.getAttribute(“data-tp”);
-for(var j=0;j<picks.length;j++){ if(picks[j].id===id){ picks[j].active=!picks[j].active; break; }}
+
+// toggle pick active
+var tps = document.querySelectorAll(”[data-tp]”);
+for (var i = 0; i < tps.length; i++) {
+(function(btn) {
+btn.addEventListener(“click”, function() {
+var id = parseInt(btn.getAttribute(“data-tp”), 10);
+for (var j = 0; j < PICKS.length; j++) { if (PICKS[j].id === id) { PICKS[j].active = !PICKS[j].active; break; } }
 refreshAC();
 });
 })(tps[i]);
 }
-var dps=qsa(”[data-dp]”);
-for(var i=0;i<dps.length;i++){
-(function(b){
-b.addEventListener(“click”,function(){
-var id=+b.getAttribute(“data-dp”);
-picks=picks.filter(function(p){ return p.id!==id; });
+
+// delete pick
+var dps = document.querySelectorAll(”[data-dp]”);
+for (var i = 0; i < dps.length; i++) {
+(function(btn) {
+btn.addEventListener(“click”, function() {
+var id = parseInt(btn.getAttribute(“data-dp”), 10);
+var next = [];
+for (var j = 0; j < PICKS.length; j++) { if (PICKS[j].id !== id) next.push(PICKS[j]); }
+PICKS.length = 0;
+for (var j = 0; j < next.length; j++) PICKS.push(next[j]);
 refreshAC();
 });
 })(dps[i]);
 }
-var tus=qsa(”[data-tu]”);
-for(var i=0;i<tus.length;i++){
-(function(b){
-b.addEventListener(“click”,function(){
-var id=+b.getAttribute(“data-tu”);
-for(var j=0;j<users.length;j++){ if(users[j].id===id){ users[j].active=!users[j].active; break; }}
+
+// toggle user
+var tus = document.querySelectorAll(”[data-tu]”);
+for (var i = 0; i < tus.length; i++) {
+(function(btn) {
+btn.addEventListener(“click”, function() {
+var id = parseInt(btn.getAttribute(“data-tu”), 10);
+for (var j = 0; j < USERS.length; j++) { if (USERS[j].id === id) { USERS[j].active = !USERS[j].active; break; } }
 refreshAC();
 });
 })(tus[i]);
 }
 }
 
-function refreshAC(){
-var ac=ge(“ac”);
-if(!ac) return;
-ac.innerHTML=adminTab===“add”?addPickHTML():adminTab===“manage”?managePicksHTML():manageUsersHTML();
-bindAC();
+function refreshAC() {
+var ac = ge(“ac”);
+if (ac) {
+ac.innerHTML = buildAdminContent();
+attachACEvents();
+}
 }
 
-/* ── AUTH LOGIC ── */
-function doAuth(){
-var errEl=ge(“a-err”);
-if(errEl) errEl.innerHTML=””;
-var username=val(“a-user”), password=val(“a-pass”);
-if(authMode===“login”){
-var found=null;
-for(var i=0;i<users.length;i++){
-if(users[i].username===username&&users[i].password===password){found=users[i];break;}
+// ── AUTH LOGIC ────────────────────────────────────────────────────────────
+function doAuth() {
+var errEl = ge(“a-err”);
+if (errEl) errEl.innerHTML = “”;
+var username = val(“a-user”).trim();
+var password = val(“a-pass”).trim();
+
+if (authMode === “login”) {
+var found = null;
+for (var i = 0; i < USERS.length; i++) {
+if (USERS[i].username === username && USERS[i].password === password) { found = USERS[i]; break; }
 }
-if(!found){ showErr(errEl,“Invalid username or password.”); return; }
-if(!found.active){ showErr(errEl,“Your account has been deactivated. Please contact support.”); return; }
-currentUser=found; currentPage=“picks”; render();
+if (!found)        { if (errEl) errEl.innerHTML = “<div class='err'>Invalid username or password.</div>”; return; }
+if (!found.active) { if (errEl) errEl.innerHTML = “<div class='err'>Your account has been deactivated. Please contact support.</div>”; return; }
+curUser = found; curPage = “picks”; render();
 } else {
-var email=val(“a-email”), confirm=val(“a-conf”);
-if(!username||!email||!password){ showErr(errEl,“All fields are required.”); return; }
-if(password!==confirm){ showErr(errEl,“Passwords do not match.”); return; }
-for(var i=0;i<users.length;i++){
-if(users[i].username===username){ showErr(errEl,“Username already taken.”); return; }
+var email   = val(“a-email”).trim();
+var confirm = val(“a-conf”).trim();
+if (!username || !email || !password) { if (errEl) errEl.innerHTML = “<div class='err'>All fields are required.</div>”; return; }
+if (password !== confirm)             { if (errEl) errEl.innerHTML = “<div class='err'>Passwords do not match.</div>”; return; }
+for (var i = 0; i < USERS.length; i++) {
+if (USERS[i].username === username) { if (errEl) errEl.innerHTML = “<div class='err'>Username already taken.</div>”; return; }
 }
-var nu={id:Date.now(),username:username,email:email,password:password,role:“user”,active:true,joined:todayStr()};
-users.push(nu);
-currentUser=nu; currentPage=“picks”; render();
+var nu = { id: Date.now(), username:username, email:email, password:password, role:“user”, active:true, joined:todayStr() };
+USERS.push(nu);
+curUser = nu; curPage = “picks”; render();
 }
 }
 
-/* ── LOAD GAMES ── */
-function doLoadGames(){
-var btn=ge(“btn-load”), errEl=ge(“g-err”), card=ge(“g-card”), list=ge(“g-list”), title=ge(“g-title”);
-if(!btn) return;
-var sport=val(“p-sport”)||“NBA”, date=val(“p-date”)||todayStr();
-btn.disabled=true;
-btn.innerHTML=”<span class='spinner'></span>LOADING…”;
-if(errEl) errEl.innerHTML=””;
-if(card)  card.style.display=“none”;
+// ── LOAD GAMES ────────────────────────────────────────────────────────────
+function doLoadGames() {
+var btn   = ge(“btn-load”);
+var errEl = ge(“g-err”);
+var card  = ge(“g-card”);
+var list  = ge(“g-list”);
+var title = ge(“g-title”);
+if (!btn) return;
 
-espnFetch(sport, date, function(games){
-btn.disabled=false;
-btn.innerHTML=”🔄 LOAD GAMES”;
-if(!games.length){
-if(errEl) errEl.innerHTML=”<div class='warn-box'>No “+esc(sport)+” games found for “+esc(date)+”. Try a different date or sport.</div>”;
+var sport = val(“p-sport”) || “NBA”;
+var date  = val(“p-date”)  || todayStr();
+
+btn.disabled  = true;
+btn.innerHTML = “<span style='display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#0a0c0e;border-radius:50%;-webkit-animation:spin 0.8s linear infinite;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px'></span>LOADING…”;
+if (errEl) errEl.innerHTML = “”;
+if (card)  card.style.display = “none”;
+
+espnFetch(sport, date, function(games) {
+btn.disabled  = false;
+btn.innerHTML = “🔄 LOAD GAMES”;
+
+```
+if (!games || games.length === 0) {
+  if (errEl) errEl.innerHTML = "<div class='warn'>No " + esc(sport) + " games found for " + esc(date) + ". Try a different date or sport.</div>";
+  return;
+}
+
+if (card)  card.style.display = "block";
+if (title) title.textContent  = "2. SELECT GAME (" + games.length + ")";
+if (!list) return;
+
+var html = "";
+for (var i = 0; i < games.length; i++) {
+  var g = games[i];
+  html += "<div class='game-row' data-home='" + esc(g.homeTeam) + "' data-away='" + esc(g.awayTeam) + "' data-time='" + esc(g.gameTime) + "'>";
+  html += "<div style='font-family:Bebas Neue,sans-serif;font-size:0.93rem;letter-spacing:0.04em'>" + esc(g.awayTeam) + " @ " + esc(g.homeTeam) + "</div>";
+  html += "<div style='font-size:0.68rem;color:#6b7a8d;margin-top:2px'>" + esc(g.gameTime) + (g.venue ? " &middot; " + esc(g.venue) : "") + "</div>";
+  html += "</div>";
+}
+list.innerHTML = html;
+
+var rows = list.querySelectorAll(".game-row");
+for (var i = 0; i < rows.length; i++) {
+  (function(row) {
+    row.addEventListener("click", function() {
+      for (var j = 0; j < rows.length; j++) rows[j].className = "game-row";
+      row.className = "game-row sel";
+      sv("p-home",  row.getAttribute("data-home"));
+      sv("p-away",  row.getAttribute("data-away"));
+      sv("p-gtime", row.getAttribute("data-time"));
+    });
+  })(rows[i]);
+}
+```
+
+});
+}
+
+// ── PUBLISH PICK ──────────────────────────────────────────────────────────
+function doPublish() {
+var home = val(“p-home”).trim(), away = val(“p-away”).trim(), pick = val(“p-pick”).trim();
+var savedEl = ge(“p-saved”);
+if (!home || !away || !pick) {
+if (savedEl) savedEl.innerHTML = “<div class='err'>Away team, home team, and pick are required.</div>”;
 return;
 }
-if(card)  card.style.display=“block”;
-if(title) title.textContent=“2. SELECT GAME (”+games.length+”)”;
-if(!list) return;
-var h=””;
-games.forEach(function(g){
-h+=”<div class=‘grow’ data-home=’”+esc(g.homeTeam)+”’ data-away=’”+esc(g.awayTeam)+”’ data-time=’”+esc(g.gameTime)+”’”
-+” style=‘padding:10px 12px;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1117;border:1px solid var(–border)’>”
-+”<div style='font-family:Bebas Neue,sans-serif;font-size:.93rem;letter-spacing:.04em'>”+esc(g.awayTeam)+” @ “+esc(g.homeTeam)+”</div>”
-+”<div style='font-size:.68rem;color:var(--muted);margin-top:2px'>”+esc(g.gameTime)+(g.venue?” · “+esc(g.venue):””)+”</div>”
-+”</div>”;
+PICKS.push({
+id:       Date.now(),
+sport:    val(“p-sport”)    || “NBA”,
+date:     val(“p-date”)     || todayStr(),
+homeTeam: home,
+awayTeam: away,
+pick:     pick,
+betType:  val(“p-btype”)    || “Spread”,
+odds:     val(“p-odds”)     || “-110”,
+result:   val(“p-result”)   || “PENDING”,
+gameTime: val(“p-gtime”),
+analysis: val(“p-analysis”),
+active:   true
 });
-list.innerHTML=h;
-var rows=list.querySelectorAll(”.grow”);
-for(var i=0;i<rows.length;i++){
-(function(row){
-row.addEventListener(“click”,function(){
-for(var j=0;j<rows.length;j++){rows[j].style.background=”#0d1117”;rows[j].style.borderColor=“var(–border)”;}
-row.style.background=“rgba(200,245,53,.08)”;row.style.borderColor=“rgba(200,245,53,.35)”;
-sv(“p-home”,row.getAttribute(“data-home”));
-sv(“p-away”,row.getAttribute(“data-away”));
-sv(“p-gtime”,row.getAttribute(“data-time”));
-});
-})(rows[i]);
-}
-});
-}
-
-/* ── PUBLISH PICK ── */
-function doPublish(){
-var home=val(“p-home”),away=val(“p-away”),pick=val(“p-pick”),savedEl=ge(“p-saved”);
-if(!home||!away||!pick){ if(savedEl) savedEl.innerHTML=”<div class='err-box'>Away team, home team, and pick are required.</div>”; return; }
-picks.push({
-id:Date.now(),sport:val(“p-sport”)||“NBA”,date:val(“p-date”)||todayStr(),
-homeTeam:home,awayTeam:away,pick:pick,
-betType:val(“p-btype”)||“Spread”,odds:val(“p-odds”)||”-110”,
-result:val(“p-result”)||“PENDING”,gameTime:val(“p-gtime”),
-analysis:val(“p-analysis”),active:true
-});
-[“p-home”,“p-away”,“p-pick”,“p-odds”,“p-gtime”,“p-analysis”].forEach(function(id){ sv(id,””); });
-sv(“p-result”,“PENDING”);
-var gc=ge(“g-card”); if(gc) gc.style.display=“none”;
-var gl=ge(“g-list”);  if(gl) gl.innerHTML=””;
-if(savedEl){
-savedEl.innerHTML=”<div class='ok-box'>✓ Pick published successfully!</div>”;
-setTimeout(function(){ if(ge(“p-saved”)) ge(“p-saved”).innerHTML=””; },2500);
+var ids = [“p-home”,“p-away”,“p-pick”,“p-odds”,“p-gtime”,“p-analysis”];
+for (var i = 0; i < ids.length; i++) sv(ids[i], “”);
+sv(“p-result”, “PENDING”);
+var gc = ge(“g-card”); if (gc) gc.style.display = “none”;
+var gl = ge(“g-list”);  if (gl) gl.innerHTML = “”;
+if (savedEl) {
+savedEl.innerHTML = “<div class='ok'>✓ Pick published successfully!</div>”;
+setTimeout(function() { var el = ge(“p-saved”); if (el) el.innerHTML = “”; }, 2500);
 }
 }
 
-function showErr(el,msg){ if(el) el.innerHTML=”<div class='err-box'>”+esc(msg)+”</div>”; }
-
-/* ── BOOT ── */
-if(document.readyState===“loading”){
-document.addEventListener(“DOMContentLoaded”,render);
-} else {
-render();
-}
-
-})();
+// ── BOOT ──────────────────────────────────────────────────────────────────
+window.addEventListener(“load”, render);
 </script>
 
 </body>
