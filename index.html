@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -229,7 +228,6 @@
     <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
     <button class="nav-tab" onclick="showPage('history', this)">History</button>
     <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
-    <button class="nav-tab" onclick="showPage('about', this)">About</button>
     <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
     <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">User Management <span class="pending-badge" id="pending-count" style="display:none;"></span></button>
   </div>
@@ -330,21 +328,15 @@
     <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
     <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
   </div>
-```
 
-  <div class="page" id="page-about">
-    <div class="date-bar"><div><div class="date-display">ABOUT US</div></div>
-      <button class="btn btn-secondary btn-sm admin-only" id="about-edit-btn" onclick="openAboutEditor()" style="display:none;">Edit</button>
-    </div>
-    <div style="padding:24px;max-width:600px;margin:0 auto;"><div id="about-display"></div></div>
+  <div id="pending-section" style="margin-bottom:28px;display:none;">
+    <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
+    <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
   </div>
-      <div id="pending-section" style="margin-bottom:28px;display:none;">
-        <div class="section-header"><div class="section-title" style="color:var(--accent2);">⚠ Pending Approval</div></div>
-        <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
-      </div>
-      <div class="section-header"><div class="section-title">All Users</div></div>
-      <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
-    </div>
+  <div class="section-header"><div class="section-title">All Users</div></div>
+  <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
+</div>
+```
 
   </div>
 </div>
@@ -511,7 +503,6 @@ function showPage(name, tab) {
   if (name === 'users') { renderUsersTable(); updatePendingBadge(); }
   if (name === 'stats') renderStats();
   if (name === 'history') renderHistory();
-  if (name === 'about') renderAboutPage();
 }
 
 function getPicks() { return getData('ss_picks', []); }
@@ -803,34 +794,7 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
-function getAbout() { return getData('ss_about', { desc: '' }); }
-function renderAboutPage() {
-  var el = document.getElementById('about-display');
-  if (!el) return;
-  var d = getAbout();
-  el.innerHTML = d.desc
-    ? '<p style="color:#ddffd0;font-size:15px;line-height:1.8;white-space:pre-wrap;margin:0;">' + d.desc + '</p>'
-    : '<p style="color:#3d5c3d;font-size:14px;">No info added yet.</p>';
-}
-function openAboutEditor() {
-  document.getElementById('ab-desc').value = getAbout().desc || '';
-  document.getElementById('about-modal').classList.add('open');
-}
-function saveAbout() {
-  setData('ss_about', { desc: document.getElementById('ab-desc').value.trim() });
-  closeModal('about-modal');
-  renderAboutPage();
-}
 </script>
 
-  <div class="modal-overlay" id="about-modal">
-    <div class="modal"><div class="modal-header"><span class="modal-title">Edit About Us</span>
-      <button class="modal-close" onclick="closeModal('about-modal')">&#x2715;</button></div>
-      <div style="display:grid;gap:12px;">
-        <div class="field"><label>Description</label>
-          <textarea id="ab-desc" rows="6" placeholder="Tell visitors about Sharp Selections..."></textarea></div>
-        <button class="btn btn-primary" onclick="saveAbout()">Save</button>
-      </div></div>
-  </div>
 </body>
 </html>
