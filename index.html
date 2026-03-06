@@ -664,52 +664,51 @@ color: var(–muted); letter-spacing: 1px; margin-bottom: 6px;
         <input type="date" id="pick-form-date">
       </div>
     </div>
-    <div style="margin-bottom:16px;">
-      <button class="btn btn-secondary" id="btn-load-games" onclick="loadESPNGames()" style="width:100%;margin-bottom:10px;">&#128260; Load Games from ESPN</button>
-      <div id="espn-status" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;display:none;"></div>
-      <div id="espn-games-list" style="display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:2px;background:var(--surface2);"></div>
-    </div>
-    <div class="form-grid">
-      <div class="field">
-        <label>Away Team</label>
-        <input type="text" id="pick-away" placeholder="e.g. Cowboys">
-      </div>
-      <div class="field">
-        <label>Home Team</label>
-        <input type="text" id="pick-home" placeholder="e.g. Eagles">
-      </div>
-      <div class="field">
-        <label>Bet Type</label>
-        <select id="pick-type">
-          <option value="Spread">Spread</option>
-          <option value="Moneyline">Moneyline</option>
-          <option value="Total (O/U)">Total (O/U)</option>
-          <option value="Parlay">Parlay</option>
-          <option value="Prop">Prop</option>
-          <option value="Futures">Futures</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Selection</label>
-        <input type="text" id="pick-selection" placeholder="e.g. Cowboys -3.5">
-      </div>
-      <div class="field">
-        <label>Odds</label>
-        <input type="text" id="pick-odds" placeholder="e.g. -110">
-      </div>
-      <div class="field">
-        <label>Units</label>
-        <input type="number" id="pick-units" placeholder="1" min="0.5" step="0.5" value="1">
-      </div>
-    </div>
-    <div class="field" style="margin-top:8px;">
-      <label>Analysis / Notes</label>
-      <textarea id="pick-notes" rows="3" placeholder="Brief analysis or reasoning..."></textarea>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-primary" onclick="savePick()" style="flex:1;">Save Pick</button>
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-pick')">Cancel</button>
-    </div>
+
+```
+<div class="form-grid">
+  <div class="field">
+    <label>Away Team</label>
+    <input type="text" id="pick-away" placeholder="e.g. Cowboys">
+  </div>
+  <div class="field">
+    <label>Home Team</label>
+    <input type="text" id="pick-home" placeholder="e.g. Eagles">
+  </div>
+  <div class="field">
+    <label>Bet Type</label>
+    <select id="pick-type">
+      <option value="Spread">Spread</option>
+      <option value="Moneyline">Moneyline</option>
+      <option value="Total (O/U)">Total (O/U)</option>
+      <option value="Parlay">Parlay</option>
+      <option value="Prop">Prop</option>
+      <option value="Futures">Futures</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Selection</label>
+    <input type="text" id="pick-selection" placeholder="e.g. Cowboys -3.5">
+  </div>
+  <div class="field">
+    <label>Odds</label>
+    <input type="text" id="pick-odds" placeholder="e.g. -110">
+  </div>
+  <div class="field">
+    <label>Units</label>
+    <input type="number" id="pick-units" placeholder="1" min="0.5" step="0.5" value="1">
+  </div>
+</div>
+<div class="field" style="margin-top:8px;">
+  <label>Analysis / Notes</label>
+  <textarea id="pick-notes" rows="3" placeholder="Brief analysis or reasoning..."></textarea>
+</div>
+<div style="display:flex;gap:10px;margin-top:20px;">
+  <button class="btn btn-primary" onclick="savePick()" style="flex:1;">Save Pick</button>
+  <button class="btn btn-secondary" onclick="closeModal('modal-add-pick')">Cancel</button>
+</div>
+```
+
   </div>
 </div>
 
@@ -942,10 +941,6 @@ function pickCardHTML(p, adminMode) {
 
 function openAddPickModal() {
   document.getElementById('pick-form-date').value = currentDateView;
-  document.getElementById('espn-status').style.display = 'none';
-  document.getElementById('espn-games-list').style.display = 'none';
-  document.getElementById('espn-games-list').innerHTML = '';
-  document.getElementById('btn-load-games').textContent = 'Load Games from ESPN';
   openModal('modal-add-pick');
 }
 
@@ -1210,103 +1205,9 @@ for (var i = 0; i < overlays.length; i++) {
   overlays[i].addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
 }
 
-var ESPN_MAP = {
-  NFL:   { s: 'football',   l: 'nfl' },
-  NBA:   { s: 'basketball', l: 'nba' },
-  NHL:   { s: 'hockey',     l: 'nhl' },
-  MLB:   { s: 'baseball',   l: 'mlb' },
-  NCAAF: { s: 'football',   l: 'college-football' },
-  NCAAM: { s: 'basketball', l: 'mens-college-basketball' }
-};
 
-function loadESPNGames() {
-  var sport   = document.getElementById('pick-sport').value;
-  var date    = document.getElementById('pick-form-date').value;
-  var btn     = document.getElementById('btn-load-games');
-  var status  = document.getElementById('espn-status');
-  var list    = document.getElementById('espn-games-list');
-  var map     = ESPN_MAP[sport];
 
-  if (!map) { status.textContent = 'Sport not supported for ESPN lookup.'; status.style.display = 'block'; return; }
-  if (!date) { status.textContent = 'Please select a date first.'; status.style.display = 'block'; return; }
 
-  btn.disabled = true; btn.textContent = 'Loading...';
-  btn.disabled = true;
-  status.textContent = 'Fetching games from ESPN...';
-  status.style.color = 'var(--muted)';
-  status.style.display = 'block';
-  list.style.display = 'none';
-  list.innerHTML = '';
-
-  var ds  = date.replace(/-/g, '');
-  var url = 'https://site.api.espn.com/apis/site/v2/sports/' + map.s + '/' + map.l + '/scoreboard?dates=' + ds;
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.timeout = 10000;
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState !== 4) return;
-    btn.textContent = 'Load Games from ESPN';
-    btn.disabled = false;
-    try {
-      var data  = JSON.parse(xhr.responseText);
-      var evts  = data.events || [];
-      if (!evts.length) {
-        status.textContent = 'No ' + sport + ' games found for ' + date + '.';
-        status.style.color = 'var(--danger)';
-        return;
-      }
-      var games = [];
-      for (var i = 0; i < evts.length; i++) {
-        var ev   = evts[i];
-        var comp = ev.competitions && ev.competitions[0] ? ev.competitions[0] : {};
-        var ctrs = comp.competitors || [];
-        var home = null, away = null;
-        for (var j = 0; j < ctrs.length; j++) {
-          if (ctrs[j].homeAway === 'home') home = ctrs[j];
-          else away = ctrs[j];
-        }
-        var t = '';
-        if (comp.date) {
-          try { t = new Date(comp.date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); } catch(e) {}
-        }
-        games.push({
-          home: home && home.team ? (home.team.displayName || 'Home') : 'Home',
-          away: away && away.team ? (away.team.displayName || 'Away') : 'Away',
-          time: t,
-          venue: comp.venue && comp.venue.fullName ? comp.venue.fullName : ''
-        });
-      }
-      status.textContent = evts.length + ' game' + (evts.length !== 1 ? 's' : '') + ' found. Click to select.';
-      status.style.color = 'var(--accent)';
-      list.style.display = 'block';
-      var html = '';
-      for (var i = 0; i < games.length; i++) {
-        var g = games[i];
-        html += '<div class="espn-game-row" data-away="' + g.away.replace(/"/g,'&quot;') + '" data-home="' + g.home.replace(/"/g,'&quot;') + '" onclick="selectESPNGame(this)"'
-          + ' style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">'
-          + '<div style="font-weight:600;font-size:13px;color:#e8eaf0;">' + g.away + ' @ ' + g.home + '</div>'
-          + '<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);margin-top:2px;">' + (g.time || 'TBD') + (g.venue ? ' &middot; ' + g.venue : '') + '</div>'
-          + '</div>';
-      }
-      list.innerHTML = html;
-    } catch(e) {
-      status.textContent = 'Error loading games. Check your connection.';
-      status.style.color = 'var(--danger)';
-    }
-  };
-  xhr.onerror   = function() { btn.textContent = 'Load Games from ESPN'; btn.disabled = false; status.textContent = 'Network error. Try again.'; status.style.color = 'var(--danger)'; };
-  xhr.ontimeout = function() { btn.textContent = 'Load Games from ESPN'; btn.disabled = false; status.textContent = 'Request timed out. Try again.'; status.style.color = 'var(--danger)'; };
-  xhr.send();
-}
-
-function selectESPNGame(row) {
-  var rows = document.querySelectorAll('.espn-game-row');
-  for (var i = 0; i < rows.length; i++) rows[i].style.background = '';
-  row.style.background = 'rgba(200,245,53,0.08)';
-  document.getElementById('pick-away').value = row.getAttribute('data-away');
-  document.getElementById('pick-home').value = row.getAttribute('data-home');
-}
 
 </script>
 
