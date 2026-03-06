@@ -5,11 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sharp Selections - Daily Selections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
   :root {
     --bg: #0d0f0d; --surface: #0e120e; --surface2: #121812; --border: #1c301c;
-    --accent: #c8ff00; --accent-glow: #b3f000; --accent2: #1a56ff; --accent2-glow: #0040ff;
+    --accent: #c8ff00; --accent2: #1a56ff;
     --danger: #ff3b3b; --success: #c8ff00; --warning: #1a56ff;
     --text: #ddffd0; --muted: #3d5c3d;
     --nfl: #c8ff00; --nba: #1a56ff; --mlb: #00d4ff; --nhl: #1a56ff; --ncaaf: #c8ff00; --ncaam: #00aaff;
@@ -37,9 +38,8 @@
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
   .btn-danger { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
   .btn-success { background: rgba(200,255,0,0.08); color: var(--accent); border: 1px solid rgba(200,255,0,0.3); }
-  .btn-warning { background: rgba(41,121,255,0.1); color: var(--accent2); border: 1px solid rgba(41,121,255,0.25); }
   .btn-sm { padding: 8px 14px; font-size: 10px; }
-  .msg { padding: 10px 14px; border-radius: 2px; font-size: 13px; margin-top: 12px; font-family: 'DM Mono', monospace; }
+  .msg { padding: 10px 14px; border-radius: 2px; font-size: 13px; margin-top: 12px; font-family: 'DM Mono', monospace; display: none; }
   .msg-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
   .msg-success { background: rgba(200,255,0,0.07); border: 1px solid rgba(200,255,0,0.3); color: var(--accent); }
   .msg-warning { background: rgba(26,86,255,0.07); border: 1px solid rgba(26,86,255,0.3); color: var(--accent2); }
@@ -66,13 +66,7 @@
   .date-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
   .sport-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
   .sport-chip { padding: 6px 16px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.2s; }
-  .sport-chip[data-sport="ALL"].active { color: var(--accent); border-color: var(--accent); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NFL"].active { color: var(--nfl); border-color: var(--nfl); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NBA"].active { color: var(--nba); border-color: var(--nba); background: rgba(26,86,255,0.08); }
-  .sport-chip[data-sport="MLB"].active { color: var(--mlb); border-color: var(--mlb); background: rgba(0,212,255,0.08); }
-  .sport-chip[data-sport="NHL"].active { color: var(--nhl); border-color: var(--nhl); background: rgba(26,86,255,0.08); }
-  .sport-chip[data-sport="NCAAF"].active { color: var(--ncaaf); border-color: var(--ncaaf); background: rgba(200,255,0,0.08); }
-  .sport-chip[data-sport="NCAAM"].active { color: var(--ncaam); border-color: var(--ncaam); background: rgba(0,170,255,0.08); }
+  .sport-chip.active, .sport-chip:hover { color: var(--accent); border-color: var(--accent); background: rgba(200,255,0,0.08); }
   .picks-grid { display: flex; flex-direction: column; gap: 10px; }
   .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 18px 20px; display: grid; grid-template-columns: 80px 1fr 120px 120px 100px auto; align-items: center; gap: 16px; transition: border-color 0.2s; }
   .pick-card:hover { border-color: rgba(200,255,0,0.2); }
@@ -112,7 +106,7 @@
   .game-pill .gp-sport { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; padding: 2px 6px; opacity: 0.8; }
   .game-pill .gp-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
   .games-empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; padding: 8px 0; }
-  .admin-add-panel { background: var(--surface); border: 1px solid var(--accent2); border-radius: 4px; margin-bottom: 24px; overflow: hidden; box-shadow: 0 0 20px rgba(26,86,255,0.08); }
+  .admin-add-panel { background: var(--surface); border: 1px solid var(--accent2); border-radius: 4px; margin-bottom: 24px; overflow: hidden; }
   .admin-add-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; background: linear-gradient(90deg, rgba(26,86,255,0.06), transparent); flex-wrap: wrap; gap: 12px; }
   .add-panel-icon { font-size: 22px; color: var(--accent); width: 36px; height: 36px; border: 1px solid rgba(200,255,0,0.3); display: flex; align-items: center; justify-content: center; border-radius: 2px; background: rgba(200,255,0,0.06); flex-shrink: 0; }
   .add-panel-title { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; color: var(--accent); font-weight: 500; }
@@ -136,366 +130,417 @@
   .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
   .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; border: 1px dashed var(--border); border-radius: 2px; }
   .empty-state .icon { font-size: 36px; margin-bottom: 16px; opacity: 0.3; }
+  .strength-bar { height: 3px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; background: var(--border); }
+  .strength-bar.weak { background: var(--danger); width: 33%; }
+  .strength-bar.medium { background: var(--warning); width: 66%; }
+  .strength-bar.strong { background: var(--success); width: 100%; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
   @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   @media (max-width: 768px) { .content { padding: 16px; } .topbar { padding: 0 16px; } .nav-tabs { padding: 0 16px; } .auth-box { padding: 32px 24px; } .pick-card { grid-template-columns: 70px 1fr auto; } .pick-type, .pick-odds, .pick-selection { display: none; } }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  .strength-bar { height: 3px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; background: var(--border); }
-  .strength-bar.weak { background: var(--danger); width: 33%; }
-  .strength-bar.medium { background: var(--warning); width: 66%; }
-  .strength-bar.strong { background: var(--success); width: 100%; }
 </style>
 </head>
 <body>
 
-<div class="auth-screen" id="login-screen">
-  <div class="auth-grid-bg"></div>
-  <div class="auth-box">
-    <div class="auth-logo">$harp $elections</div>
-    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
-      <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
-    </svg>
-    <div class="auth-tagline">Bet $harp</div>
-    <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" autocomplete="off"></div>
-    <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()"></div>
-    <button class="btn btn-primary" onclick="doLogin()">Sign In -></button>
-    <div id="login-error" class="msg msg-error" style="display:none;"></div>
-    <div class="auth-toggle">Don't have an account? <a onclick="showScreen('register-screen')">Create one</a></div>
-  </div>
-</div>
+<!-- AUTH SCREENS -->
 
-<div class="auth-screen" id="register-screen" style="display:none;">
-  <div class="auth-grid-bg"></div>
-  <div class="auth-box">
-    <div class="auth-logo">$harp $elections</div>
-    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
-      <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
-    </svg>
-    <div class="auth-tagline">Create Your Account</div>
-    <div class="form-grid" style="margin-bottom:0;">
-      <div class="field"><label>First Name</label><input type="text" id="reg-first" placeholder="John"></div>
-      <div class="field"><label>Last Name</label><input type="text" id="reg-last" placeholder="Smith"></div>
+<div id="auth-wrap">
+  <div class="auth-screen" id="login-screen">
+    <div class="auth-grid-bg"></div>
+    <div class="auth-box">
+      <div class="auth-logo">$harp $elections</div>
+      <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
+        <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="auth-tagline">Bet $harp</div>
+      <div class="field"><label>Username</label><input type="text" id="login-user" placeholder="username" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="password" autocomplete="current-password"></div>
+      <div id="login-msg" class="msg"></div>
+      <button class="btn btn-primary" style="margin-top:8px;" onclick="doLogin()">Sign In</button>
+      <div class="auth-toggle">Don't have an account? <a onclick="showScreen('register-screen')">Sign up</a></div>
     </div>
-    <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="Choose a username" autocomplete="off"></div>
-    <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min. 6 characters" oninput="checkStrength(this.value)"><div class="strength-bar" id="strength-bar"></div></div>
-    <div class="field"><label>Confirm Password</label><input type="password" id="reg-pass2" placeholder="Repeat password"></div>
-    <button class="btn btn-primary" onclick="doRegister()">Create Account -></button>
-    <div id="reg-msg" class="msg" style="display:none;"></div>
-    <div class="auth-toggle">Already have an account? <a onclick="showScreen('login-screen')">Sign in</a></div>
+  </div>
+
+  <div class="auth-screen" id="register-screen" style="display:none;">
+    <div class="auth-grid-bg"></div>
+    <div class="auth-box">
+      <div class="auth-logo">$harp $elections</div>
+      <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
+        <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="auth-tagline">Create Account</div>
+      <div class="form-grid">
+        <div class="field"><label>First Name</label><input type="text" id="reg-first" placeholder="First"></div>
+        <div class="field"><label>Last Name</label><input type="text" id="reg-last" placeholder="Last"></div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
+      <div class="field"><label>Username</label><input type="text" id="reg-user" placeholder="username"></div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-pass" placeholder="password" oninput="checkStrength(this.value)">
+        <div class="strength-bar" id="strength-bar"></div>
+      </div>
+      <div id="reg-msg" class="msg"></div>
+      <button class="btn btn-primary" style="margin-top:8px;" onclick="doRegister()">Create Account</button>
+      <div class="auth-toggle"><a onclick="showScreen('login-screen')">Back to Login</a></div>
+    </div>
+  </div>
+
+  <div class="auth-screen" id="pending-screen" style="display:none;">
+    <div class="auth-grid-bg"></div>
+    <div class="auth-box">
+      <div class="pending-icon">...</div>
+      <div class="pending-title">Pending Approval</div>
+      <div class="pending-text">Your account is awaiting admin approval. You will be able to log in once approved.</div>
+      <button class="btn btn-secondary" style="width:100%;" onclick="showScreen('login-screen')">Back to Login</button>
+    </div>
   </div>
 </div>
 
-<div class="auth-screen" id="pending-screen" style="display:none;">
-  <div class="auth-grid-bg"></div>
-  <div class="auth-box" style="text-align:center;">
-    <div class="auth-logo">$harp $elections</div>
-    <svg class="logo-swoosh" width="260" height="32" viewBox="0 0 260 32">
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#1a56ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <path d="M 20 16 Q 80 4 130 16 Q 180 28 240 10" stroke="#3a7aff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
-      <polygon points="20,16 36,8 34,18" fill="#1a56ff"/>
-      <polygon points="240,10 226,4 228,16" fill="#1a56ff"/>
-    </svg>
-    <hr class="divider">
-    <div class="pending-icon"></div>
-    <div class="pending-title">AWAITING APPROVAL</div>
-    <p class="pending-text">Your account has been submitted and is pending admin approval.<br><br>You'll be able to log in once an administrator approves your registration.</p>
-    <button class="btn btn-secondary" onclick="showScreen('login-screen')" style="width:100%;"><- Back to Login</button>
-  </div>
-</div>
+<!-- MAIN APP -->
 
 <div id="app">
   <div class="topbar">
-    <div style="display:flex;flex-direction:column;line-height:1;">
+    <div>
       <div class="topbar-logo">$harp $elections</div>
       <div class="topbar-tagline">Bet $harp</div>
     </div>
     <div class="topbar-right">
-      <div class="user-badge"><span id="topbar-username"></span><span class="role-tag" id="topbar-role"></span></div>
+      <div class="user-badge">
+        <span id="topbar-username"></span>
+        <span class="role-tag" id="topbar-role"></span>
+      </div>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()">Logout</button>
     </div>
   </div>
-  <div class="nav-tabs">
+
+  <div class="nav-tabs" id="nav-tabs">
     <button class="nav-tab active" onclick="showPage('picks', this)">Today's Picks</button>
     <button class="nav-tab" onclick="showPage('history', this)">History</button>
     <button class="nav-tab" onclick="showPage('stats', this)">Stats</button>
     <button class="nav-tab admin-only" onclick="showPage('admin', this)" style="display:none;">Admin Panel</button>
-    <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;" id="users-tab">User Management <span class="pending-badge" id="pending-count" style="display:none;"></span></button>
+    <button class="nav-tab admin-only" onclick="showPage('users', this)" style="display:none;">Users <span class="pending-badge" id="pending-badge" style="display:none;"></span></button>
   </div>
+
   <div class="content">
+    <div class="page active" id="page-picks">
+      <div class="date-bar">
+        <div>
+          <div class="date-display" id="today-date"></div>
+          <div class="date-sub">Today's Selections</div>
+        </div>
+        <input type="date" id="pick-date-selector" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="loadPicksForDate(this.value)">
+      </div>
+      <div class="sport-tabs" id="sport-filter-tabs">
+        <button class="sport-chip active" data-sport="ALL" onclick="filterSport('ALL', this)">All Sports</button>
+        <button class="sport-chip" data-sport="NFL" onclick="filterSport('NFL', this)">NFL</button>
+        <button class="sport-chip" data-sport="NBA" onclick="filterSport('NBA', this)">NBA</button>
+        <button class="sport-chip" data-sport="MLB" onclick="filterSport('MLB', this)">MLB</button>
+        <button class="sport-chip" data-sport="NHL" onclick="filterSport('NHL', this)">NHL</button>
+        <button class="sport-chip" data-sport="NCAAF" onclick="filterSport('NCAAF', this)">NCAAF</button>
+        <button class="sport-chip" data-sport="NCAAM" onclick="filterSport('NCAAM', this)">NCAAM</button>
+      </div>
+      <div id="picks-container" class="picks-grid"></div>
+    </div>
 
-
-<div class="page active" id="page-picks">
-  <div class="date-bar">
-    <div><div class="date-display" id="today-date"></div><div class="date-sub">Today's Selections</div></div>
-    <input type="date" id="pick-date-selector" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="loadPicksForDate(this.value)">
-  </div>
-  <div class="sport-tabs">
-    <button class="sport-chip active" data-sport="ALL" onclick="filterSport('ALL', this)">All Sports</button>
-    <button class="sport-chip" data-sport="NFL" onclick="filterSport('NFL', this)">NFL</button>
-    <button class="sport-chip" data-sport="NBA" onclick="filterSport('NBA', this)">NBA</button>
-    <button class="sport-chip" data-sport="MLB" onclick="filterSport('MLB', this)">MLB</button>
-    <button class="sport-chip" data-sport="NHL" onclick="filterSport('NHL', this)">NHL</button>
-    <button class="sport-chip" data-sport="NCAAF" onclick="filterSport('NCAAF', this)">NCAAF</button>
-    <button class="sport-chip" data-sport="NCAAM" onclick="filterSport('NCAAM', this)">NCAAM</button>
-  </div>
-  <div id="picks-container" class="picks-grid"></div>
-</div>
-
+```
 <div class="page" id="page-history">
   <div class="date-bar">
-    <div><div class="date-display">HISTORY</div><div class="date-sub">All Past Selections</div></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <select id="hist-sport" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
-        <option value="ALL">All Sports</option><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
-      </select>
-      <select id="hist-result" onchange="renderHistory()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
-        <option value="ALL">All Results</option><option value="WIN">Wins</option><option value="LOSS">Losses</option><option value="PUSH">Pushes</option><option value="PENDING">Pending</option>
-      </select>
-    </div>
+    <div><div class="date-display">History</div><div class="date-sub">All Past Selections</div></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <select id="hist-sport" class="field" style="width:auto;margin:0;" onchange="renderHistory()">
+      <option value="ALL">All Sports</option>
+      <option value="NFL">NFL</option><option value="NBA">NBA</option>
+      <option value="MLB">MLB</option><option value="NHL">NHL</option>
+      <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+    </select>
+    <select id="hist-result" class="field" style="width:auto;margin:0;" onchange="renderHistory()">
+      <option value="ALL">All Results</option>
+      <option value="WIN">Wins</option><option value="LOSS">Losses</option>
+      <option value="PUSH">Pushes</option><option value="PENDING">Pending</option>
+    </select>
   </div>
   <div id="history-container" class="picks-grid"></div>
 </div>
 
 <div class="page" id="page-stats">
-  <div class="date-bar"><div><div class="date-display">STATISTICS</div><div class="date-sub">Season Performance</div></div></div>
+  <div class="date-bar">
+    <div><div class="date-display">Stats</div><div class="date-sub">Performance Overview</div></div>
+  </div>
   <div class="stats-row" id="overall-stats"></div>
-  <div class="section-header" style="margin-top:8px;"><div class="section-title">By Sport</div></div>
-  <div id="sport-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+  <div class="section-header"><span class="section-title">By Sport</span></div>
+  <div class="stats-row" id="sport-stats"></div>
 </div>
 
 <div class="page" id="page-admin">
-  <div class="date-bar"><div><div class="date-display">ADMIN PANEL</div><div class="date-sub">Add Picks & Manage Results</div></div></div>
+  <div class="date-bar">
+    <div><div class="date-display">Admin Panel</div><div class="date-sub">Manage Picks</div></div>
+  </div>
   <div class="admin-add-panel">
     <div class="admin-add-header" onclick="toggleAddPanel()">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="add-panel-icon">+</span>
-        <div><div class="add-panel-title">ADD NEW PICK</div><div class="add-panel-sub">Click to expand - Add selections for any sport</div></div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="add-panel-icon">+</div>
+        <div>
+          <div class="add-panel-title">Add New Pick</div>
+          <div class="add-panel-sub">Click to expand - Add selections for any sport</div>
+        </div>
       </div>
-      <div class="sport-quick-btns" onclick="event.stopPropagation()">
-        <button class="sport-quick" data-s="NFL" onclick="quickSport('NFL')">NFL</button>
-        <button class="sport-quick" data-s="NBA" onclick="quickSport('NBA')">NBA</button>
-        <button class="sport-quick" data-s="MLB" onclick="quickSport('MLB')">MLB</button>
-        <button class="sport-quick" data-s="NHL" onclick="quickSport('NHL')">NHL</button>
-        <button class="sport-quick" data-s="NCAAF" onclick="quickSport('NCAAF')">NCAAF</button>
-        <button class="sport-quick" data-s="NCAAM" onclick="quickSport('NCAAM')">NCAAM</button>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="sport-quick-btns">
+          <button class="sport-quick active-sport" data-s="NFL" onclick="setSportQuick('NFL',event)">NFL</button>
+          <button class="sport-quick" data-s="NBA" onclick="setSportQuick('NBA',event)">NBA</button>
+          <button class="sport-quick" data-s="MLB" onclick="setSportQuick('MLB',event)">MLB</button>
+          <button class="sport-quick" data-s="NHL" onclick="setSportQuick('NHL',event)">NHL</button>
+          <button class="sport-quick" data-s="NCAAF" onclick="setSportQuick('NCAAF',event)">NCAAF</button>
+          <button class="sport-quick" data-s="NCAAM" onclick="setSportQuick('NCAAM',event)">NCAAM</button>
+        </div>
+        <span class="panel-chevron" id="panel-chevron">v</span>
       </div>
-      <span class="panel-chevron" id="panel-chevron">v</span>
     </div>
     <div class="admin-add-body" id="admin-add-body">
-      <div style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-          <div class="section-title" style="margin:0;">Select a Game</div>
-          <input type="date" id="f-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;outline:none;" onchange="lastFetchKey='';document.getElementById('games-grid').innerHTML='';document.getElementById('fetch-btn').textContent=' Load Games';">
-          <button class="btn btn-secondary btn-sm" onclick="lastFetchKey='';fetchGames()" id="fetch-btn"> Load Games</button>
-        </div>
-        <div id="games-loader" style="display:none;padding:14px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;">LOADING SCHEDULE...</div>
-        <div id="games-grid" style="display:flex;flex-wrap:wrap;gap:8px;min-height:36px;"><div class="games-empty">Select a date and sport, then tap Load Games.</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" id="fetch-btn" onclick="fetchGames()">Load Games</button>
+        <input type="date" id="fetch-date" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;outline:none;">
       </div>
-      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:16px;">
+      <div id="games-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;"></div>
       <div class="add-form-grid">
-        <div class="field"><label>Sport</label><select id="f-sport" onchange="updateSportQuick(this.value)"><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option></select></div>
-        <div class="field"><label>Away Team</label><input type="text" id="f-away" placeholder="e.g. Cowboys"></div>
-        <div class="field"><label>Home Team</label><input type="text" id="f-home" placeholder="e.g. Eagles"></div>
-        <div class="field"><label>Bet Type</label><select id="f-type"><option value="Spread">Spread</option><option value="Moneyline">Moneyline</option><option value="Total (O/U)">Total (O/U)</option><option value="Parlay">Parlay</option><option value="Prop">Prop</option><option value="Futures">Futures</option></select></div>
-        <div class="field"><label>Selection</label><input type="text" id="f-selection" placeholder="e.g. Cowboys -3.5"></div>
-        <div class="field"><label>Odds</label><input type="text" id="f-odds" placeholder="e.g. -110"></div>
-        <div class="field"><label>Units</label><input type="number" id="f-units" min="0.5" step="0.5" value="1"></div>
+        <div class="field"><label>Sport</label>
+          <select id="f-sport">
+            <option value="NFL">NFL</option><option value="NBA">NBA</option>
+            <option value="MLB">MLB</option><option value="NHL">NHL</option>
+            <option value="NCAAF">NCAAF</option><option value="NCAAM">NCAAM</option>
+          </select>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="f-date"></div>
+        <div class="field"><label>Away Team</label><input type="text" id="f-away" placeholder="Away"></div>
+        <div class="field"><label>Home Team</label><input type="text" id="f-home" placeholder="Home"></div>
+        <div class="field"><label>Pick Type</label>
+          <select id="f-type">
+            <option value="Spread">Spread</option><option value="Moneyline">Moneyline</option>
+            <option value="Total">Total</option><option value="Prop">Prop</option><option value="Parlay">Parlay</option>
+          </select>
+        </div>
+        <div class="field"><label>Selection</label><input type="text" id="f-selection" placeholder="e.g. Chiefs -3.5"></div>
+        <div class="field"><label>Odds</label><input type="text" id="f-odds" placeholder="-110"></div>
+        <div class="field"><label>Units</label><input type="number" id="f-units" value="1" min="0.5" step="0.5"></div>
       </div>
-      <div class="field" style="margin-top:4px;"><label>Analysis / Notes</label><textarea id="f-notes" rows="2" placeholder="Brief analysis or reasoning..."></textarea></div>
-      <div id="add-pick-error" class="msg msg-error" style="display:none;margin-top:8px;"></div>
-      <div style="display:flex;gap:10px;margin-top:16px;">
-        <button class="btn btn-primary" onclick="savePickInline()" style="flex:1;">+ Save Pick</button>
-        <button class="btn btn-secondary" onclick="clearPickForm()">Clear</button>
+      <div class="field"><label>Notes (optional)</label><textarea id="f-notes" rows="2" placeholder="Analysis or reasoning..."></textarea></div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" style="width:auto;padding:12px 32px;" onclick="addPick()">Add Pick</button>
+        <div id="add-msg" class="msg" style="flex:1;margin:0;align-self:center;"></div>
       </div>
     </div>
   </div>
-  <div class="section-header"><div class="section-title">All Picks - Update Results</div></div>
+  <div class="section-header"><span class="section-title">All Picks</span></div>
   <div id="admin-picks-container" class="picks-grid"></div>
 </div>
 
 <div class="page" id="page-users">
   <div class="date-bar">
-    <div><div class="date-display">USER MANAGEMENT</div><div class="date-sub">Accounts & Access Control</div></div>
-    <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add User</button>
+    <div><div class="date-display">Users</div><div class="date-sub">Manage Accounts</div></div>
+    <button class="btn btn-secondary btn-sm" onclick="openAddUser()">+ Add User</button>
   </div>
-  <div id="pending-section" style="margin-bottom:28px;display:none;">
-    <div class="section-header"><div class="section-title" style="color:var(--accent2);">! Pending Approval</div></div>
-    <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pending-tbody"></tbody></table></div>
+  <div id="pending-section" style="margin-bottom:24px;display:none;">
+    <div class="section-header"><span class="section-title">Pending Approval</span></div>
+    <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody id="pending-tbody"></tbody></table></div>
   </div>
-  <div class="section-header"><div class="section-title">All Users</div></div>
-  <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
+  <div class="section-header"><span class="section-title">Active Users</span></div>
+  <div class="users-table"><table><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+  <tbody id="users-tbody"></tbody></table></div>
+</div>
+```
+
+  </div>
 </div>
 
+<!-- MODALS -->
 
+<div class="modal-overlay" id="modal-result">
+  <div class="modal">
+    <div class="modal-title">Set Result</div>
+    <button class="modal-close" onclick="closeModal('modal-result')">x</button>
+    <input type="hidden" id="result-pick-id">
+    <div class="field"><label>Result</label>
+      <select id="result-select">
+        <option value="WIN">Win</option>
+        <option value="LOSS">Loss</option>
+        <option value="PUSH">Push</option>
+        <option value="PENDING">Pending</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="saveResult()">Save Result</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-add-user">
   <div class="modal">
+    <div class="modal-title">Add User</div>
     <button class="modal-close" onclick="closeModal('modal-add-user')">x</button>
-    <div class="modal-title" id="user-modal-title">ADD USER</div>
     <div class="form-grid">
-      <div class="field"><label>First Name</label><input type="text" id="new-first" placeholder="First name"></div>
-      <div class="field"><label>Last Name</label><input type="text" id="new-last" placeholder="Last name"></div>
+      <div class="field"><label>First Name</label><input type="text" id="au-first"></div>
+      <div class="field"><label>Last Name</label><input type="text" id="au-last"></div>
     </div>
-    <div class="field"><label>Email</label><input type="email" id="new-email" placeholder="Email address"></div>
-    <div class="field"><label>Username</label><input type="text" id="new-username" placeholder="Username" autocomplete="off"></div>
-    <div class="field"><label>Password <span style="color:var(--muted);font-size:10px;">(leave blank to keep current)</span></label><input type="password" id="new-password" placeholder="Password"></div>
-    <div class="field"><label>Role</label><select id="new-role"><option value="user">User</option><option value="admin">Admin</option></select></div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-primary" onclick="saveUser()" style="flex:1;" id="save-user-btn">Add User</button>
-      <button class="btn btn-secondary" onclick="closeModal('modal-add-user')">Cancel</button>
+    <div class="field"><label>Email</label><input type="email" id="au-email"></div>
+    <div class="field"><label>Username</label><input type="text" id="au-user"></div>
+    <div class="field"><label>Password</label><input type="password" id="au-pass"></div>
+    <div class="field"><label>Role</label>
+      <select id="au-role"><option value="user">User</option><option value="admin">Admin</option></select>
     </div>
-    <div id="user-error" class="msg msg-error" style="display:none;margin-top:12px;"></div>
+    <div id="au-msg" class="msg"></div>
+    <button class="btn btn-primary" onclick="saveNewUser()">Add User</button>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-result">
+<div class="modal-overlay" id="modal-edit-user">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-result')">x</button>
-    <div class="modal-title">UPDATE RESULT</div>
-    <input type="hidden" id="result-pick-id">
-    <div class="field"><label>Result</label><select id="result-select"><option value="PENDING">Pending</option><option value="WIN">Win OK</option><option value="LOSS">Loss x</option><option value="PUSH">Push ~</option></select></div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
-      <button class="btn btn-primary" onclick="saveResult()" style="flex:1;">Save Result</button>
-      <button class="btn btn-secondary" onclick="closeModal('modal-result')">Cancel</button>
+    <div class="modal-title">Edit User</div>
+    <button class="modal-close" onclick="closeModal('modal-edit-user')">x</button>
+    <input type="hidden" id="eu-id">
+    <div class="form-grid">
+      <div class="field"><label>First Name</label><input type="text" id="eu-first"></div>
+      <div class="field"><label>Last Name</label><input type="text" id="eu-last"></div>
     </div>
+    <div class="field"><label>Email</label><input type="email" id="eu-email"></div>
+    <div class="field"><label>Username</label><input type="text" id="eu-user"></div>
+    <div class="field"><label>New Password (leave blank to keep)</label><input type="password" id="eu-pass"></div>
+    <div class="field"><label>Role</label>
+      <select id="eu-role"><option value="user">User</option><option value="admin">Admin</option></select>
+    </div>
+    <div id="eu-msg" class="msg"></div>
+    <button class="btn btn-primary" onclick="saveEditUser()">Save Changes</button>
   </div>
 </div>
 
 <script>
-const _memStore = {};
+// -- Storage --
+var _mem = {};
 function getData(key, def) {
-  try { const v = localStorage.getItem(key); if (v) return JSON.parse(v); } catch(e) {}
-  return key in _memStore ? JSON.parse(JSON.stringify(_memStore[key])) : def;
+  try { var v = localStorage.getItem(key); if (v !== null) return JSON.parse(v); } catch(e) {}
+  return key in _mem ? JSON.parse(JSON.stringify(_mem[key])) : def;
 }
 function setData(key, val) {
-  _memStore[key] = JSON.parse(JSON.stringify(val));
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  _mem[key] = val;
 }
 
-function init() {
-  if (!getData('ss_users', null)) {
-    setData('ss_users', [{ id:'u1', username:'admin', password:'admin123', firstName:'Site', lastName:'Admin', email:'admin@sharpselections.com', role:'admin', status:'active', created:new Date().toISOString() }]);
+// -- Seed admin --
+(function() {
+  var users = getData('ss_users', null);
+  if (!users) {
+    setData('ss_users', [{
+      id: 'admin', username: 'admin', password: 'admin123',
+      firstName: 'Admin', lastName: '', email: 'admin@sharpselections.com',
+      role: 'admin', status: 'active', created: new Date().toISOString()
+    }]);
   }
-}
-init();
+})();
 
-let currentUser = null, currentSportFilter = 'ALL', currentDateView = todayStr(), editingUserId = null;
-
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function formatDateDisplay(d) {
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const [y,m,day] = d.split('-');
-  return `${months[+m-1]} ${+day}, ${y}`;
+// -- Helpers --
+var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function formatDate(d) {
+  var parts = d.split('-');
+  return months[+parts[1]-1] + ' ' + (+parts[2]) + ', ' + parts[0];
 }
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getPicks() { return getData('ss_picks', []); }
+function savePicks(p) { setData('ss_picks', p); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+// -- Auth --
+var currentUser = null;
 
 function showScreen(id) {
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('register-screen').style.display = 'none';
+  document.getElementById('pending-screen').style.display = 'none';
   document.getElementById(id).style.display = 'flex';
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('reg-msg').style.display = 'none';
 }
 
 function doLogin() {
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  const found = getData('ss_users', []).find(x => x.username === u && x.password === p);
-  if (!found) { errEl.textContent = 'Invalid username or password.'; errEl.style.display = 'block'; return; }
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pass').value;
+  var msgEl = document.getElementById('login-msg');
+  function showMsg(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; }
+  if (!u || !p) { showMsg('Please enter username and password.', 'error'); return; }
+  var users = getData('ss_users', []);
+  var found = null;
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].username === u && users[i].password === p) { found = users[i]; break; }
+  }
+  if (!found) { showMsg('Invalid username or password.', 'error'); return; }
   if (found.status === 'pending') { showScreen('pending-screen'); return; }
-  if (found.status === 'inactive') { errEl.textContent = 'Account deactivated. Contact an admin.'; errEl.style.display = 'block'; return; }
+  if (found.status === 'inactive') { showMsg('Account deactivated. Contact admin.', 'error'); return; }
   currentUser = found;
-  errEl.style.display = 'none';
-  ['login-screen','register-screen','pending-screen'].forEach(s => document.getElementById(s).style.display = 'none');
-  document.getElementById('app').style.display = 'block';
-  setupApp();
+  launchApp();
 }
 
 function doRegister() {
-  const first = document.getElementById('reg-first').value.trim();
-  const last = document.getElementById('reg-last').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const user = document.getElementById('reg-user').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const pass2 = document.getElementById('reg-pass2').value;
-  const msgEl = document.getElementById('reg-msg');
-  const show = (txt, type) => { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; };
-  if (!first||!last||!email||!user||!pass) return show('All fields are required.', 'error');
-  if (pass.length < 6) return show('Password must be at least 6 characters.', 'error');
-  if (pass !== pass2) return show('Passwords do not match.', 'error');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show('Please enter a valid email.', 'error');
-  const users = getData('ss_users', []);
-  if (users.find(u => u.username === user)) return show('Username already taken.', 'error');
-  if (users.find(u => u.email === email)) return show('Email already in use.', 'error');
-  users.push({ id:'u'+Date.now(), username:user, password:pass, firstName:first, lastName:last, email, role:'user', status:'pending', created:new Date().toISOString() });
+  var first = document.getElementById('reg-first').value.trim();
+  var last = document.getElementById('reg-last').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var user = document.getElementById('reg-user').value.trim();
+  var pass = document.getElementById('reg-pass').value;
+  var msgEl = document.getElementById('reg-msg');
+  function showMsg(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; }
+  if (!first || !last || !email || !user || !pass) { showMsg('All fields required.', 'error'); return; }
+  if (pass.length < 6) { showMsg('Password must be at least 6 characters.', 'error'); return; }
+  var users = getData('ss_users', []);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].username === user) { showMsg('Username already taken.', 'error'); return; }
+    if (users[i].email === email) { showMsg('Email already registered.', 'error'); return; }
+  }
+  users.push({ id: uid(), username: user, password: pass, firstName: first, lastName: last, email: email, role: 'user', status: 'pending', created: new Date().toISOString() });
   setData('ss_users', users);
-  show('Account created! Awaiting admin approval.', 'success');
-  setTimeout(() => showScreen('pending-screen'), 1500);
+  showMsg('Account created! Awaiting admin approval.', 'success');
+  setTimeout(function() { showScreen('pending-screen'); }, 1800);
 }
 
 function checkStrength(val) {
-  const bar = document.getElementById('strength-bar');
+  var bar = document.getElementById('strength-bar');
   if (!val) { bar.className = 'strength-bar'; return; }
-  if (val.length < 6) bar.className = 'strength-bar weak';
-  else if (val.length < 10 || !/[^a-zA-Z0-9]/.test(val)) bar.className = 'strength-bar medium';
-  else bar.className = 'strength-bar strong';
+  if (val.length < 6) { bar.className = 'strength-bar weak'; return; }
+  var strong = /[A-Z]/.test(val) && /[0-9]/.test(val) && val.length >= 8;
+  bar.className = strong ? 'strength-bar strong' : 'strength-bar medium';
 }
 
-function doLogout() {
-  currentUser = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  showScreen('login-screen');
-}
+function doLogout() { currentUser = null; document.getElementById('app').style.display = 'none'; document.getElementById('auth-wrap').style.display = 'block'; showScreen('login-screen'); document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = ''; }
 
-function setupApp() {
+function launchApp() {
+  document.getElementById('auth-wrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
   document.getElementById('topbar-username').textContent = currentUser.username;
-  const roleEl = document.getElementById('topbar-role');
+  var roleEl = document.getElementById('topbar-role');
   roleEl.textContent = currentUser.role;
-  roleEl.className = 'role-tag' + (currentUser.role === 'admin' ? '' : ' user-role');
-  document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? '' : 'none');
-  const today = todayStr();
-  currentDateView = today;
-  document.getElementById('today-date').textContent = formatDateDisplay(today);
-  document.getElementById('pick-date-selector').value = today;
-  if (currentUser.role === 'admin') {
-    document.getElementById('f-date').value = today;
-    document.getElementById('f-sport').value = 'NFL';
-    updateSportQuick('NFL');
-    addPanelOpen = true;
-    document.getElementById('admin-add-body').classList.add('open');
-    document.getElementById('panel-chevron').classList.add('open');
+  roleEl.className = 'role-tag' + (currentUser.role !== 'admin' ? ' user-role' : '');
+  var adminEls = document.querySelectorAll('.admin-only');
+  for (var i = 0; i < adminEls.length; i++) {
+    adminEls[i].style.display = currentUser.role === 'admin' ? '' : 'none';
   }
+  var today = todayStr();
+  document.getElementById('today-date').textContent = formatDate(today);
+  document.getElementById('pick-date-selector').value = today;
+  document.getElementById('fetch-date').value = today;
+  currentDateView = today;
+  currentSportFilter = 'ALL';
+  renderPicks();
   updatePendingBadge();
-  showPage('picks', document.querySelectorAll('.nav-tab')[0]);
-  loadPicksForDate(today);
-  renderHistory(); renderStats();
-  if (currentUser.role === 'admin') { renderAdminPicks(); renderUsersTable(); }
+  showPage('picks', document.querySelector('.nav-tab'));
 }
 
-function updatePendingBadge() {
-  if (currentUser?.role !== 'admin') return;
-  const pending = getData('ss_users', []).filter(u => u.status === 'pending').length;
-  const badge = document.getElementById('pending-count');
-  if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline'; }
-  else { badge.style.display = 'none'; }
-}
-
+// -- Navigation --
 function showPage(name, tab) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) { pages[i].classList.remove('active'); }
+  var tabs = document.querySelectorAll('.nav-tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
   document.getElementById('page-' + name).classList.add('active');
   if (tab) tab.classList.add('active');
   if (name === 'admin') { renderAdminPicks(); if (!document.getElementById('f-date').value) document.getElementById('f-date').value = todayStr(); }
@@ -504,295 +549,486 @@ function showPage(name, tab) {
   if (name === 'history') renderHistory();
 }
 
-function getPicks() { return getData('ss_picks', []); }
-function savePicks(picks) { setData('ss_picks', picks); }
-function loadPicksForDate(date) { currentDateView = date; document.getElementById('today-date').textContent = formatDateDisplay(date); renderPicks(); }
+// -- Picks --
+var currentDateView = todayStr();
+var currentSportFilter = 'ALL';
+
+function loadPicksForDate(val) {
+  currentDateView = val;
+  document.getElementById('today-date').textContent = formatDate(val);
+  renderPicks();
+}
 
 function filterSport(sport, el) {
   currentSportFilter = sport;
-  document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+  var chips = document.querySelectorAll('.sport-chip');
+  for (var i = 0; i < chips.length; i++) { chips[i].classList.remove('active'); }
+  if (el) el.classList.add('active');
   renderPicks();
 }
 
 function renderPicks() {
-  const picks = getPicks().filter(p => p.date === currentDateView);
-  const filtered = currentSportFilter === 'ALL' ? picks : picks.filter(p => p.sport === currentSportFilter);
-  const container = document.getElementById('picks-container');
-  container.innerHTML = filtered.length === 0
-    ? `<div class="empty-state"><div class="icon"></div>No picks for this date${currentSportFilter !== 'ALL' ? ' / sport' : ''}</div>`
-    : filtered.map(p => pickCardHTML(p, false)).join('');
-}
-
-function pickCardHTML(p, adminMode) {
-  const rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
-  return `
-    <div class="pick-card">
-      <div class="pick-sport-badge sport-${p.sport}">${p.sport}</div>
-      <div class="pick-teams">${p.away} @ ${p.home}<div class="matchup">${formatDateDisplay(p.date)}</div></div>
-      <div class="pick-type">${p.type}</div>
-      <div class="pick-selection">${p.selection}</div>
-      <div class="pick-odds">${p.odds || '-'}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-        <span class="pick-result ${rClass}">${p.result || 'PENDING'}</span>
-        ${adminMode ? `<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal('${p.id}')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick('${p.id}')">x</button></div>` : ''}
-      </div>
-    </div>
-    ${p.notes ? `<div class="note-card"><div class="note-meta">${p.sport} - ${p.type} - ${p.units||1}u</div>${p.notes}</div>` : ''}`;
-}
-
-let addPanelOpen = false;
-function toggleAddPanel() {
-  addPanelOpen = !addPanelOpen;
-  document.getElementById('admin-add-body').classList.toggle('open', addPanelOpen);
-  document.getElementById('panel-chevron').classList.toggle('open', addPanelOpen);
-}
-function quickSport(sport) { document.getElementById('f-sport').value = sport; updateSportQuick(sport); if (!addPanelOpen) toggleAddPanel(); }
-function updateSportQuick(sport) { document.querySelectorAll('.sport-quick').forEach(b => b.classList.toggle('active-sport', b.dataset.s === sport)); }
-
-let isFetching = false, lastFetchKey = '';
-
-async function fetchGames() {
-  const adminPage = document.getElementById('page-admin');
-  if (!adminPage || !adminPage.classList.contains('active')) return;
-  const sport = document.getElementById('f-sport').value;
-  const date = document.getElementById('f-date').value;
-  const grid = document.getElementById('games-grid');
-  const loader = document.getElementById('games-loader');
-  const fetchBtn = document.getElementById('fetch-btn');
-  if (!date || !sport || isFetching) return;
-  const fetchKey = sport + '|' + date;
-  if (fetchKey === lastFetchKey) return;
-  lastFetchKey = fetchKey;
-  isFetching = true;
-  grid.innerHTML = '';
-  loader.style.display = 'block';
-  fetchBtn.textContent = ' Loading...';
-  fetchBtn.disabled = true;
-  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-  const resetBtn = label => { loader.style.display = 'none'; fetchBtn.textContent = label; fetchBtn.disabled = false; isFetching = false; };
-  const espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
-  const espnPath = espnMap[sport];
-  if (!espnPath) { resetBtn(' Try Again'); lastFetchKey = ''; grid.innerHTML = `<div class="games-empty">Sport not supported - enter teams manually.</div>`; return; }
-  const espnDate = date.replace(/-/g, '');
-  const directUrl = `https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard?dates=${espnDate}`;
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
-  const tryFetch = async url => { const r = await fetch(url); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
-  try {
-    let data;
-    try { data = await tryFetch(directUrl); } catch(e) { data = await tryFetch(proxyUrl); }
-    const events = data.events || [];
-    if (!events.length) { resetBtn(' Refresh'); grid.innerHTML = `<div class="games-empty">No ${sport} games on ${dateLabel}. Enter teams manually.</div>`; return; }
-    const upcoming = [], started = [];
-    events.forEach(e => {
-      const comp = e.competitions?.[0]; if (!comp) return;
-      const aw = comp.competitors?.find(c => c.homeAway === 'away');
-      const hm = comp.competitors?.find(c => c.homeAway === 'home');
-      if (!aw || !hm) return;
-      const time = new Date(e.date).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZoneName:'short', timeZone:'America/New_York' });
-      const state = comp.status?.type?.state || 'pre';
-      (state === 'pre' ? upcoming : started).push({ away: aw.team.displayName||aw.team.name, home: hm.team.displayName||hm.team.name, time });
-    });
-    resetBtn(' Refresh');
-    let html = '';
-    if (upcoming.length) {
-      html += upcoming.map(g => `<button class="game-pill" onclick="selectGame(this)" data-away="${g.away}" data-home="${g.home}"><span class="gp-sport">${sport}</span><strong>${g.away}</strong><span style="opacity:0.4;font-size:11px;">@</span><strong>${g.home}</strong><span class="gp-time">${g.time}</span></button>`).join('');
-    } else {
-      html += `<div class="games-empty">All ${sport} games today have already started.</div>`;
+  var all = getPicks();
+  var picks = [];
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].date === currentDateView) picks.push(all[i]);
+  }
+  if (currentSportFilter !== 'ALL') {
+    var filtered = [];
+    for (var i = 0; i < picks.length; i++) {
+      if (picks[i].sport === currentSportFilter) filtered.push(picks[i]);
     }
-    if (started.length) {
-      html += `<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);"><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${started.map(g => `<span class="game-pill" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><strong>${g.away}</strong><span style="opacity:0.4;">@</span><strong>${g.home}</strong><span style="color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;">LIVE</span></span>`).join('')}</div></div>`;
-    }
-    grid.innerHTML = html;
-  } catch(err) {
-    resetBtn(' Try Again');
-    lastFetchKey = '';
-    grid.innerHTML = `<div class="games-empty" style="color:var(--danger);">! Could not load - enter teams manually. (${err.message})</div>`;
+    picks = filtered;
+  }
+  var container = document.getElementById('picks-container');
+  if (picks.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">o</div>No picks for this date' + (currentSportFilter !== 'ALL' ? ' / sport' : '') + '</div>';
+  } else {
+    var html = '';
+    for (var i = 0; i < picks.length; i++) { html += pickCardHTML(picks[i], false); }
+    container.innerHTML = html;
   }
 }
 
+function pickCardHTML(p, adminMode) {
+  var rClass = { WIN:'result-win', LOSS:'result-loss', PUSH:'result-push', PENDING:'result-pending' }[p.result] || 'result-pending';
+  var actions = adminMode
+    ? '<div class="pick-actions"><button class="btn btn-secondary btn-sm" onclick="openResultModal(\'' + p.id + '\')">Result</button><button class="btn btn-danger btn-sm" onclick="deletePick(\'' + p.id + '\')">x</button></div>'
+    : '';
+  var notes = p.notes
+    ? '<div class="note-card"><div class="note-meta">' + p.sport + ' - ' + p.type + ' - ' + (p.units||1) + 'u</div>' + p.notes + '</div>'
+    : '';
+  return '<div class="pick-card">' +
+    '<div class="pick-sport-badge sport-' + p.sport + '">' + p.sport + '</div>' +
+    '<div class="pick-teams">' + p.away + ' @ ' + p.home + '<div class="matchup">' + formatDate(p.date) + '</div></div>' +
+    '<div class="pick-type">' + p.type + '</div>' +
+    '<div class="pick-selection">' + p.selection + '</div>' +
+    '<div class="pick-odds">' + (p.odds || '-') + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">' +
+      '<span class="pick-result ' + rClass + '">' + (p.result || 'PENDING') + '</span>' +
+      actions +
+    '</div></div>' + notes;
+}
+
+// -- Add Panel --
+var addPanelOpen = false;
+function toggleAddPanel() {
+  addPanelOpen = !addPanelOpen;
+  document.getElementById('admin-add-body').className = 'admin-add-body' + (addPanelOpen ? ' open' : '');
+  document.getElementById('panel-chevron').className = 'panel-chevron' + (addPanelOpen ? ' open' : '');
+}
+
+function setSportQuick(sport, e) {
+  e.stopPropagation();
+  document.getElementById('f-sport').value = sport;
+  var btns = document.querySelectorAll('.sport-quick');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active-sport', btns[i].dataset.s === sport);
+  }
+}
+
+function addPick() {
+  var msgEl = document.getElementById('add-msg');
+  function showMsg(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; }
+  var sport = document.getElementById('f-sport').value;
+  var date = document.getElementById('f-date').value;
+  var away = document.getElementById('f-away').value.trim();
+  var home = document.getElementById('f-home').value.trim();
+  var type = document.getElementById('f-type').value;
+  var selection = document.getElementById('f-selection').value.trim();
+  var odds = document.getElementById('f-odds').value.trim();
+  var units = document.getElementById('f-units').value;
+  var notes = document.getElementById('f-notes').value.trim();
+  if (!date || !away || !home || !selection) { showMsg('Fill in all required fields.', 'error'); return; }
+  var picks = getPicks();
+  picks.push({ id: uid(), sport: sport, date: date, away: away, home: home, type: type, selection: selection, odds: odds, units: parseFloat(units)||1, notes: notes, result: 'PENDING', created: new Date().toISOString() });
+  savePicks(picks);
+  var ids = ['f-away','f-home','f-selection','f-odds','f-notes'];
+  for (var i = 0; i < ids.length; i++) { document.getElementById(ids[i]).value = ''; }
+  document.getElementById('f-units').value = '1';
+  showMsg('Pick added!', 'success');
+  setTimeout(function() { msgEl.style.display = 'none'; }, 2000);
+  renderAdminPicks();
+  renderPicks();
+}
+
+// -- ESPN Games --
+var isFetching = false;
+var lastFetchKey = '';
+
+function fetchGames() {
+  if (isFetching) return;
+  var sport = document.getElementById('f-sport').value;
+  var date = document.getElementById('fetch-date').value || todayStr();
+  var key = sport + '-' + date;
+  if (key === lastFetchKey) return;
+  isFetching = true;
+  var btn = document.getElementById('fetch-btn');
+  var origText = btn.textContent;
+  btn.textContent = 'Loading...';
+  btn.disabled = true;
+  var grid = document.getElementById('games-grid');
+  grid.innerHTML = '';
+
+  function resetBtn(label) { btn.textContent = label; btn.disabled = false; isFetching = false; }
+
+  var espnMap = { NFL:'football/nfl', NBA:'basketball/nba', MLB:'baseball/mlb', NHL:'hockey/nhl', NCAAF:'football/college-football', NCAAM:'basketball/mens-college-basketball' };
+  var espnPath = espnMap[sport];
+  if (!espnPath) { resetBtn('Load Games'); grid.innerHTML = '<div class="games-empty">Sport not supported - enter teams manually.</div>'; return; }
+
+  var espnDate = date.replace(/-/g, '');
+  var directUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + espnDate;
+  var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+
+  function tryFetch(url, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { cb(null, JSON.parse(xhr.responseText)); } catch(e) { cb(e); }
+      } else { cb(new Error('HTTP ' + xhr.status)); }
+    };
+    xhr.onerror = function() { cb(new Error('Network error')); };
+    xhr.send();
+  }
+
+  tryFetch(directUrl, function(err, data) {
+    if (err) {
+      tryFetch(proxyUrl, function(err2, data2) {
+        if (err2) { resetBtn(origText); lastFetchKey = ''; grid.innerHTML = '<div class="games-empty">Could not load - enter teams manually.</div>'; }
+        else { processGames(data2, sport, date, grid, resetBtn, origText); }
+      });
+    } else { processGames(data, sport, date, grid, resetBtn, origText); }
+  });
+}
+
+function processGames(data, sport, date, grid, resetBtn, origText) {
+  lastFetchKey = sport + '-' + date;
+  var events = (data && data.events) ? data.events : [];
+  if (!events.length) { resetBtn(origText); grid.innerHTML = '<div class="games-empty">No ' + sport + ' games on ' + formatDate(date) + '. Enter teams manually.</div>'; return; }
+  var upcoming = [], started = [];
+  for (var i = 0; i < events.length; i++) {
+    var e = events[i];
+    var comp = e.competitions && e.competitions[0];
+    if (!comp) continue;
+    var competitors = comp.competitors || [];
+    var aw = null, hm = null;
+    for (var j = 0; j < competitors.length; j++) {
+      if (competitors[j].homeAway === 'away') aw = competitors[j];
+      if (competitors[j].homeAway === 'home') hm = competitors[j];
+    }
+    if (!aw || !hm) continue;
+    var away = aw.team && aw.team.shortDisplayName || aw.team && aw.team.name || 'Away';
+    var home = hm.team && hm.team.shortDisplayName || hm.team && hm.team.name || 'Home';
+    var statusType = comp.status && comp.status.type;
+    var state = (statusType && statusType.state) || 'pre';
+    var timeStr = '';
+    if (e.date) {
+      var d = new Date(e.date);
+      timeStr = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    }
+    var game = { away: away, home: home, time: timeStr };
+    if (state === 'pre') upcoming.push(game); else started.push(game);
+  }
+  var html = '';
+  if (upcoming.length) {
+    for (var i = 0; i < upcoming.length; i++) {
+      var g = upcoming[i];
+      html += '<button class="game-pill" onclick="selectGame(this)" data-away="' + g.away + '" data-home="' + g.home + '"><span class="gp-sport">' + sport + '</span><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span class="gp-time">' + g.time + '</span></button>';
+    }
+  } else {
+    html += '<div class="games-empty">All ' + sport + ' games today have already started.</div>';
+  }
+  if (started.length) {
+    html += '<div style="width:100%;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"><div style="font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:6px;">ALREADY STARTED</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    for (var i = 0; i < started.length; i++) {
+      var g = started[i];
+      html += '<span class="game-pill" style="opacity:0.3;cursor:not-allowed;"><strong>' + g.away + '</strong> @ <strong>' + g.home + '</strong><span style="color:var(--danger);font-size:10px;"> LIVE</span></span>';
+    }
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+  resetBtn(origText);
+}
+
 function selectGame(el) {
-  document.querySelectorAll('.game-pill').forEach(p => p.classList.remove('selected'));
+  var pills = document.querySelectorAll('.game-pill');
+  for (var i = 0; i < pills.length; i++) { pills[i].classList.remove('selected'); }
   el.classList.add('selected');
   document.getElementById('f-away').value = el.dataset.away;
   document.getElementById('f-home').value = el.dataset.home;
-  document.getElementById('f-selection').focus();
+  if (!addPanelOpen) toggleAddPanel();
 }
 
-function savePickInline() {
-  const sport = document.getElementById('f-sport').value;
-  const date = document.getElementById('f-date').value;
-  const away = document.getElementById('f-away').value.trim();
-  const home = document.getElementById('f-home').value.trim();
-  const type = document.getElementById('f-type').value;
-  const selection = document.getElementById('f-selection').value.trim();
-  const odds = document.getElementById('f-odds').value.trim();
-  const units = document.getElementById('f-units').value || 1;
-  const notes = document.getElementById('f-notes').value.trim();
-  const errEl = document.getElementById('add-pick-error');
-  if (!away || !home || !selection) { errEl.textContent = 'Away, Home and Selection are required.'; errEl.style.display = 'block'; setTimeout(() => errEl.style.display = 'none', 3000); return; }
-  const picks = getPicks();
-  picks.push({ id:'p'+Date.now(), sport, date, away, home, type, selection, odds, units, notes, result:'PENDING', createdBy:currentUser.username, created:new Date().toISOString() });
+// -- Result Modal --
+function openResultModal(id) {
+  document.getElementById('result-pick-id').value = id;
+  var picks = getPicks();
+  var pick = null;
+  for (var i = 0; i < picks.length; i++) { if (picks[i].id === id) { pick = picks[i]; break; } }
+  if (pick) document.getElementById('result-select').value = pick.result || 'PENDING';
+  document.getElementById('modal-result').classList.add('open');
+}
+
+function saveResult() {
+  var id = document.getElementById('result-pick-id').value;
+  var result = document.getElementById('result-select').value;
+  var picks = getPicks();
+  for (var i = 0; i < picks.length; i++) { if (picks[i].id === id) { picks[i].result = result; break; } }
   savePicks(picks);
-  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-units').value = 1;
-  errEl.style.display = 'none';
-  const btn = document.querySelector('[onclick="savePickInline()"]');
-  const orig = btn.textContent;
-  btn.textContent = 'OK Pick Saved!';
-  setTimeout(() => { btn.textContent = orig; }, 1800);
-  loadPicksForDate(currentDateView); renderAdminPicks(); renderStats(); renderHistory();
-}
-
-function clearPickForm() {
-  ['f-away','f-home','f-selection','f-odds','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-units').value = 1;
-  document.getElementById('add-pick-error').style.display = 'none';
+  closeModal('modal-result');
+  renderAdminPicks();
+  renderPicks();
 }
 
 function deletePick(id) {
   if (!confirm('Delete this pick?')) return;
-  savePicks(getPicks().filter(p => p.id !== id));
-  renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
+  var picks = getPicks();
+  var newPicks = [];
+  for (var i = 0; i < picks.length; i++) { if (picks[i].id !== id) newPicks.push(picks[i]); }
+  savePicks(newPicks);
+  renderAdminPicks();
+  renderPicks();
 }
 
-function openResultModal(id) {
-  document.getElementById('result-pick-id').value = id;
-  const pick = getPicks().find(p => p.id === id);
-  if (pick) document.getElementById('result-select').value = pick.result || 'PENDING';
-  openModal('modal-result');
-}
-
-function saveResult() {
-  const id = document.getElementById('result-pick-id').value;
-  const result = document.getElementById('result-select').value;
-  const picks = getPicks();
-  const idx = picks.findIndex(p => p.id === id);
-  if (idx !== -1) picks[idx].result = result;
-  savePicks(picks);
-  closeModal('modal-result');
-  renderAdminPicks(); renderPicks(); renderHistory(); renderStats();
-}
-
+// -- History --
 function renderHistory() {
-  const sport = document.getElementById('hist-sport')?.value || 'ALL';
-  const result = document.getElementById('hist-result')?.value || 'ALL';
-  let picks = getPicks();
-  if (sport !== 'ALL') picks = picks.filter(p => p.sport === sport);
-  if (result !== 'ALL') picks = picks.filter(p => (p.result || 'PENDING') === result);
-  picks.sort((a,b) => b.date.localeCompare(a.date));
-  const c = document.getElementById('history-container');
-  c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon"></div>No picks match the filter</div>`
-    : picks.map(p => pickCardHTML(p, false)).join('');
+  var sport = document.getElementById('hist-sport').value;
+  var result = document.getElementById('hist-result').value;
+  var picks = getPicks();
+  if (sport !== 'ALL') {
+    var f = [];
+    for (var i = 0; i < picks.length; i++) { if (picks[i].sport === sport) f.push(picks[i]); }
+    picks = f;
+  }
+  if (result !== 'ALL') {
+    var f = [];
+    for (var i = 0; i < picks.length; i++) { if ((picks[i].result || 'PENDING') === result) f.push(picks[i]); }
+    picks = f;
+  }
+  picks.sort(function(a,b) { return b.date > a.date ? 1 : -1; });
+  var c = document.getElementById('history-container');
+  if (picks.length === 0) {
+    c.innerHTML = '<div class="empty-state"><div class="icon">o</div>No picks match the filter</div>';
+  } else {
+    var html = '';
+    for (var i = 0; i < picks.length; i++) { html += pickCardHTML(picks[i], false); }
+    c.innerHTML = html;
+  }
 }
 
+// -- Stats --
 function renderStats() {
-  const picks = getPicks().filter(p => p.result && p.result !== 'PENDING');
-  const wins = picks.filter(p => p.result === 'WIN').length;
-  const losses = picks.filter(p => p.result === 'LOSS').length;
-  const pushes = picks.filter(p => p.result === 'PUSH').length;
-  const total = wins + losses;
-  const pct = total > 0 ? Math.round((wins/total)*100) : 0;
-  document.getElementById('overall-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ${pct>=55?'green':pct<45&&total>0?'red':''}">${pct}%</div></div>
-    <div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">${picks.length}</div></div>
-    <div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">${wins}</div></div>
-    <div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">${losses}</div></div>
-    <div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">${pushes}</div></div>
-    <div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">${wins}-${losses}</div></div>`;
-  const sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
-  document.getElementById('sport-stats').innerHTML = sports.map(s => {
-    const sp = picks.filter(p => p.sport === s);
-    const sw = sp.filter(p => p.result === 'WIN').length;
-    const sl = sp.filter(p => p.result === 'LOSS').length;
-    const spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
-    return `<div class="stat-card" style="border-top:2px solid var(--${s.toLowerCase()});"><div class="stat-label">${s}</div><div class="stat-value" style="font-size:28px;">${sw}-${sl}</div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;">${spct}% - ${sp.length} picks</div></div>`;
-  }).join('');
+  var picks = getPicks();
+  var graded = [];
+  for (var i = 0; i < picks.length; i++) { if (picks[i].result && picks[i].result !== 'PENDING') graded.push(picks[i]); }
+  var wins = 0, losses = 0, pushes = 0;
+  for (var i = 0; i < graded.length; i++) {
+    if (graded[i].result === 'WIN') wins++;
+    else if (graded[i].result === 'LOSS') losses++;
+    else if (graded[i].result === 'PUSH') pushes++;
+  }
+  var total = wins + losses;
+  var pct = total > 0 ? Math.round((wins/total)*100) : 0;
+  document.getElementById('overall-stats').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Win %</div><div class="stat-value ' + (pct>=55?'green':pct<45&&total>0?'red':'') + '">' + pct + '%</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Total Picks</div><div class="stat-value">' + graded.length + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Wins</div><div class="stat-value green">' + wins + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Losses</div><div class="stat-value red">' + losses + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Pushes</div><div class="stat-value">' + pushes + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Record</div><div class="stat-value">' + wins + '-' + losses + '</div></div>';
+
+  var sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAM'];
+  var sportHTML = '';
+  for (var i = 0; i < sports.length; i++) {
+    var s = sports[i];
+    var sp = [];
+    for (var j = 0; j < graded.length; j++) { if (graded[j].sport === s) sp.push(graded[j]); }
+    if (!sp.length) continue;
+    var sw = 0, sl = 0;
+    for (var j = 0; j < sp.length; j++) {
+      if (sp[j].result === 'WIN') sw++;
+      else if (sp[j].result === 'LOSS') sl++;
+    }
+    var spct = (sw+sl) > 0 ? Math.round((sw/(sw+sl))*100) : 0;
+    sportHTML += '<div class="stat-card" style="border-top:2px solid var(--' + s.toLowerCase() + ',var(--accent));"><div class="stat-label">' + s + '</div><div class="stat-value" style="font-size:28px;">' + sw + '-' + sl + '</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">' + spct + '% - ' + sp.length + ' picks</div></div>';
+  }
+  document.getElementById('sport-stats').innerHTML = sportHTML || '<div style="color:var(--muted);font-size:13px;">No graded picks yet.</div>';
 }
 
+// -- Admin Picks --
 function renderAdminPicks() {
-  const picks = getPicks().sort((a,b) => b.date.localeCompare(a.date));
-  const c = document.getElementById('admin-picks-container');
-  if (!c) return;
-  c.innerHTML = picks.length === 0
-    ? `<div class="empty-state"><div class="icon"></div>No picks yet. Add your first pick!</div>`
-    : picks.map(p => pickCardHTML(p, true)).join('');
+  var picks = getPicks();
+  picks.sort(function(a,b) { return b.date > a.date ? 1 : -1; });
+  var c = document.getElementById('admin-picks-container');
+  if (picks.length === 0) {
+    c.innerHTML = '<div class="empty-state"><div class="icon">o</div>No picks yet. Add your first pick!</div>';
+  } else {
+    var html = '';
+    for (var i = 0; i < picks.length; i++) { html += pickCardHTML(picks[i], true); }
+    c.innerHTML = html;
+  }
+}
+
+// -- Users --
+function updatePendingBadge() {
+  var users = getData('ss_users', []);
+  var count = 0;
+  for (var i = 0; i < users.length; i++) { if (users[i].status === 'pending') count++; }
+  var badge = document.getElementById('pending-badge');
+  if (count > 0) { badge.textContent = count; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
 }
 
 function renderUsersTable() {
-  const users = getData('ss_users', []);
-  const pending = users.filter(u => u.status === 'pending');
-  const active = users.filter(u => u.status !== 'pending');
-  const pendingSection = document.getElementById('pending-section');
-  const pendingTbody = document.getElementById('pending-tbody');
-  if (!pendingTbody) return;
-  if (pending.length > 0) {
-    pendingSection.style.display = 'block';
-    pendingTbody.innerHTML = pending.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'-'}</td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">OK Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">x Reject</button></div></td></tr>`).join('');
-  } else { pendingSection.style.display = 'none'; }
-  document.getElementById('users-tbody').innerHTML = active.map(u => `<tr><td style="font-family:'DM Mono',monospace;">${u.username}</td><td>${u.firstName||''} ${u.lastName||''}</td><td style="color:var(--muted);font-size:12px;">${u.email||'-'}</td><td><span class="role-tag ${u.role!=='admin'?'user-role':''}">${u.role}</span></td><td><span class="pick-result ${u.status==='active'?'result-win':'result-loss'}">${u.status}</span></td><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);">${u.created.split('T')[0]}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">${u.username!=='admin'?`<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus('${u.id}')">${u.status==='active'?'Deactivate':'Activate'}</button><button class="btn btn-secondary btn-sm" onclick="openEditUser('${u.id}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button>`:'<span style="color:var(--muted);font-size:11px;">Protected</span>'}</div></td></tr>`).join('');
-}
-
-function approveUser(id) { const users = getData('ss_users',[]); const idx = users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status='active'; setData('ss_users',users); renderUsersTable(); updatePendingBadge(); }
-function rejectUser(id) { if(!confirm('Reject and delete this request?')) return; setData('ss_users', getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
-
-function openAddUserModal() {
-  editingUserId = null;
-  document.getElementById('user-modal-title').textContent = 'ADD USER';
-  document.getElementById('save-user-btn').textContent = 'Add User';
-  ['new-first','new-last','new-email','new-username','new-password'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('new-role').value = 'user';
-  document.getElementById('user-error').style.display = 'none';
-  openModal('modal-add-user');
-}
-
-function openEditUser(id) {
-  editingUserId = id;
-  const user = getData('ss_users', []).find(u => u.id === id);
-  if (!user) return;
-  document.getElementById('user-modal-title').textContent = 'EDIT USER';
-  document.getElementById('save-user-btn').textContent = 'Save Changes';
-  document.getElementById('new-first').value = user.firstName || '';
-  document.getElementById('new-last').value = user.lastName || '';
-  document.getElementById('new-email').value = user.email || '';
-  document.getElementById('new-username').value = user.username;
-  document.getElementById('new-password').value = '';
-  document.getElementById('new-role').value = user.role;
-  document.getElementById('user-error').style.display = 'none';
-  openModal('modal-add-user');
-}
-
-function saveUser() {
-  const first = document.getElementById('new-first').value.trim();
-  const last = document.getElementById('new-last').value.trim();
-  const email = document.getElementById('new-email').value.trim();
-  const username = document.getElementById('new-username').value.trim();
-  const password = document.getElementById('new-password').value;
-  const role = document.getElementById('new-role').value;
-  const errEl = document.getElementById('user-error');
-  const show = txt => { errEl.textContent = txt; errEl.style.display = 'block'; };
-  if (!username) return show('Username is required.');
-  if (!editingUserId && !password) return show('Password is required.');
-  const users = getData('ss_users', []);
-  if (editingUserId) {
-    const idx = users.findIndex(u => u.id === editingUserId);
-    if (idx !== -1) { users[idx] = { ...users[idx], firstName:first, lastName:last, email, username, role }; if (password) users[idx].password = password; }
-  } else {
-    if (users.find(u => u.username === username)) return show('Username already exists.');
-    users.push({ id:'u'+Date.now(), username, password, firstName:first, lastName:last, email, role, status:'active', created:new Date().toISOString() });
+  var users = getData('ss_users', []);
+  var pending = [], active = [];
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].status === 'pending') pending.push(users[i]);
+    else active.push(users[i]);
   }
+  var pendingSection = document.getElementById('pending-section');
+  var pendingTbody = document.getElementById('pending-tbody');
+  if (pending.length) {
+    pendingSection.style.display = '';
+    var html = '';
+    for (var i = 0; i < pending.length; i++) {
+      var u = pending[i];
+      html += '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;"><button class="btn btn-success btn-sm" onclick="approveUser(\'' + u.id + '\')">Approve</button><button class="btn btn-danger btn-sm" onclick="rejectUser(\'' + u.id + '\')">Reject</button></div></td></tr>';
+    }
+    pendingTbody.innerHTML = html;
+  } else { pendingSection.style.display = 'none'; }
+
+  var html = '';
+  for (var i = 0; i < active.length; i++) {
+    var u = active[i];
+    var btns = u.username !== 'admin'
+      ? '<button class="btn btn-secondary btn-sm" onclick="toggleUserStatus(\'' + u.id + '\')">' + (u.status==='active'?'Deactivate':'Activate') + '</button> <button class="btn btn-secondary btn-sm" onclick="openEditUser(\'' + u.id + '\')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\')">Delete</button>'
+      : '<span style="color:var(--muted);font-size:11px;">Protected</span>';
+    html += '<tr><td style="font-family:monospace;">' + u.username + '</td><td>' + (u.firstName||'') + ' ' + (u.lastName||'') + '</td><td style="color:var(--muted);font-size:12px;">' + (u.email||'-') + '</td><td><span class="role-tag ' + (u.role!=='admin'?'user-role':'') + '">' + u.role + '</span></td><td><span class="pick-result ' + (u.status==='active'?'result-win':'result-loss') + '">' + u.status + '</span></td><td style="font-family:monospace;font-size:12px;color:var(--muted);">' + u.created.split('T')[0] + '</td><td><div style="display:flex;gap:6px;flex-wrap:wrap;">' + btns + '</div></td></tr>';
+  }
+  document.getElementById('users-tbody').innerHTML = html;
+}
+
+function approveUser(id) {
+  var users = getData('ss_users', []);
+  for (var i = 0; i < users.length; i++) { if (users[i].id === id) { users[i].status = 'active'; break; } }
   setData('ss_users', users);
-  closeModal('modal-add-user');
   renderUsersTable();
   updatePendingBadge();
 }
 
-function toggleUserStatus(id) { const users=getData('ss_users',[]); const idx=users.findIndex(u=>u.id===id); if(idx!==-1) users[idx].status=users[idx].status==='active'?'inactive':'active'; setData('ss_users',users); renderUsersTable(); }
-function deleteUser(id) { if(!confirm('Permanently delete this user?')) return; setData('ss_users',getData('ss_users',[]).filter(u=>u.id!==id)); renderUsersTable(); updatePendingBadge(); }
+function rejectUser(id) {
+  if (!confirm('Reject and delete this user?')) return;
+  var users = getData('ss_users', []);
+  var newUsers = [];
+  for (var i = 0; i < users.length; i++) { if (users[i].id !== id) newUsers.push(users[i]); }
+  setData('ss_users', newUsers);
+  renderUsersTable();
+  updatePendingBadge();
+}
+
+function toggleUserStatus(id) {
+  var users = getData('ss_users', []);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].id === id) { users[i].status = users[i].status === 'active' ? 'inactive' : 'active'; break; }
+  }
+  setData('ss_users', users);
+  renderUsersTable();
+}
+
+function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  var users = getData('ss_users', []);
+  var newUsers = [];
+  for (var i = 0; i < users.length; i++) { if (users[i].id !== id) newUsers.push(users[i]); }
+  setData('ss_users', newUsers);
+  renderUsersTable();
+}
+
+function openAddUser() {
+  var ids = ['au-first','au-last','au-email','au-user','au-pass'];
+  for (var i = 0; i < ids.length; i++) { document.getElementById(ids[i]).value = ''; }
+  document.getElementById('au-role').value = 'user';
+  document.getElementById('au-msg').style.display = 'none';
+  document.getElementById('modal-add-user').classList.add('open');
+}
+
+function saveNewUser() {
+  var first = document.getElementById('au-first').value.trim();
+  var last = document.getElementById('au-last').value.trim();
+  var email = document.getElementById('au-email').value.trim();
+  var user = document.getElementById('au-user').value.trim();
+  var pass = document.getElementById('au-pass').value;
+  var role = document.getElementById('au-role').value;
+  var msgEl = document.getElementById('au-msg');
+  function showMsg(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; }
+  if (!first || !user || !pass) { showMsg('First name, username and password required.', 'error'); return; }
+  var users = getData('ss_users', []);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].username === user) { showMsg('Username taken.', 'error'); return; }
+  }
+  users.push({ id: uid(), username: user, password: pass, firstName: first, lastName: last, email: email, role: role, status: 'active', created: new Date().toISOString() });
+  setData('ss_users', users);
+  closeModal('modal-add-user');
+  renderUsersTable();
+}
+
+var editingUserId = null;
+function openEditUser(id) {
+  var users = getData('ss_users', []);
+  var u = null;
+  for (var i = 0; i < users.length; i++) { if (users[i].id === id) { u = users[i]; break; } }
+  if (!u) return;
+  editingUserId = id;
+  document.getElementById('eu-first').value = u.firstName || '';
+  document.getElementById('eu-last').value = u.lastName || '';
+  document.getElementById('eu-email').value = u.email || '';
+  document.getElementById('eu-user').value = u.username;
+  document.getElementById('eu-pass').value = '';
+  document.getElementById('eu-role').value = u.role;
+  document.getElementById('eu-msg').style.display = 'none';
+  document.getElementById('modal-edit-user').classList.add('open');
+}
+
+function saveEditUser() {
+  var first = document.getElementById('eu-first').value.trim();
+  var last = document.getElementById('eu-last').value.trim();
+  var email = document.getElementById('eu-email').value.trim();
+  var username = document.getElementById('eu-user').value.trim();
+  var pass = document.getElementById('eu-pass').value;
+  var role = document.getElementById('eu-role').value;
+  var msgEl = document.getElementById('eu-msg');
+  function showMsg(txt, type) { msgEl.textContent = txt; msgEl.className = 'msg msg-' + type; msgEl.style.display = 'block'; }
+  if (!username) { showMsg('Username required.', 'error'); return; }
+  var users = getData('ss_users', []);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].username === username && users[i].id !== editingUserId) { showMsg('Username taken.', 'error'); return; }
+  }
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].id === editingUserId) {
+      users[i].firstName = first; users[i].lastName = last;
+      users[i].email = email; users[i].username = username;
+      users[i].role = role;
+      if (pass) users[i].password = pass;
+      break;
+    }
+  }
+  setData('ss_users', users);
+  closeModal('modal-edit-user');
+  renderUsersTable();
+}
+
+// -- Modals --
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+var overlays = document.querySelectorAll('.modal-overlay');
+for (var i = 0; i < overlays.length; i++) {
+  overlays[i].addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+}
 </script>
 
 </body>
