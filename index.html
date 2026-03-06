@@ -1,878 +1,792 @@
-import { useState, useEffect, useRef } from “react”;
+<!DOCTYPE html>
 
-// ─── MOCK DATA STORE (simulates backend) ───────────────────────────────────
-const INITIAL_USERS = [
-{ id: 1, username: “admin”, password: “admin123”, role: “admin”, active: true, email: “admin@sharpselections.com”, joined: “2024-01-01” },
-{ id: 2, username: “john_doe”, password: “pass123”, role: “user”, active: true, email: “john@example.com”, joined: “2024-03-01” },
-{ id: 3, username: “jane_smith”, password: “pass123”, role: “user”, active: false, email: “jane@example.com”, joined: “2024-03-10” },
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>$harp $elections — Bet $harp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0a0c0e !important; min-height: 100vh; }
+
+:root {
+–neon-green: #c8f535;
+–neon-blue: #3b82f6;
+–dark-bg: #0a0c0e;
+–card-bg: #111518;
+–card-border: #1e2530;
+–text-primary: #e8edf2;
+–text-muted: #6b7a8d;
+–glow-green: 0 0 20px rgba(200,245,53,0.4), 0 0 40px rgba(200,245,53,0.15);
+–glow-blue: 0 0 20px rgba(59,130,246,0.4), 0 0 40px rgba(59,130,246,0.15);
+}
+
+body { background: var(–dark-bg); color: var(–text-primary); font-family: ‘Rajdhani’, sans-serif; }
+
+.neon-title {
+font-family: ‘Pacifico’, cursive;
+color: var(–neon-green);
+text-shadow: var(–glow-green), 0 0 80px rgba(200,245,53,0.3);
+-webkit-text-stroke: 2px var(–neon-blue);
+paint-order: stroke fill;
+animation: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+0%,100% { text-shadow: var(–glow-green), 0 0 80px rgba(200,245,53,0.3); }
+50%      { text-shadow: 0 0 30px rgba(200,245,53,0.8), 0 0 60px rgba(200,245,53,0.4), 0 0 100px rgba(200,245,53,0.2); }
+}
+@keyframes fadeInUp {
+from { opacity:0; transform:translateY(16px); }
+to   { opacity:1; transform:translateY(0); }
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.fade-in { animation: fadeInUp 0.4s ease forwards; }
+
+.spinner {
+width:18px; height:18px;
+border:2px solid rgba(200,245,53,0.2);
+border-top-color:var(–neon-green);
+border-radius:50%;
+animation:spin 0.8s linear infinite;
+display:inline-block; vertical-align:middle; margin-right:8px;
+}
+
+/* Buttons */
+.btn-primary {
+background: linear-gradient(135deg,var(–neon-green),#a8e020);
+color:#0a0c0e; font-family:‘Bebas Neue’,sans-serif; font-size:1rem;
+letter-spacing:.1em; border:none; border-radius:6px; padding:10px 24px;
+cursor:pointer; transition:all .2s; box-shadow:var(–glow-green); width:100%;
+}
+.btn-primary:hover  { transform:translateY(-1px); box-shadow:0 0 30px rgba(200,245,53,0.6); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+.btn-secondary {
+background:transparent; color:var(–neon-blue); font-family:‘Bebas Neue’,sans-serif;
+font-size:.85rem; letter-spacing:.1em; border:1px solid var(–neon-blue);
+border-radius:6px; padding:6px 14px; cursor:pointer; transition:all .2s;
+}
+.btn-secondary:hover { background:rgba(59,130,246,.1); box-shadow:var(–glow-blue); }
+.btn-danger {
+background:transparent; color:#ff4444; border:1px solid #ff4444;
+font-family:‘Bebas Neue’,sans-serif; font-size:.8rem; letter-spacing:.05em;
+border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .2s;
+}
+.btn-danger:hover { background:rgba(255,68,68,.15); }
+.btn-success {
+background:transparent; color:var(–neon-green); border:1px solid var(–neon-green);
+font-family:‘Bebas Neue’,sans-serif; font-size:.8rem; letter-spacing:.05em;
+border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .2s;
+}
+.btn-success:hover { background:rgba(200,245,53,.1); }
+
+/* Form */
+.input-field {
+background:#0d1117; border:1px solid #2a3344; border-radius:6px;
+color:var(–text-primary); font-family:‘Rajdhani’,sans-serif; font-size:.95rem;
+padding:10px 14px; width:100%; transition:border-color .2s;
+}
+.input-field:focus { outline:none; border-color:var(–neon-blue); box-shadow:0 0 0 2px rgba(59,130,246,.2); }
+.input-field option { background:#0d1117; }
+textarea.input-field { resize:vertical; }
+
+label { font-size:.75rem; letter-spacing:.05em; color:var(–text-muted); text-transform:uppercase; display:block; margin-bottom:6px; }
+
+/* Card */
+.card { background:var(–card-bg); border:1px solid var(–card-border); border-radius:12px; padding:20px; }
+
+/* Tab */
+.tab-btn {
+background:transparent; color:var(–text-muted); font-family:‘Bebas Neue’,sans-serif;
+font-size:1rem; letter-spacing:.08em; border:none; border-bottom:2px solid transparent;
+padding:10px 18px; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.tab-btn.active { color:var(–neon-green); border-bottom-color:var(–neon-green); }
+.tab-btn:hover:not(.active) { color:var(–text-primary); }
+
+/* Picks grid */
+.picks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.pick-card {
+background:var(–card-bg); border:1px solid var(–card-border); border-radius:12px;
+overflow:hidden; transition:transform .2s, box-shadow .2s;
+}
+.pick-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.4); }
+
+.sport-badge {
+font-family:‘Bebas Neue’,sans-serif; font-size:.72rem; letter-spacing:.1em;
+padding:3px 10px; border-radius:4px; display:inline-block;
+}
+.result-badge {
+font-family:‘Bebas Neue’,sans-serif; font-size:.85rem; letter-spacing:.1em;
+padding:4px 12px; border-radius:4px;
+}
+.stat-box {
+background:#0d1117; border:1px solid #1e2530; border-radius:8px;
+padding:14px 18px; text-align:center;
+}
+.user-row {
+display:flex; align-items:center; justify-content:space-between;
+padding:12px 16px; border-bottom:1px solid #1a2030; flex-wrap:wrap; gap:10px;
+}
+.user-row:last-child { border-bottom:none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:#0d1117; }
+::-webkit-scrollbar-thumb { background:#2a3344; border-radius:3px; }
+
+/* Header */
+#app-header {
+background:rgba(10,12,14,.95); border-bottom:1px solid #1e2530;
+backdrop-filter:blur(12px); position:sticky; top:0; z-index:100;
+}
+.header-inner {
+max-width:1200px; margin:0 auto; padding:14px 20px;
+display:flex; align-items:center; justify-content:space-between;
+}
+.logo-wrap { cursor:pointer; }
+.double-arrow { height:3px; position:relative; margin:3px auto 2px; width:160px; }
+.double-arrow::before, .double-arrow::after {
+content:’’; position:absolute; top:50%; transform:translateY(-50%);
+height:2px; background:var(–neon-blue); box-shadow:var(–glow-blue);
+}
+.double-arrow::before { left:8px; right:8px; }
+.arrow-left, .arrow-right {
+position:absolute; top:50%; transform:translateY(-50%);
+color:var(–neon-blue); font-size:10px; text-shadow:var(–glow-blue); line-height:1;
+}
+.arrow-left  { left:0; margin-top:-1px; }
+.arrow-right { right:0; margin-top:-1px; }
+
+/* Pages */
+.page { display:none; }
+.page.active { display:block; }
+
+/* Admin grid */
+.admin-two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+/* Error */
+.error-box { color:#ff4444; font-size:.85rem; background:rgba(255,68,68,.1); padding:8px 12px; border-radius:6px; border:1px solid rgba(255,68,68,.2); }
+.warn-box  { color:#f0c040; font-size:.8rem; background:rgba(240,192,64,.08); padding:8px 12px; border-radius:6px; }
+.success-box { color:var(–neon-green); font-size:.85rem; text-align:center; }
+
+/* Demo hint */
+.demo-hint { margin-top:16px; padding:12px; background:#0d1117; border-radius:8px; font-size:.75rem; color:var(–text-muted); }
+
+/* Footer */
+footer { border-top:1px solid #1e2530; padding:20px; text-align:center; margin-top:40px; }
+
+@media(max-width:700px) {
+.admin-two-col { grid-template-columns:1fr; }
+.form-grid-3   { grid-template-columns:1fr 1fr; }
+.picks-grid    { grid-template-columns:1fr; }
+.neon-title-lg { font-size:2.2rem !important; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- ── APP ROOT ── -->
+
+<div id="app" style="min-height:100vh;background:#0a0c0e;"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  DATA STORE
+// ══════════════════════════════════════════════════════
+let users = [
+  { id:1, username:'admin',       password:'admin123', role:'admin', active:true,  email:'admin@sharpselections.com', joined:'2024-01-01' },
+  { id:2, username:'john_doe',    password:'pass123',  role:'user',  active:true,  email:'john@example.com',          joined:'2024-03-01' },
+  { id:3, username:'jane_smith',  password:'pass123',  role:'user',  active:false, email:'jane@example.com',          joined:'2024-03-10' },
 ];
 
-const INITIAL_PICKS = [
-{
-id: 1, sport: “NBA”, date: “2026-03-06”,
-homeTeam: “Los Angeles Lakers”, awayTeam: “Boston Celtics”,
-pick: “Boston Celtics -3.5”, betType: “Spread”, odds: “-110”,
-analysis: “Celtics have won 8 straight and Lakers missing LeBron. Fade the home chalk.”,
-result: “WIN”, gameTime: “7:30 PM ET”, active: true
-},
-{
-id: 2, sport: “NHL”, date: “2026-03-06”,
-homeTeam: “Colorado Avalanche”, awayTeam: “Vegas Golden Knights”,
-pick: “Over 6.5”, betType: “Total”, odds: “-115”,
-analysis: “Both teams averaging 4+ goals at home. Expect a shootout tonight.”,
-result: “PENDING”, gameTime: “9:00 PM ET”, active: true
-},
-{
-id: 3, sport: “NFL”, date: “2026-03-06”,
-homeTeam: “Kansas City Chiefs”, awayTeam: “Buffalo Bills”,
-pick: “Kansas City Chiefs ML”, betType: “Moneyline”, odds: “-130”,
-analysis: “Chiefs at home in January? Automatic. Mahomes thrives in big spots.”,
-result: “WIN”, gameTime: “4:25 PM ET”, active: true
-},
+let picks = [
+  { id:1, sport:'NBA', date:'2026-03-06', homeTeam:'Los Angeles Lakers', awayTeam:'Boston Celtics',
+    pick:'Boston Celtics -3.5', betType:'Spread', odds:'-110',
+    analysis:'Celtics have won 8 straight and Lakers missing LeBron. Fade the home chalk.',
+    result:'WIN', gameTime:'7:30 PM ET', active:true },
+  { id:2, sport:'NHL', date:'2026-03-06', homeTeam:'Colorado Avalanche', awayTeam:'Vegas Golden Knights',
+    pick:'Over 6.5', betType:'Total', odds:'-115',
+    analysis:'Both teams averaging 4+ goals at home. Expect a shootout tonight.',
+    result:'PENDING', gameTime:'9:00 PM ET', active:true },
+  { id:3, sport:'NFL', date:'2026-03-06', homeTeam:'Kansas City Chiefs', awayTeam:'Buffalo Bills',
+    pick:'Kansas City Chiefs ML', betType:'Moneyline', odds:'-130',
+    analysis:'Chiefs at home in January? Automatic. Mahomes thrives in big spots.',
+    result:'WIN', gameTime:'4:25 PM ET', active:true },
 ];
 
-// ─── ESPN API INTEGRATION ──────────────────────────────────────────────────
-const ESPN_SPORT_MAP = {
-NFL: { sport: “football”, league: “nfl” },
-NBA: { sport: “basketball”, league: “nba” },
-NHL: { sport: “hockey”, league: “nhl” },
-MLB: { sport: “baseball”, mlb: “mlb” },
-NCAAF: { sport: “football”, league: “college-football” },
-NCAAM: { sport: “basketball”, league: “mens-college-basketball” },
+let currentUser = null;
+let currentPage = 'picks'; // picks | admin
+let adminTab    = 'add';   // add | manage | users
+let sportFilter = 'ALL';
+
+// ESPN
+const ESPN_MAP = {
+  NFL:   { sport:'football',    league:'nfl' },
+  NBA:   { sport:'basketball',  league:'nba' },
+  NHL:   { sport:'hockey',      league:'nhl' },
+  MLB:   { sport:'baseball',    league:'mlb' },
+  NCAAF: { sport:'football',    league:'college-football' },
+  NCAAM: { sport:'basketball',  league:'mens-college-basketball' },
 };
 
-async function fetchESPNGames(sport, date) {
-const map = ESPN_SPORT_MAP[sport];
-if (!map) return [];
-const dateStr = date.replace(/-/g, “”);
-const league = map.league || map.mlb;
-const url = `https://site.api.espn.com/apis/site/v2/sports/${map.sport}/${league}/scoreboard?dates=${dateStr}`;
-try {
-const res = await fetch(url);
-const data = await res.json();
-const events = data.events || [];
-return events.map((e) => {
-const comps = e.competitions?.[0];
-const home = comps?.competitors?.find((c) => c.homeAway === “home”);
-const away = comps?.competitors?.find((c) => c.homeAway === “away”);
-const status = comps?.status?.type?.shortDetail || “”;
-const time = comps?.date ? new Date(comps.date).toLocaleTimeString(“en-US”, { hour: “numeric”, minute: “2-digit”, timeZoneName: “short” }) : “”;
-return {
-id: e.id,
-homeTeam: home?.team?.displayName || “Home”,
-awayTeam: away?.team?.displayName || “Away”,
-homeAbbr: home?.team?.abbreviation || “”,
-awayAbbr: away?.team?.abbreviation || “”,
-homeLogo: home?.team?.logo || “”,
-awayLogo: away?.team?.logo || “”,
-gameTime: time,
-status,
-venue: comps?.venue?.fullName || “”,
-};
-});
-} catch (err) {
-console.error(“ESPN fetch failed”, err);
-return [];
-}
-}
-
-// ─── HELPERS ───────────────────────────────────────────────────────────────
-const today = () => new Date().toISOString().split(“T”)[0];
-const recordColor = (r) => r === “WIN” ? “#39ff14” : r === “LOSS” ? “#ff3b3b” : “#f0c040”;
-const sportColors = {
-NFL: “#d4380d”, NBA: “#c41230”, NHL: “#003087”,
-MLB: “#002D72”, NCAAF: “#bf5700”, NCAAM: “#003087”
+const SPORT_COLORS = {
+  NFL:'#d4380d', NBA:'#c41230', NHL:'#003087',
+  MLB:'#002D72', NCAAF:'#bf5700', NCAAM:'#4b0082'
 };
 
-// ─── GLOBAL STYLES ─────────────────────────────────────────────────────────
-const GlobalStyle = () => (
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function resultColor(r){ return r==='WIN'?'#39ff14':r==='LOSS'?'#ff3b3b':'#f0c040'; }
 
-  <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body, #root, #__next, [data-reactroot] {
-      background: #0a0c0e !important;
-      min-height: 100vh;
-    }
-
-    :root {
-      --neon-green: #c8f535;
-      --neon-blue: #3b82f6;
-      --dark-bg: #0a0c0e;
-      --card-bg: #111518;
-      --card-border: #1e2530;
-      --text-primary: #e8edf2;
-      --text-muted: #6b7a8d;
-      --glow-green: 0 0 20px rgba(200,245,53,0.4), 0 0 40px rgba(200,245,53,0.15);
-      --glow-blue: 0 0 20px rgba(59,130,246,0.4), 0 0 40px rgba(59,130,246,0.15);
-    }
-
-    body { background: var(--dark-bg); color: var(--text-primary); font-family: 'Rajdhani', sans-serif; }
-
-    .neon-title {
-      font-family: 'Pacifico', cursive;
-      color: var(--neon-green);
-      text-shadow: var(--glow-green), 0 0 80px rgba(200,245,53,0.3);
-      -webkit-text-stroke: 2px var(--neon-blue);
-      paint-order: stroke fill;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--neon-green), #a8e020);
-      color: #0a0c0e;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.1em;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: var(--glow-green);
-    }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(200,245,53,0.6); }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--neon-blue);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.1em;
-      border: 1px solid var(--neon-blue);
-      border-radius: 6px;
-      padding: 10px 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-secondary:hover { background: rgba(59,130,246,0.1); box-shadow: var(--glow-blue); }
-
-    .btn-danger {
-      background: transparent;
-      color: #ff4444;
-      border: 1px solid #ff4444;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      border-radius: 4px;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-danger:hover { background: rgba(255,68,68,0.15); }
-
-    .btn-success {
-      background: transparent;
-      color: var(--neon-green);
-      border: 1px solid var(--neon-green);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      border-radius: 4px;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-success:hover { background: rgba(200,245,53,0.1); }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .input-field {
-      background: #0d1117;
-      border: 1px solid #2a3344;
-      border-radius: 6px;
-      color: var(--text-primary);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.95rem;
-      padding: 10px 14px;
-      width: 100%;
-      transition: border-color 0.2s;
-    }
-    .input-field:focus { outline: none; border-color: var(--neon-blue); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
-    .input-field option { background: #0d1117; }
-
-    .tab-btn {
-      background: transparent;
-      color: var(--text-muted);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.08em;
-      border: none;
-      border-bottom: 2px solid transparent;
-      padding: 10px 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tab-btn.active { color: var(--neon-green); border-bottom-color: var(--neon-green); }
-    .tab-btn:hover:not(.active) { color: var(--text-primary); }
-
-    .pick-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .pick-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-
-    .sport-badge {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.75rem;
-      letter-spacing: 0.1em;
-      padding: 3px 10px;
-      border-radius: 4px;
-      display: inline-block;
-    }
-
-    .result-badge {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.9rem;
-      letter-spacing: 0.1em;
-      padding: 4px 12px;
-      border-radius: 4px;
-    }
-
-    .scrollbar-dark::-webkit-scrollbar { width: 6px; }
-    .scrollbar-dark::-webkit-scrollbar-track { background: #0d1117; }
-    .scrollbar-dark::-webkit-scrollbar-thumb { background: #2a3344; border-radius: 3px; }
-
-    @keyframes glow-pulse {
-      0%, 100% { text-shadow: var(--glow-green), 0 0 80px rgba(200,245,53,0.3); }
-      50% { text-shadow: 0 0 30px rgba(200,245,53,0.8), 0 0 60px rgba(200,245,53,0.4), 0 0 100px rgba(200,245,53,0.2); }
-    }
-    .neon-title { animation: glow-pulse 3s ease-in-out infinite; }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .fade-in { animation: fadeInUp 0.4s ease forwards; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner {
-      width: 20px; height: 20px;
-      border: 2px solid rgba(200,245,53,0.2);
-      border-top-color: var(--neon-green);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    .double-arrow {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      margin: 4px 0 8px;
-    }
-    .double-arrow::before, .double-arrow::after {
-      content: '';
-      height: 2px;
-      flex: 1;
-      background: var(--neon-blue);
-      box-shadow: var(--glow-blue);
-    }
-    .double-arrow-inner {
-      width: 60%;
-      height: 2px;
-      background: var(--neon-blue);
-      position: relative;
-      box-shadow: var(--glow-blue);
-    }
-    .double-arrow-inner::before {
-      content: '◄';
-      position: absolute;
-      left: -6px;
-      top: -8px;
-      color: var(--neon-blue);
-      font-size: 10px;
-      text-shadow: var(--glow-blue);
-    }
-    .double-arrow-inner::after {
-      content: '►';
-      position: absolute;
-      right: -6px;
-      top: -8px;
-      color: var(--neon-blue);
-      font-size: 10px;
-      text-shadow: var(--glow-blue);
-    }
-
-    .stat-box {
-      background: #0d1117;
-      border: 1px solid #1e2530;
-      border-radius: 8px;
-      padding: 14px 18px;
-      text-align: center;
-    }
-
-    label { font-size: 0.8rem; letter-spacing: 0.05em; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 6px; }
-
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-    .modal {
-      background: #0f1419;
-      border: 1px solid #2a3344;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .user-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid #1a2030;
-    }
-    .user-row:last-child { border-bottom: none; }
-
-    .picks-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-    }
-
-    @media (max-width: 600px) {
-      .picks-grid { grid-template-columns: 1fr; }
-      .neon-title { font-size: 2.2rem !important; }
-    }
-  `}</style>
-
-);
-
-// ─── HEADER ────────────────────────────────────────────────────────────────
-function Header({ user, onLogout, onNav, currentPage }) {
-return (
-<header style={{ background: “rgba(10,12,14,0.95)”, borderBottom: “1px solid #1e2530”, backdropFilter: “blur(12px)”, position: “sticky”, top: 0, zIndex: 100 }}>
-<div style={{ maxWidth: 1200, margin: “0 auto”, padding: “14px 20px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” }}>
-<div style={{ cursor: “pointer” }} onClick={() => onNav(“picks”)}>
-<div className=“neon-title” style={{ fontSize: “1.6rem”, lineHeight: 1 }}>$harp $elections</div>
-<div style={{ display: “flex”, justifyContent: “center”, marginTop: 2 }}>
-<div className=“double-arrow-inner” style={{ width: 140 }} />
-</div>
-<div style={{ color: “var(–neon-green)”, fontSize: “0.55rem”, fontFamily: “‘Bebas Neue’, sans-serif”, letterSpacing: “0.25em”, textAlign: “center”, marginTop: 2 }}>BET $HARP</div>
-</div>
-{user && (
-<div style={{ display: “flex”, alignItems: “center”, gap: 12 }}>
-{user.role === “admin” && (
-<button className=“tab-btn” style={{ fontSize: “0.85rem” }} onClick={() => onNav(“admin”)}>⚙ ADMIN</button>
-)}
-<div style={{ textAlign: “right” }}>
-<div style={{ fontSize: “0.75rem”, color: “var(–text-muted)” }}>Logged in as</div>
-<div style={{ fontSize: “0.9rem”, color: “var(–neon-green)”, fontWeight: 600 }}>{user.username}</div>
-</div>
-<button className=“btn-secondary” style={{ padding: “6px 14px”, fontSize: “0.8rem” }} onClick={onLogout}>LOGOUT</button>
-</div>
-)}
-</div>
-</header>
-);
+// ══════════════════════════════════════════════════════
+//  ESPN FETCH
+// ══════════════════════════════════════════════════════
+async function fetchESPN(sport, date) {
+  const map = ESPN_MAP[sport]; if(!map) return [];
+  const ds = date.replace(/-/g,'');
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${map.sport}/${map.league}/scoreboard?dates=${ds}`;
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    return (d.events||[]).map(e=>{
+      const c = e.competitions?.[0];
+      const home = c?.competitors?.find(x=>x.homeAway==='home');
+      const away = c?.competitors?.find(x=>x.homeAway==='away');
+      const t = c?.date ? new Date(c.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '';
+      return {
+        id: e.id,
+        homeTeam: home?.team?.displayName||'Home',
+        awayTeam: away?.team?.displayName||'Away',
+        gameTime: t,
+        venue: c?.venue?.fullName||''
+      };
+    });
+  } catch(e){ console.error(e); return []; }
 }
 
-// ─── AUTH PAGES ────────────────────────────────────────────────────────────
-function AuthPage({ users, setUsers, onLogin }) {
-const [mode, setMode] = useState(“login”);
-const [form, setForm] = useState({ username: “”, password: “”, email: “”, confirm: “” });
-const [error, setError] = useState(””);
-const [loading, setLoading] = useState(false);
-
-const handleSubmit = () => {
-setError(””);
-setLoading(true);
-setTimeout(() => {
-setLoading(false);
-if (mode === “login”) {
-const u = users.find(u => u.username === form.username && u.password === form.password);
-if (!u) return setError(“Invalid username or password.”);
-if (!u.active) return setError(“Your account has been deactivated. Please contact support.”);
-onLogin(u);
-} else {
-if (!form.username || !form.email || !form.password) return setError(“All fields are required.”);
-if (form.password !== form.confirm) return setError(“Passwords do not match.”);
-if (users.find(u => u.username === form.username)) return setError(“Username already taken.”);
-const newUser = { id: Date.now(), username: form.username, email: form.email, password: form.password, role: “user”, active: true, joined: today() };
-setUsers(prev => […prev, newUser]);
-onLogin(newUser);
+// ══════════════════════════════════════════════════════
+//  RENDER ENGINE
+// ══════════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = currentUser ? renderApp() : renderAuth();
+  bindEvents();
 }
-}, 600);
-};
 
-return (
-<div style={{ minHeight: “100vh”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20, background: “#0a0c0e” }}>
-<div className=“fade-in” style={{ width: “100%”, maxWidth: 420 }}>
-<div style={{ textAlign: “center”, marginBottom: 32 }}>
-<div className=“neon-title” style={{ fontSize: “3rem” }}>$harp $elections</div>
-<div style={{ display: “flex”, justifyContent: “center”, margin: “8px 0” }}>
-<div className=“double-arrow-inner” style={{ width: 200 }} />
-</div>
-<div style={{ color: “var(–neon-green)”, fontFamily: “‘Bebas Neue’, sans-serif”, letterSpacing: “0.25em”, fontSize: “0.9rem” }}>BET $HARP</div>
-</div>
+// ── LOGO HTML (reusable) ──────────────────────────────
+function logoHTML(size='1.6rem', subtitleSize='0.55rem') {
+  return `
+    <div class="logo-wrap" id="logo-home">
+      <div class="neon-title" style="font-size:${size};line-height:1;">$harp $elections</div>
+      <div class="double-arrow"><span class="arrow-left">◄</span><span class="arrow-right">►</span></div>
+      <div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;letter-spacing:.25em;text-align:center;font-size:${subtitleSize};margin-top:2px;">BET $HARP</div>
+    </div>`;
+}
 
-```
-    <div className="card" style={{ border: "1px solid #2a3344" }}>
-      <div style={{ display: "flex", borderBottom: "1px solid #1e2530", marginBottom: 24 }}>
-        <button className={`tab-btn ${mode === "login" ? "active" : ""}`} onClick={() => { setMode("login"); setError(""); }}>LOGIN</button>
-        <button className={`tab-btn ${mode === "register" ? "active" : ""}`} onClick={() => { setMode("register"); setError(""); }}>REGISTER</button>
+// ── AUTH ──────────────────────────────────────────────
+let authMode = 'login';
+function renderAuth() {
+  return `
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0c0e;">
+    <div class="fade-in" style="width:100%;max-width:420px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        ${logoHTML('3rem','0.9rem')}
       </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div>
-          <label>Username</label>
-          <input className="input-field" value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} placeholder="Enter username" />
+      <div class="card" style="border:1px solid #2a3344;">
+        <div style="display:flex;border-bottom:1px solid #1e2530;margin-bottom:24px;">
+          <button class="tab-btn ${authMode==='login'?'active':''}" id="tab-login">LOGIN</button>
+          <button class="tab-btn ${authMode==='register'?'active':''}" id="tab-register">REGISTER</button>
         </div>
-        {mode === "register" && (
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div><label>Username</label><input class="input-field" id="auth-username" placeholder="Enter username" /></div>
+          ${authMode==='register'?'<div><label>Email</label><input class="input-field" id="auth-email" type="email" placeholder="Enter email" /></div>':''}
+          <div><label>Password</label><input class="input-field" id="auth-password" type="password" placeholder="Enter password" /></div>
+          ${authMode==='register'?'<div><label>Confirm Password</label><input class="input-field" id="auth-confirm" type="password" placeholder="Confirm password" /></div>':''}
+          <div id="auth-error"></div>
+          <button class="btn-primary" id="auth-submit" style="margin-top:4px;font-size:1.1rem;padding:12px;">
+            ${authMode==='login'?'LOGIN':'CREATE ACCOUNT'}
+          </button>
+        </div>
+        ${authMode==='login'?'<div class="demo-hint"><strong style="color:var(--neon-green);">Demo:</strong> admin / admin123</div>':''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── MAIN APP ──────────────────────────────────────────
+function renderApp() {
+  return `
+    ${renderHeader()}
+    <main id="main-content">${currentPage==='admin' && currentUser.role==='admin' ? renderAdmin() : renderPicks()}</main>
+    <footer>
+      <div class="neon-title" style="font-size:1rem;display:inline;">$harp $elections</div>
+      <div style="color:var(--text-muted);font-size:.7rem;margin-top:6px;">Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div>
+    </footer>`;
+}
+
+function renderHeader() {
+  return `
+  <header id="app-header">
+    <div class="header-inner">
+      ${logoHTML('1.6rem','0.55rem')}
+      <div style="display:flex;align-items:center;gap:12px;">
+        ${currentUser.role==='admin'?`<button class="tab-btn ${currentPage==='admin'?'active':''}" id="nav-admin" style="font-size:.85rem;">⚙ ADMIN</button>`:''}
+        <button class="tab-btn ${currentPage==='picks'?'active':''}" id="nav-picks" style="font-size:.85rem;">PICKS</button>
+        <div style="text-align:right;">
+          <div style="font-size:.7rem;color:var(--text-muted);">Logged in as</div>
+          <div style="font-size:.9rem;color:var(--neon-green);font-weight:600;">${esc(currentUser.username)}</div>
+        </div>
+        <button class="btn-secondary" id="btn-logout">LOGOUT</button>
+      </div>
+    </div>
+  </header>`;
+}
+
+// ── PICKS PAGE ─────────────────────────────────────────
+function renderPicks() {
+  const sports = ['ALL','NFL','NBA','NHL','MLB','NCAAF','NCAAM'];
+  const active = picks.filter(p=>p.active);
+  const filtered = sportFilter==='ALL' ? active : active.filter(p=>p.sport===sportFilter);
+  const wins = active.filter(p=>p.result==='WIN').length;
+  const losses = active.filter(p=>p.result==='LOSS').length;
+  const pending = active.filter(p=>p.result==='PENDING').length;
+
+  return `
+  <div style="max-width:1200px;margin:0 auto;padding:24px 20px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+      <div class="stat-box"><div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;font-size:2rem;">${wins}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">WINS</div></div>
+      <div class="stat-box"><div style="color:#ff4444;font-family:'Bebas Neue',sans-serif;font-size:2rem;">${losses}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">LOSSES</div></div>
+      <div class="stat-box"><div style="color:#f0c040;font-family:'Bebas Neue',sans-serif;font-size:2rem;">${pending}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">PENDING</div></div>
+    </div>
+    <div style="display:flex;gap:4px;overflow-x:auto;margin-bottom:24px;padding-bottom:4px;">
+      ${sports.map(s=>`<button class="tab-btn sport-filter ${sportFilter===s?'active':''}" data-sport="${s}" style="font-size:.85rem;">${s}</button>`).join('')}
+    </div>
+    <div style="margin-bottom:16px;display:flex;align-items:baseline;gap:12px;">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.08em;">TODAY'S PICKS</h2>
+      <span style="color:var(--text-muted);font-size:.85rem;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</span>
+    </div>
+    ${filtered.length===0
+      ? `<div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+           <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;">NO PICKS AVAILABLE</div>
+           <div style="font-size:.85rem;margin-top:8px;">Check back soon for today's sharp selections.</div>
+         </div>`
+      : `<div class="picks-grid">${filtered.map((p,i)=>pickCardHTML(p,i)).join('')}</div>`
+    }
+  </div>`;
+}
+
+function pickCardHTML(p, i) {
+  const sc = SPORT_COLORS[p.sport]||'#6b7a8d';
+  const rc = resultColor(p.result);
+  const rbg = p.result==='WIN'?'rgba(57,255,20,.12)':p.result==='LOSS'?'rgba(255,60,60,.12)':'rgba(240,192,64,.12)';
+  const rbd = p.result==='WIN'?'#39ff14':p.result==='LOSS'?'#ff3b3b':'#f0c040';
+  const cardBorder = p.result==='WIN'?'rgba(57,255,20,.2)':p.result==='LOSS'?'rgba(255,60,60,.2)':'var(--card-border)';
+  return `
+  <div class="pick-card fade-in" style="animation-delay:${i*60}ms;border-color:${cardBorder};">
+    <div style="height:3px;background:linear-gradient(90deg,${sc},transparent);"></div>
+    <div style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <span class="sport-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">${esc(p.sport)}</span>
+        <span class="result-badge" style="background:${rbg};color:${rc};border:1px solid ${rbd}55;">${esc(p.result)}</span>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px;">${esc(p.gameTime)}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;line-height:1.3;">${esc(p.awayTeam)} <span style="color:var(--text-muted);font-size:.8rem;">@</span> ${esc(p.homeTeam)}</div>
+      </div>
+      <div style="background:rgba(200,245,53,.06);border:1px solid rgba(200,245,53,.15);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+        <div style="font-size:.7rem;color:var(--text-muted);letter-spacing:.08em;margin-bottom:4px;">SHARP PICK</div>
+        <div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;">${esc(p.pick)}</div>
+        <div style="display:flex;gap:12px;margin-top:4px;">
+          <span style="font-size:.75rem;color:var(--text-muted);">${esc(p.betType)}</span>
+          <span style="font-size:.75rem;color:var(--neon-blue);">${esc(p.odds)}</span>
+        </div>
+      </div>
+      <p style="font-size:.82rem;color:#8a9ab0;line-height:1.5;">${esc(p.analysis)}</p>
+    </div>
+  </div>`;
+}
+
+// ── ADMIN PANEL ────────────────────────────────────────
+function renderAdmin() {
+  return `
+  <div style="max-width:1200px;margin:0 auto;padding:24px 20px;">
+    <div style="margin-bottom:24px;">
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.1em;color:var(--neon-green);">ADMIN PANEL</h1>
+      <p style="color:var(--text-muted);font-size:.85rem;">Manage picks, users, and settings</p>
+    </div>
+    <div style="display:flex;gap:4px;border-bottom:1px solid #1e2530;margin-bottom:28px;">
+      <button class="tab-btn admin-tab ${adminTab==='add'?'active':''}" data-tab="add">ADD PICKS</button>
+      <button class="tab-btn admin-tab ${adminTab==='manage'?'active':''}" data-tab="manage">MANAGE PICKS</button>
+      <button class="tab-btn admin-tab ${adminTab==='users'?'active':''}" data-tab="users">USERS</button>
+    </div>
+    <div id="admin-content">
+      ${adminTab==='add'    ? renderAddPick()    : ''}
+      ${adminTab==='manage' ? renderManagePicks(): ''}
+      ${adminTab==='users'  ? renderManageUsers(): ''}
+    </div>
+  </div>`;
+}
+
+// ── ADD PICK ───────────────────────────────────────────
+function renderAddPick() {
+  return `
+  <div class="admin-two-col">
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-blue);">1. SELECT SPORT &amp; DATE</h3>
+        <div class="form-grid-2" style="margin-bottom:16px;">
           <div>
-            <label>Email</label>
-            <input className="input-field" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="Enter email" />
+            <label>Sport</label>
+            <select class="input-field" id="pick-sport">
+              ${['NFL','NBA','NHL','MLB','NCAAF','NCAAM'].map(s=>`<option>${s}</option>`).join('')}
+            </select>
           </div>
-        )}
-        <div>
-          <label>Password</label>
-          <input className="input-field" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Enter password" />
-        </div>
-        {mode === "register" && (
           <div>
-            <label>Confirm Password</label>
-            <input className="input-field" type="password" value={form.confirm} onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Confirm password" />
+            <label>Date</label>
+            <input class="input-field" type="date" id="pick-date" value="${todayStr()}" />
           </div>
-        )}
-        {error && <div style={{ color: "#ff4444", fontSize: "0.85rem", background: "rgba(255,68,68,0.1)", padding: "8px 12px", borderRadius: 6, border: "1px solid rgba(255,68,68,0.2)" }}>{error}</div>}
-        <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ marginTop: 4, fontSize: "1.1rem", padding: "12px" }}>
-          {loading ? <span className="spinner" /> : mode === "login" ? "LOGIN" : "CREATE ACCOUNT"}
-        </button>
-      </div>
-
-      {mode === "login" && (
-        <div style={{ marginTop: 16, padding: "12px", background: "#0d1117", borderRadius: 8, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-          <strong style={{ color: "var(--neon-green)" }}>Demo:</strong> admin / admin123
         </div>
-      )}
-    </div>
-  </div>
-</div>
-```
-
-);
-}
-
-// ─── PICKS PAGE ────────────────────────────────────────────────────────────
-function PicksPage({ picks, user }) {
-const [filter, setFilter] = useState(“ALL”);
-const sports = [“ALL”, “NFL”, “NBA”, “NHL”, “MLB”, “NCAAF”, “NCAAM”];
-const todayPicks = picks.filter(p => p.active);
-const filtered = filter === “ALL” ? todayPicks : todayPicks.filter(p => p.sport === filter);
-
-const wins = todayPicks.filter(p => p.result === “WIN”).length;
-const losses = todayPicks.filter(p => p.result === “LOSS”).length;
-const pending = todayPicks.filter(p => p.result === “PENDING”).length;
-
-return (
-<div style={{ maxWidth: 1200, margin: “0 auto”, padding: “24px 20px” }}>
-{/* Stats Row */}
-<div style={{ display: “grid”, gridTemplateColumns: “repeat(3, 1fr)”, gap: 12, marginBottom: 28 }}>
-<div className="stat-box">
-<div style={{ color: “var(–neon-green)”, fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “2rem” }}>{wins}</div>
-<div style={{ color: “var(–text-muted)”, fontSize: “0.75rem”, letterSpacing: “0.08em” }}>WINS</div>
-</div>
-<div className="stat-box">
-<div style={{ color: “#ff4444”, fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “2rem” }}>{losses}</div>
-<div style={{ color: “var(–text-muted)”, fontSize: “0.75rem”, letterSpacing: “0.08em” }}>LOSSES</div>
-</div>
-<div className="stat-box">
-<div style={{ color: “#f0c040”, fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “2rem” }}>{pending}</div>
-<div style={{ color: “var(–text-muted)”, fontSize: “0.75rem”, letterSpacing: “0.08em” }}>PENDING</div>
-</div>
-</div>
-
-```
-  {/* Filter Tabs */}
-  <div style={{ display: "flex", gap: 4, overflowX: "auto", marginBottom: 24, paddingBottom: 4 }} className="scrollbar-dark">
-    {sports.map(s => (
-      <button key={s} className={`tab-btn ${filter === s ? "active" : ""}`} onClick={() => setFilter(s)} style={{ whiteSpace: "nowrap", fontSize: "0.85rem" }}>{s}</button>
-    ))}
-  </div>
-
-  <div style={{ marginBottom: 16, display: "flex", alignItems: "baseline", gap: 12 }}>
-    <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.6rem", letterSpacing: "0.08em", color: "var(--text-primary)" }}>
-      TODAY'S PICKS
-    </h2>
-    <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-      {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-    </span>
-  </div>
-
-  {filtered.length === 0 ? (
-    <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)" }}>
-      <div style={{ fontSize: "3rem", marginBottom: 12 }}>📋</div>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", letterSpacing: "0.08em" }}>NO PICKS AVAILABLE</div>
-      <div style={{ fontSize: "0.85rem", marginTop: 8 }}>Check back soon for today's sharp selections.</div>
-    </div>
-  ) : (
-    <div className="picks-grid">
-      {filtered.map((pick, i) => (
-        <PickCard key={pick.id} pick={pick} delay={i * 60} />
-      ))}
-    </div>
-  )}
-</div>
-```
-
-);
-}
-
-function PickCard({ pick, delay }) {
-const sportColor = sportColors[pick.sport] || “#6b7a8d”;
-const resultBg = { WIN: “rgba(57,255,20,0.12)”, LOSS: “rgba(255,60,60,0.12)”, PENDING: “rgba(240,192,64,0.12)” };
-const resultBorder = { WIN: “#39ff14”, LOSS: “#ff3b3b”, PENDING: “#f0c040” };
-
-return (
-<div className=“pick-card fade-in” style={{ animationDelay: `${delay}ms`, border: `1px solid ${pick.result === "WIN" ? "rgba(57,255,20,0.2)" : pick.result === "LOSS" ? "rgba(255,60,60,0.2)" : "var(--card-border)"}` }}>
-{/* Header stripe */}
-<div style={{ height: 3, background: `linear-gradient(90deg, ${sportColor}, transparent)` }} />
-<div style={{ padding: “16px” }}>
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “flex-start”, marginBottom: 12 }}>
-<span className=“sport-badge” style={{ background: `${sportColor}22`, color: sportColor, border: `1px solid ${sportColor}44` }}>{pick.sport}</span>
-<span className=“result-badge” style={{ background: resultBg[pick.result], color: recordColor(pick.result), border: `1px solid ${resultBorder[pick.result]}55` }}>{pick.result}</span>
-</div>
-
-```
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: 4 }}>{pick.gameTime}</div>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1rem", letterSpacing: "0.04em", color: "var(--text-primary)", lineHeight: 1.3 }}>
-        {pick.awayTeam} <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>@</span> {pick.homeTeam}
+        <button class="btn-primary" id="btn-load-games">🔄 LOAD GAMES</button>
+        <div id="games-error" style="margin-top:12px;"></div>
+      </div>
+      <div class="card" id="games-list-card" style="display:none;">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;margin-bottom:12px;color:var(--neon-blue);">2. SELECT GAME</h3>
+        <div id="games-list" style="max-height:340px;overflow-y:auto;"></div>
       </div>
     </div>
+    <div class="card">
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-green);">3. PICK DETAILS</h3>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-grid-2">
+          <div><label>Away Team</label><input class="input-field" id="pick-away" placeholder="Away team" /></div>
+          <div><label>Home Team</label><input class="input-field" id="pick-home" placeholder="Home team" /></div>
+        </div>
+        <div><label>Your Pick</label><input class="input-field" id="pick-pick" placeholder="e.g. Boston Celtics -3.5" /></div>
+        <div class="form-grid-3">
+          <div><label>Bet Type</label>
+            <select class="input-field" id="pick-bettype">
+              ${['Spread','Moneyline','Total','Prop','Parlay'].map(b=>`<option>${b}</option>`).join('')}
+            </select>
+          </div>
+          <div><label>Odds</label><input class="input-field" id="pick-odds" value="-110" /></div>
+          <div><label>Result</label>
+            <select class="input-field" id="pick-result">
+              ${['PENDING','WIN','LOSS','PUSH'].map(r=>`<option>${r}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div><label>Game Time</label><input class="input-field" id="pick-gametime" placeholder="e.g. 7:30 PM ET" /></div>
+        <div><label>Analysis</label><textarea class="input-field" id="pick-analysis" rows="4" placeholder="Write your pick analysis..."></textarea></div>
 
-    <div style={{ background: "rgba(200,245,53,0.06)", border: "1px solid rgba(200,245,53,0.15)", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: 4 }}>SHARP PICK</div>
-      <div style={{ color: "var(--neon-green)", fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.2rem", letterSpacing: "0.04em" }}>{pick.pick}</div>
-      <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{pick.betType}</span>
-        <span style={{ fontSize: "0.75rem", color: "var(--neon-blue)" }}>{pick.odds}</span>
+```
+    <button class="btn-primary" id="btn-publish-pick" style="padding:14px;font-size:1.1rem;">PUBLISH PICK</button>
+    <div id="pick-saved"></div>
+  </div>
+</div>
+```
+
+  </div>`;
+}
+
+// ── MANAGE PICKS ───────────────────────────────────────
+function renderManagePicks() {
+const sorted = […picks].reverse();
+return `
+
+  <div class="card">
+    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-green);">ALL PICKS (${picks.length})</h3>
+    ${picks.length===0
+      ? `<div style="color:var(--text-muted);text-align:center;padding:32px;">No picks yet.</div>`
+      : `<div style="display:flex;flex-direction:column;gap:8px;">
+          ${sorted.map(p=>{
+            const sc = SPORT_COLORS[p.sport]||'#555';
+            return `
+            <div style="background:#0d1117;border:1px solid #1e2530;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span class="sport-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;font-size:.7rem;">${esc(p.sport)}</span>
+              <div style="flex:1;min-width:160px;">
+                <div style="font-size:.85rem;font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;">${esc(p.awayTeam)} @ ${esc(p.homeTeam)}</div>
+                <div style="font-size:.75rem;color:var(--neon-green);">${esc(p.pick)}</div>
+                <div style="font-size:.7rem;color:var(--text-muted);">${esc(p.date)}</div>
+              </div>
+              <select class="input-field" data-pick-result="${p.id}" style="width:110px;font-size:.8rem;padding:6px 8px;color:${resultColor(p.result)};">
+                ${['PENDING','WIN','LOSS','PUSH'].map(r=>`<option ${p.result===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+              <button class="${p.active?'btn-danger':'btn-success'}" data-toggle-pick="${p.id}">${p.active?'DEACTIVATE':'ACTIVATE'}</button>
+              <button class="btn-danger" data-delete-pick="${p.id}">DELETE</button>
+            </div>`;
+          }).join('')}
+        </div>`
+    }
+  </div>`;
+}
+
+// ── MANAGE USERS ───────────────────────────────────────
+function renderManageUsers() {
+const nonAdmin = users.filter(u=>u.role!==‘admin’);
+const activeCount = nonAdmin.filter(u=>u.active).length;
+return `
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--neon-green);">REGISTERED USERS (${nonAdmin.length})</h3>
+      <div style="display:flex;gap:16px;font-size:.8rem;">
+        <span style="color:var(--neon-green);">● ${activeCount} Active</span>
+        <span style="color:#ff4444;">● ${nonAdmin.length-activeCount} Inactive</span>
       </div>
     </div>
-
-    <p style={{ fontSize: "0.82rem", color: "#8a9ab0", lineHeight: 1.5 }}>{pick.analysis}</p>
-  </div>
-</div>
-```
-
-);
-}
-
-// ─── ADMIN PANEL ───────────────────────────────────────────────────────────
-function AdminPanel({ picks, setPicks, users, setUsers }) {
-const [tab, setTab] = useState(“picks”);
-
-return (
-<div style={{ maxWidth: 1200, margin: “0 auto”, padding: “24px 20px” }}>
-<div style={{ marginBottom: 24 }}>
-<h1 style={{ fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “2rem”, letterSpacing: “0.1em”, color: “var(–neon-green)” }}>ADMIN PANEL</h1>
-<p style={{ color: “var(–text-muted)”, fontSize: “0.85rem” }}>Manage picks, users, and settings</p>
-</div>
-
-```
-  <div style={{ display: "flex", gap: 4, borderBottom: "1px solid #1e2530", marginBottom: 28 }}>
-    <button className={`tab-btn ${tab === "picks" ? "active" : ""}`} onClick={() => setTab("picks")}>ADD PICKS</button>
-    <button className={`tab-btn ${tab === "manage" ? "active" : ""}`} onClick={() => setTab("manage")}>MANAGE PICKS</button>
-    <button className={`tab-btn ${tab === "users" ? "active" : ""}`} onClick={() => setTab("users")}>USERS</button>
-  </div>
-
-  {tab === "picks" && <AddPickForm picks={picks} setPicks={setPicks} />}
-  {tab === "manage" && <ManagePicks picks={picks} setPicks={setPicks} />}
-  {tab === "users" && <ManageUsers users={users} setUsers={setUsers} />}
-</div>
-```
-
-);
-}
-
-function AddPickForm({ picks, setPicks }) {
-const [form, setForm] = useState({
-sport: “NBA”, date: today(), homeTeam: “”, awayTeam: “”,
-pick: “”, betType: “Spread”, odds: “-110”,
-analysis: “”, gameTime: “”, result: “PENDING”
-});
-const [games, setGames] = useState([]);
-const [loadingGames, setLoadingGames] = useState(false);
-const [gamesError, setGamesError] = useState(””);
-const [selectedGame, setSelectedGame] = useState(null);
-const [saved, setSaved] = useState(false);
-
-const loadGames = async () => {
-setLoadingGames(true);
-setGamesError(””);
-setGames([]);
-setSelectedGame(null);
-const g = await fetchESPNGames(form.sport, form.date);
-setLoadingGames(false);
-if (g.length === 0) {
-setGamesError(`No ${form.sport} games found for ${form.date}. ESPN may not have data for this date/sport yet.`);
-}
-setGames(g);
-};
-
-const selectGame = (game) => {
-setSelectedGame(game.id);
-setForm(f => ({ …f, homeTeam: game.homeTeam, awayTeam: game.awayTeam, gameTime: game.gameTime }));
-};
-
-const savePick = () => {
-if (!form.homeTeam || !form.awayTeam || !form.pick) return;
-setPicks(prev => […prev, { …form, id: Date.now(), active: true }]);
-setSaved(true);
-setForm(f => ({ …f, homeTeam: “”, awayTeam: “”, pick: “”, analysis: “”, gameTime: “” }));
-setSelectedGame(null);
-setGames([]);
-setTimeout(() => setSaved(false), 2500);
-};
-
-const betTypes = [“Spread”, “Moneyline”, “Total”, “Prop”, “Parlay”];
-const results = [“PENDING”, “WIN”, “LOSS”, “PUSH”];
-
-return (
-<div style={{ display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: 24 }}>
-{/* Left: Sport/Date selector + game loader */}
-<div>
-<div className=“card” style={{ marginBottom: 16 }}>
-<h3 style={{ fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “1.2rem”, letterSpacing: “0.08em”, marginBottom: 16, color: “var(–neon-blue)” }}>1. SELECT SPORT & DATE</h3>
-<div style={{ display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: 12, marginBottom: 16 }}>
-<div>
-<label>Sport</label>
-<select className=“input-field” value={form.sport} onChange={e => { setForm(f => ({ …f, sport: e.target.value })); setGames([]); setSelectedGame(null); }}>
-{[“NFL”, “NBA”, “NHL”, “MLB”, “NCAAF”, “NCAAM”].map(s => <option key={s}>{s}</option>)}
-</select>
-</div>
-<div>
-<label>Date</label>
-<input className=“input-field” type=“date” value={form.date} onChange={e => { setForm(f => ({ …f, date: e.target.value })); setGames([]); setSelectedGame(null); }} />
-</div>
-</div>
-<button className=“btn-primary” onClick={loadGames} disabled={loadingGames} style={{ width: “100%” }}>
-{loadingGames ? <><span className=“spinner” style={{ marginRight: 8 }} />LOADING GAMES…</> : “🔄 LOAD GAMES”}
-</button>
-{gamesError && <div style={{ marginTop: 12, color: “#f0c040”, fontSize: “0.8rem”, background: “rgba(240,192,64,0.08)”, padding: “8px 12px”, borderRadius: 6 }}>{gamesError}</div>}
-</div>
-
-```
-    {games.length > 0 && (
-      <div className="card">
-        <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.1rem", letterSpacing: "0.08em", marginBottom: 12, color: "var(--neon-blue)" }}>2. SELECT GAME ({games.length})</h3>
-        <div style={{ maxHeight: 340, overflowY: "auto" }} className="scrollbar-dark">
-          {games.map(g => (
-            <div key={g.id} onClick={() => selectGame(g)} style={{
-              padding: "10px 12px", borderRadius: 8, marginBottom: 6, cursor: "pointer",
-              background: selectedGame === g.id ? "rgba(200,245,53,0.08)" : "#0d1117",
-              border: `1px solid ${selectedGame === g.id ? "rgba(200,245,53,0.3)" : "#1e2530"}`,
-              transition: "all 0.15s"
-            }}>
-              <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "0.95rem", letterSpacing: "0.04em" }}>{g.awayTeam} @ {g.homeTeam}</div>
-              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 2 }}>{g.gameTime} {g.venue && `• ${g.venue}`}</div>
+    ${nonAdmin.length===0
+      ? `<div style="color:var(--text-muted);text-align:center;padding:40px;">No registered users.</div>`
+      : nonAdmin.map(u=>`
+        <div class="user-row">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:${u.active?'rgba(200,245,53,.1)':'rgba(255,68,68,.1)'};border:2px solid ${u.active?'var(--neon-green)':'#ff4444'};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${u.active?'var(--neon-green)':'#ff4444'};">
+              ${esc(u.username[0].toUpperCase())}
             </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-
-  {/* Right: Pick details */}
-  <div className="card">
-    <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.2rem", letterSpacing: "0.08em", marginBottom: 16, color: "var(--neon-green)" }}>3. PICK DETAILS</h3>
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <div>
-          <label>Away Team</label>
-          <input className="input-field" value={form.awayTeam} onChange={e => setForm(f => ({ ...f, awayTeam: e.target.value }))} placeholder="Away team" />
-        </div>
-        <div>
-          <label>Home Team</label>
-          <input className="input-field" value={form.homeTeam} onChange={e => setForm(f => ({ ...f, homeTeam: e.target.value }))} placeholder="Home team" />
-        </div>
-      </div>
-      <div>
-        <label>Your Pick</label>
-        <input className="input-field" value={form.pick} onChange={e => setForm(f => ({ ...f, pick: e.target.value }))} placeholder="e.g. Boston Celtics -3.5" />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-        <div>
-          <label>Bet Type</label>
-          <select className="input-field" value={form.betType} onChange={e => setForm(f => ({ ...f, betType: e.target.value }))}>
-            {betTypes.map(b => <option key={b}>{b}</option>)}
-          </select>
-        </div>
-        <div>
-          <label>Odds</label>
-          <input className="input-field" value={form.odds} onChange={e => setForm(f => ({ ...f, odds: e.target.value }))} placeholder="-110" />
-        </div>
-        <div>
-          <label>Result</label>
-          <select className="input-field" value={form.result} onChange={e => setForm(f => ({ ...f, result: e.target.value }))}>
-            {results.map(r => <option key={r}>{r}</option>)}
-          </select>
-        </div>
-      </div>
-      <div>
-        <label>Game Time</label>
-        <input className="input-field" value={form.gameTime} onChange={e => setForm(f => ({ ...f, gameTime: e.target.value }))} placeholder="e.g. 7:30 PM ET" />
-      </div>
-      <div>
-        <label>Analysis</label>
-        <textarea className="input-field" rows={4} value={form.analysis} onChange={e => setForm(f => ({ ...f, analysis: e.target.value }))} placeholder="Write your pick analysis..." style={{ resize: "vertical" }} />
-      </div>
-      <button className="btn-primary" onClick={savePick} disabled={!form.homeTeam || !form.awayTeam || !form.pick} style={{ padding: "14px", fontSize: "1.1rem" }}>
-        PUBLISH PICK
-      </button>
-      {saved && <div style={{ color: "var(--neon-green)", fontSize: "0.85rem", textAlign: "center" }}>✓ Pick published successfully!</div>}
+            <div>
+              <div style="font-weight:600;font-size:.95rem;">${esc(u.username)}</div>
+              <div style="font-size:.75rem;color:var(--text-muted);">${esc(u.email)} · Joined ${esc(u.joined)}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:.75rem;color:${u.active?'var(--neon-green)':'#ff4444'};background:${u.active?'rgba(200,245,53,.08)':'rgba(255,68,68,.08)'};padding:3px 10px;border-radius:4px;border:1px solid ${u.active?'rgba(200,245,53,.2)':'rgba(255,68,68,.2)'};font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;">
+              ${u.active?'ACTIVE':'INACTIVE'}
+            </span>
+            <button class="${u.active?'btn-danger':'btn-success'}" data-toggle-user="${u.id}">${u.active?'DEACTIVATE':'ACTIVATE'}</button>
+          </div>
+        </div>`).join('')
+    }
+    <div style="margin-top:20px;padding:12px 16px;background:rgba(59,130,246,.05);border:1px dashed rgba(59,130,246,.2);border-radius:8px;">
+      <div style="font-size:.75rem;color:var(--neon-blue);font-family:'Bebas Neue',sans-serif;letter-spacing:.06em;margin-bottom:4px;">🔮 COMING SOON</div>
+      <div style="font-size:.8rem;color:var(--text-muted);">Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>
     </div>
-  </div>
-</div>
-```
-
-);
+  </div>`;
 }
 
-function ManagePicks({ picks, setPicks }) {
-const deletePick = (id) => setPicks(prev => prev.filter(p => p.id !== id));
-const toggleActive = (id) => setPicks(prev => prev.map(p => p.id === id ? { …p, active: !p.active } : p));
-const updateResult = (id, result) => setPicks(prev => prev.map(p => p.id === id ? { …p, result } : p));
+// ══════════════════════════════════════════════════════
+//  EVENT BINDING
+// ══════════════════════════════════════════════════════
+function bindEvents() {
+// Auth mode switch
+on(‘tab-login’,    ‘click’, ()=>{ authMode=‘login’;    render(); });
+on(‘tab-register’, ‘click’, ()=>{ authMode=‘register’; render(); });
+on(‘auth-submit’,  ‘click’, handleAuth);
+// Enter key on auth
+document.querySelectorAll(’.input-field’).forEach(el=>{
+el.addEventListener(‘keydown’, e=>{ if(e.key===‘Enter’) { const s=document.getElementById(‘auth-submit’); if(s) s.click(); }});
+});
 
-return (
-<div>
-<div className="card">
-<h3 style={{ fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “1.2rem”, letterSpacing: “0.08em”, marginBottom: 16, color: “var(–neon-green)” }}>ALL PICKS ({picks.length})</h3>
-{picks.length === 0 ? <div style={{ color: “var(–text-muted)”, textAlign: “center”, padding: 32 }}>No picks yet.</div> : (
-<div style={{ display: “flex”, flexDirection: “column”, gap: 8 }}>
-{[…picks].reverse().map(p => (
-<div key={p.id} style={{ background: “#0d1117”, border: “1px solid #1e2530”, borderRadius: 8, padding: “12px 16px”, display: “flex”, alignItems: “center”, gap: 12, flexWrap: “wrap” }}>
-<span className=“sport-badge” style={{ background: `${sportColors[p.sport] || "#333"}22`, color: sportColors[p.sport] || “#aaa”, border: `1px solid ${sportColors[p.sport] || "#333"}44`, fontSize: “0.7rem” }}>{p.sport}</span>
-<div style={{ flex: 1, minWidth: 200 }}>
-<div style={{ fontSize: “0.85rem”, fontFamily: “‘Bebas Neue’, sans-serif”, letterSpacing: “0.04em” }}>{p.awayTeam} @ {p.homeTeam}</div>
-<div style={{ fontSize: “0.75rem”, color: “var(–neon-green)” }}>{p.pick}</div>
-<div style={{ fontSize: “0.7rem”, color: “var(–text-muted)” }}>{p.date}</div>
-</div>
-<select className=“input-field” value={p.result} onChange={e => updateResult(p.id, e.target.value)} style={{ width: 110, fontSize: “0.8rem”, padding: “6px 8px”, color: recordColor(p.result) }}>
-{[“PENDING”, “WIN”, “LOSS”, “PUSH”].map(r => <option key={r} style={{ color: “#e8edf2” }}>{r}</option>)}
-</select>
-<button className={p.active ? “btn-danger” : “btn-success”} style={{ fontSize: “0.75rem”, padding: “5px 10px” }} onClick={() => toggleActive(p.id)}>
-{p.active ? “DEACTIVATE” : “ACTIVATE”}
-</button>
-<button className=“btn-danger” style={{ fontSize: “0.75rem”, padding: “5px 10px” }} onClick={() => deletePick(p.id)}>DELETE</button>
-</div>
-))}
-</div>
-)}
-</div>
-</div>
-);
+// Header nav
+on(‘logo-home’,  ‘click’, ()=>{ currentPage=‘picks’; render(); });
+on(‘nav-picks’,  ‘click’, ()=>{ currentPage=‘picks’; render(); });
+on(‘nav-admin’,  ‘click’, ()=>{ currentPage=‘admin’; adminTab=‘add’; render(); });
+on(‘btn-logout’, ‘click’, ()=>{ currentUser=null; authMode=‘login’; render(); });
+
+// Sport filter
+document.querySelectorAll(’.sport-filter’).forEach(btn=>{
+btn.addEventListener(‘click’, ()=>{ sportFilter=btn.dataset.sport; render(); });
+});
+
+// Admin tabs
+document.querySelectorAll(’.admin-tab’).forEach(btn=>{
+btn.addEventListener(‘click’, ()=>{ adminTab=btn.dataset.tab; render(); });
+});
+
+// Load games
+on(‘btn-load-games’, ‘click’, handleLoadGames);
+
+// Publish pick
+on(‘btn-publish-pick’, ‘click’, handlePublishPick);
+
+// Manage picks: result change, toggle, delete
+document.querySelectorAll(’[data-pick-result]’).forEach(sel=>{
+sel.addEventListener(‘change’, ()=>{
+const id = +sel.dataset.pickResult;
+picks = picks.map(p=>p.id===id?{…p,result:sel.value}:p);
+// re-render just admin content
+reRenderAdminContent();
+});
+});
+document.querySelectorAll(’[data-toggle-pick]’).forEach(btn=>{
+btn.addEventListener(‘click’, ()=>{
+const id = +btn.dataset.togglePick;
+picks = picks.map(p=>p.id===id?{…p,active:!p.active}:p);
+reRenderAdminContent();
+});
+});
+document.querySelectorAll(’[data-delete-pick]’).forEach(btn=>{
+btn.addEventListener(‘click’, ()=>{
+const id = +btn.dataset.deletePick;
+picks = picks.filter(p=>p.id!==id);
+reRenderAdminContent();
+});
+});
+
+// Manage users: toggle
+document.querySelectorAll(’[data-toggle-user]’).forEach(btn=>{
+btn.addEventListener(‘click’, ()=>{
+const id = +btn.dataset.toggleUser;
+users = users.map(u=>u.id===id?{…u,active:!u.active}:u);
+reRenderAdminContent();
+});
+});
 }
 
-function ManageUsers({ users, setUsers }) {
-const toggleUser = (id) => setUsers(prev => prev.map(u => u.id === id ? { …u, active: !u.active } : u));
-const nonAdmin = users.filter(u => u.role !== “admin”);
-
-return (
-<div className="card">
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 16 }}>
-<h3 style={{ fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “1.2rem”, letterSpacing: “0.08em”, color: “var(–neon-green)” }}>REGISTERED USERS ({nonAdmin.length})</h3>
-<div style={{ display: “flex”, gap: 16, fontSize: “0.8rem” }}>
-<span style={{ color: “var(–neon-green)” }}>● {nonAdmin.filter(u => u.active).length} Active</span>
-<span style={{ color: “#ff4444” }}>● {nonAdmin.filter(u => !u.active).length} Inactive</span>
-</div>
-</div>
-{nonAdmin.length === 0 ? (
-<div style={{ color: “var(–text-muted)”, textAlign: “center”, padding: 40 }}>No registered users.</div>
-) : (
-<div>
-{nonAdmin.map(u => (
-<div className="user-row" key={u.id}>
-<div style={{ display: “flex”, alignItems: “center”, gap: 12 }}>
-<div style={{ width: 36, height: 36, borderRadius: “50%”, background: u.active ? “rgba(200,245,53,0.1)” : “rgba(255,68,68,0.1)”, border: `2px solid ${u.active ? "var(--neon-green)" : "#ff4444"}`, display: “flex”, alignItems: “center”, justifyContent: “center”, fontFamily: “‘Bebas Neue’, sans-serif”, fontSize: “1rem”, color: u.active ? “var(–neon-green)” : “#ff4444” }}>
-{u.username[0].toUpperCase()}
-</div>
-<div>
-<div style={{ fontWeight: 600, fontSize: “0.95rem” }}>{u.username}</div>
-<div style={{ fontSize: “0.75rem”, color: “var(–text-muted)” }}>{u.email} · Joined {u.joined}</div>
-</div>
-</div>
-<div style={{ display: “flex”, alignItems: “center”, gap: 12 }}>
-<span style={{ fontSize: “0.75rem”, color: u.active ? “var(–neon-green)” : “#ff4444”, background: u.active ? “rgba(200,245,53,0.08)” : “rgba(255,68,68,0.08)”, padding: “3px 10px”, borderRadius: 4, border: `1px solid ${u.active ? "rgba(200,245,53,0.2)" : "rgba(255,68,68,0.2)"}`, fontFamily: “‘Bebas Neue’, sans-serif”, letterSpacing: “0.05em” }}>
-{u.active ? “ACTIVE” : “INACTIVE”}
-</span>
-<button className={u.active ? “btn-danger” : “btn-success”} onClick={() => toggleUser(u.id)}>
-{u.active ? “DEACTIVATE” : “ACTIVATE”}
-</button>
-</div>
-</div>
-))}
-</div>
-)}
-
-```
-  {/* Future: subscriptions note */}
-  <div style={{ marginTop: 20, padding: "12px 16px", background: "rgba(59,130,246,0.05)", border: "1px dashed rgba(59,130,246,0.2)", borderRadius: 8 }}>
-    <div style={{ fontSize: "0.75rem", color: "var(--neon-blue)", fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.06em", marginBottom: 4 }}>🔮 COMING SOON</div>
-    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>
-  </div>
-</div>
-```
-
-);
+function on(id, ev, fn) {
+const el = document.getElementById(id);
+if(el) el.addEventListener(ev, fn);
 }
 
-// ─── ROOT APP ──────────────────────────────────────────────────────────────
-export default function App() {
-const [users, setUsers] = useState(INITIAL_USERS);
-const [picks, setPicks] = useState(INITIAL_PICKS);
-const [currentUser, setCurrentUser] = useState(null);
-const [page, setPage] = useState(“picks”);
-
-const handleLogin = (user) => setCurrentUser(user);
-const handleLogout = () => { setCurrentUser(null); setPage(“picks”); };
-
-if (!currentUser) {
-return (
-<>
-<GlobalStyle />
-<AuthPage users={users} setUsers={setUsers} onLogin={handleLogin} />
-</>
-);
+function reRenderAdminContent() {
+const el = document.getElementById(‘admin-content’);
+if(!el) return;
+el.innerHTML = adminTab===‘add’ ? renderAddPick() : adminTab===‘manage’ ? renderManagePicks() : renderManageUsers();
+bindAdminContentEvents();
 }
 
-return (
-<>
-<GlobalStyle />
-<div style={{ minHeight: “100vh”, background: “var(–dark-bg)” }}>
-<Header user={currentUser} onLogout={handleLogout} onNav={setPage} currentPage={page} />
-<main>
-{page === “picks” || currentUser.role !== “admin” ? (
-<PicksPage picks={picks} user={currentUser} />
-) : (
-<AdminPanel picks={picks} setPicks={setPicks} users={users} setUsers={setUsers} />
-)}
-</main>
-<footer style={{ borderTop: “1px solid #1e2530”, padding: “20px”, textAlign: “center”, marginTop: 40 }}>
-<div className=“neon-title” style={{ fontSize: “1rem”, display: “inline” }}>$harp $elections</div>
-<div style={{ color: “var(–text-muted)”, fontSize: “0.7rem”, marginTop: 6 }}>
-Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.
-</div>
-</footer>
-</div>
-</>
-);
+function bindAdminContentEvents() {
+on(‘btn-load-games’,    ‘click’, handleLoadGames);
+on(‘btn-publish-pick’,  ‘click’, handlePublishPick);
+document.querySelectorAll(’[data-pick-result]’).forEach(sel=>{
+sel.addEventListener(‘change’, ()=>{
+const id=+sel.dataset.pickResult;
+picks=picks.map(p=>p.id===id?{…p,result:sel.value}:p);
+reRenderAdminContent();
+});
+});
+document.querySelectorAll(’[data-toggle-pick]’).forEach(btn=>{
+btn.addEventListener(‘click’,()=>{
+const id=+btn.dataset.togglePick;
+picks=picks.map(p=>p.id===id?{…p,active:!p.active}:p);
+reRenderAdminContent();
+});
+});
+document.querySelectorAll(’[data-delete-pick]’).forEach(btn=>{
+btn.addEventListener(‘click’,()=>{
+const id=+btn.dataset.deletePick;
+picks=picks.filter(p=>p.id!==id);
+reRenderAdminContent();
+});
+});
+document.querySelectorAll(’[data-toggle-user]’).forEach(btn=>{
+btn.addEventListener(‘click’,()=>{
+const id=+btn.dataset.toggleUser;
+users=users.map(u=>u.id===id?{…u,active:!u.active}:u);
+reRenderAdminContent();
+});
+});
 }
+
+// ── AUTH HANDLER ───────────────────────────────────────
+function handleAuth() {
+const errBox = document.getElementById(‘auth-error’);
+errBox.innerHTML=’’;
+const username = val(‘auth-username’);
+const password = val(‘auth-password’);
+
+if(authMode===‘login’){
+const u = users.find(u=>u.username===username && u.password===password);
+if(!u) return showErr(errBox,‘Invalid username or password.’);
+if(!u.active) return showErr(errBox,‘Your account has been deactivated. Please contact support.’);
+currentUser=u; currentPage=‘picks’; render();
+} else {
+const email   = val(‘auth-email’);
+const confirm = val(‘auth-confirm’);
+if(!username||!email||!password) return showErr(errBox,‘All fields are required.’);
+if(password!==confirm) return showErr(errBox,‘Passwords do not match.’);
+if(users.find(u=>u.username===username)) return showErr(errBox,‘Username already taken.’);
+const newUser={id:Date.now(),username,email,password,role:‘user’,active:true,joined:todayStr()};
+users.push(newUser);
+currentUser=newUser; currentPage=‘picks’; render();
+}
+}
+
+// ── LOAD GAMES ─────────────────────────────────────────
+async function handleLoadGames() {
+const btn  = document.getElementById(‘btn-load-games’);
+const errEl= document.getElementById(‘games-error’);
+const card = document.getElementById(‘games-list-card’);
+const list = document.getElementById(‘games-list’);
+if(!btn||!errEl||!card||!list) return;
+
+const sport = val(‘pick-sport’);
+const date  = val(‘pick-date’);
+
+btn.disabled=true;
+btn.innerHTML=’<span class="spinner"></span>LOADING GAMES…’;
+errEl.innerHTML=’’;
+card.style.display=‘none’;
+
+const games = await fetchESPN(sport, date);
+btn.disabled=false;
+btn.innerHTML=‘🔄 LOAD GAMES’;
+
+if(games.length===0){
+errEl.innerHTML=`<div class="warn-box">No ${sport} games found for ${date}. ESPN may not have data yet.</div>`;
+return;
+}
+
+card.style.display=‘block’;
+const h3 = card.querySelector(‘h3’);
+if(h3) h3.textContent=`2. SELECT GAME (${games.length})`;
+
+list.innerHTML = games.map(g=>` <div class="game-row" data-home="${esc(g.homeTeam)}" data-away="${esc(g.awayTeam)}" data-time="${esc(g.gameTime)}" style="padding:10px 12px;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1117;border:1px solid #1e2530;transition:all .15s;"> <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.04em;">${esc(g.awayTeam)} @ ${esc(g.homeTeam)}</div> <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">${esc(g.gameTime)}${g.venue?' · '+esc(g.venue):''}</div> </div>`).join(’’);
+
+list.querySelectorAll(’.game-row’).forEach(row=>{
+row.addEventListener(‘click’,()=>{
+list.querySelectorAll(’.game-row’).forEach(r=>{ r.style.background=’#0d1117’; r.style.borderColor=’#1e2530’; });
+row.style.background=‘rgba(200,245,53,.08)’; row.style.borderColor=‘rgba(200,245,53,.3)’;
+setVal(‘pick-home’, row.dataset.home);
+setVal(‘pick-away’, row.dataset.away);
+setVal(‘pick-gametime’, row.dataset.time);
+});
+});
+}
+
+// ── PUBLISH PICK ───────────────────────────────────────
+function handlePublishPick() {
+const home     = val(‘pick-home’);
+const away     = val(‘pick-away’);
+const pick     = val(‘pick-pick’);
+const betType  = val(‘pick-bettype’);
+const odds     = val(‘pick-odds’);
+const result   = val(‘pick-result’);
+const gameTime = val(‘pick-gametime’);
+const analysis = val(‘pick-analysis’);
+const sport    = val(‘pick-sport’);
+const date     = val(‘pick-date’);
+const savedEl  = document.getElementById(‘pick-saved’);
+
+if(!home||!away||!pick){ if(savedEl) savedEl.innerHTML=’<div class="error-box">Away team, home team, and pick are required.</div>’; return; }
+
+picks.push({ id:Date.now(), sport, date, homeTeam:home, awayTeam:away, pick, betType, odds, result, gameTime, analysis, active:true });
+
+// Clear form
+[‘pick-home’,‘pick-away’,‘pick-pick’,‘pick-odds’,‘pick-gametime’,‘pick-analysis’].forEach(id=>setVal(id,’’));
+setVal(‘pick-result’,‘PENDING’);
+const card=document.getElementById(‘games-list-card’); if(card) card.style.display=‘none’;
+if(savedEl) { savedEl.innerHTML=’<div class="success-box">✓ Pick published successfully!</div>’; setTimeout(()=>{ if(savedEl) savedEl.innerHTML=’’; },2500); }
+}
+
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+function esc(s){ return String(s||’’).replace(/&/g,’&’).replace(/</g,’<’).replace(/>/g,’>’).replace(/”/g,’"’); }
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():’’; }
+function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v; }
+function showErr(el,msg){ el.innerHTML=`<div class="error-box">${esc(msg)}</div>`; }
+
+// ══════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════
+render();
+</script>
+
+</body>
+</html>
