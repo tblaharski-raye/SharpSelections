@@ -2,790 +2,638 @@
 
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>$harp $elections — Bet $harp</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$harp $elections</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: #0a0c0e !important; min-height: 100vh; }
-
-:root {
-–neon-green: #c8f535;
-–neon-blue: #3b82f6;
-–dark-bg: #0a0c0e;
-–card-bg: #111518;
-–card-border: #1e2530;
-–text-primary: #e8edf2;
-–text-muted: #6b7a8d;
-–glow-green: 0 0 20px rgba(200,245,53,0.4), 0 0 40px rgba(200,245,53,0.15);
-–glow-blue: 0 0 20px rgba(59,130,246,0.4), 0 0 40px rgba(59,130,246,0.15);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0a0c0e;min-height:100%;color:#e8edf2;font-family:'Rajdhani',sans-serif}
+:root{
+  --green:#c8f535;--blue:#3b82f6;--bg:#0a0c0e;--card:#111518;
+  --border:#1e2530;--muted:#6b7a8d;
+  --gg:0 0 20px rgba(200,245,53,.4),0 0 40px rgba(200,245,53,.15);
+  --gb:0 0 20px rgba(59,130,246,.4),0 0 40px rgba(59,130,246,.15);
 }
+#app{min-height:100vh;background:#0a0c0e}
 
-body { background: var(–dark-bg); color: var(–text-primary); font-family: ‘Rajdhani’, sans-serif; }
+/* ── NEON TITLE ── */
+.neon-title{
+font-family:‘Pacifico’,cursive;color:var(–green);
+text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3);
+-webkit-text-stroke:2px var(–blue);paint-order:stroke fill;
+-webkit-animation:glow 3s ease-in-out infinite;animation:glow 3s ease-in-out infinite;
+}
+@-webkit-keyframes glow{0%,100%{text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3)}50%{text-shadow:0 0 30px rgba(200,245,53,.9),0 0 70px rgba(200,245,53,.5)}}
+@keyframes glow{0%,100%{text-shadow:var(–gg),0 0 80px rgba(200,245,53,.3)}50%{text-shadow:0 0 30px rgba(200,245,53,.9),0 0 70px rgba(200,245,53,.5)}}
 
-.neon-title {
-font-family: ‘Pacifico’, cursive;
-color: var(–neon-green);
-text-shadow: var(–glow-green), 0 0 80px rgba(200,245,53,0.3);
--webkit-text-stroke: 2px var(–neon-blue);
-paint-order: stroke fill;
-animation: glow-pulse 3s ease-in-out infinite;
-}
+@-webkit-keyframes fadeUp{from{opacity:0;-webkit-transform:translateY(14px)}to{opacity:1;-webkit-transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{-webkit-animation:fadeUp .4s ease forwards;animation:fadeUp .4s ease forwards}
 
-@keyframes glow-pulse {
-0%,100% { text-shadow: var(–glow-green), 0 0 80px rgba(200,245,53,0.3); }
-50%      { text-shadow: 0 0 30px rgba(200,245,53,0.8), 0 0 60px rgba(200,245,53,0.4), 0 0 100px rgba(200,245,53,0.2); }
-}
-@keyframes fadeInUp {
-from { opacity:0; transform:translateY(16px); }
-to   { opacity:1; transform:translateY(0); }
-}
-@keyframes spin { to { transform:rotate(360deg); } }
+@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;vertical-align:middle;margin-right:6px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(200,245,53,.2);border-top-color:var(–green);-webkit-animation:spin .8s linear infinite;animation:spin .8s linear infinite}
 
-.fade-in { animation: fadeInUp 0.4s ease forwards; }
+/* ── BUTTONS ── */
+.btn-primary{display:block;width:100%;cursor:pointer;border:none;border-radius:6px;font-family:‘Bebas Neue’,sans-serif;letter-spacing:.08em;-webkit-transition:all .2s;transition:all .2s;background:-webkit-linear-gradient(135deg,#c8f535,#a8e020);background:linear-gradient(135deg,#c8f535,#a8e020);color:#0a0c0e;font-size:1rem;padding:11px 24px;box-shadow:var(–gg)}
+.btn-primary:hover{-webkit-transform:translateY(-1px);transform:translateY(-1px);box-shadow:0 0 30px rgba(200,245,53,.7)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;-webkit-transform:none;transform:none}
+.btn-secondary{cursor:pointer;border-radius:6px;font-family:‘Bebas Neue’,sans-serif;letter-spacing:.08em;-webkit-transition:all .2s;transition:all .2s;background:transparent;color:var(–blue);border:1px solid var(–blue);font-size:.85rem;padding:6px 14px}
+.btn-secondary:hover{background:rgba(59,130,246,.12);-webkit-box-shadow:var(–gb);box-shadow:var(–gb)}
+.btn-danger{cursor:pointer;background:transparent;color:#ff4444;border:1px solid #ff4444;font-family:‘Bebas Neue’,sans-serif;font-size:.78rem;padding:5px 11px;border-radius:4px;-webkit-transition:all .2s;transition:all .2s}
+.btn-danger:hover{background:rgba(255,68,68,.15)}
+.btn-success{cursor:pointer;background:transparent;color:var(–green);border:1px solid var(–green);font-family:‘Bebas Neue’,sans-serif;font-size:.78rem;padding:5px 11px;border-radius:4px;-webkit-transition:all .2s;transition:all .2s}
+.btn-success:hover{background:rgba(200,245,53,.1)}
 
-.spinner {
-width:18px; height:18px;
-border:2px solid rgba(200,245,53,0.2);
-border-top-color:var(–neon-green);
-border-radius:50%;
-animation:spin 0.8s linear infinite;
-display:inline-block; vertical-align:middle; margin-right:8px;
-}
+/* ── INPUTS ── */
+.input-field{background:#0d1117;border:1px solid #2a3344;border-radius:6px;color:#e8edf2;font-family:‘Rajdhani’,sans-serif;font-size:.95rem;padding:10px 13px;width:100%;-webkit-transition:border-color .2s;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.input-field:focus{outline:none;border-color:var(–blue);-webkit-box-shadow:0 0 0 2px rgba(59,130,246,.2);box-shadow:0 0 0 2px rgba(59,130,246,.2)}
+select.input-field{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘10’ height=‘6’%3E%3Cpath d=‘M0 0l5 6 5-6z’ fill=’%236b7a8d’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea.input-field{resize:vertical}
+label{display:block;font-size:.73rem;letter-spacing:.05em;color:var(–muted);text-transform:uppercase;margin-bottom:5px}
 
-/* Buttons */
-.btn-primary {
-background: linear-gradient(135deg,var(–neon-green),#a8e020);
-color:#0a0c0e; font-family:‘Bebas Neue’,sans-serif; font-size:1rem;
-letter-spacing:.1em; border:none; border-radius:6px; padding:10px 24px;
-cursor:pointer; transition:all .2s; box-shadow:var(–glow-green); width:100%;
-}
-.btn-primary:hover  { transform:translateY(-1px); box-shadow:0 0 30px rgba(200,245,53,0.6); }
-.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-.btn-secondary {
-background:transparent; color:var(–neon-blue); font-family:‘Bebas Neue’,sans-serif;
-font-size:.85rem; letter-spacing:.1em; border:1px solid var(–neon-blue);
-border-radius:6px; padding:6px 14px; cursor:pointer; transition:all .2s;
-}
-.btn-secondary:hover { background:rgba(59,130,246,.1); box-shadow:var(–glow-blue); }
-.btn-danger {
-background:transparent; color:#ff4444; border:1px solid #ff4444;
-font-family:‘Bebas Neue’,sans-serif; font-size:.8rem; letter-spacing:.05em;
-border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .2s;
-}
-.btn-danger:hover { background:rgba(255,68,68,.15); }
-.btn-success {
-background:transparent; color:var(–neon-green); border:1px solid var(–neon-green);
-font-family:‘Bebas Neue’,sans-serif; font-size:.8rem; letter-spacing:.05em;
-border-radius:4px; padding:5px 12px; cursor:pointer; transition:all .2s;
-}
-.btn-success:hover { background:rgba(200,245,53,.1); }
+/* ── CARD ── */
+.card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:20px}
 
-/* Form */
-.input-field {
-background:#0d1117; border:1px solid #2a3344; border-radius:6px;
-color:var(–text-primary); font-family:‘Rajdhani’,sans-serif; font-size:.95rem;
-padding:10px 14px; width:100%; transition:border-color .2s;
-}
-.input-field:focus { outline:none; border-color:var(–neon-blue); box-shadow:0 0 0 2px rgba(59,130,246,.2); }
-.input-field option { background:#0d1117; }
-textarea.input-field { resize:vertical; }
+/* ── TABS ── */
+.tab-btn{background:transparent;color:var(–muted);font-family:‘Bebas Neue’,sans-serif;font-size:.95rem;letter-spacing:.08em;border:none;border-bottom:2px solid transparent;padding:10px 16px;cursor:pointer;white-space:nowrap;-webkit-transition:all .2s;transition:all .2s}
+.tab-btn.active{color:var(–green);border-bottom-color:var(–green)}
+.tab-btn:hover{color:#e8edf2}
+.tab-btn.active:hover{color:var(–green)}
 
-label { font-size:.75rem; letter-spacing:.05em; color:var(–text-muted); text-transform:uppercase; display:block; margin-bottom:6px; }
+/* ── HEADER ── */
+#hdr{background:rgba(10,12,14,.96);border-bottom:1px solid var(–border);position:-webkit-sticky;position:sticky;top:0;z-index:100;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.hdr-inner{max-width:1200px;margin:0 auto;padding:13px 20px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;gap:10px}
 
-/* Card */
-.card { background:var(–card-bg); border:1px solid var(–card-border); border-radius:12px; padding:20px; }
+/* ── ARROW DECO ── */
+.deco-row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;margin:3px auto 2px;width:160px}
+.deco-line{-webkit-flex:1;flex:1;height:2px;background:var(–blue);-webkit-box-shadow:var(–gb);box-shadow:var(–gb)}
+.deco-arrow{color:var(–blue);font-size:9px;text-shadow:var(–gb);padding:0 2px;line-height:1}
 
-/* Tab */
-.tab-btn {
-background:transparent; color:var(–text-muted); font-family:‘Bebas Neue’,sans-serif;
-font-size:1rem; letter-spacing:.08em; border:none; border-bottom:2px solid transparent;
-padding:10px 18px; cursor:pointer; transition:all .2s; white-space:nowrap;
-}
-.tab-btn.active { color:var(–neon-green); border-bottom-color:var(–neon-green); }
-.tab-btn:hover:not(.active) { color:var(–text-primary); }
+/* ── PICKS ── */
+.picks-grid{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:16px}
+.pick-card{background:var(–card);border:1px solid var(–border);border-radius:12px;overflow:hidden;-webkit-transition:transform .2s,box-shadow .2s;transition:transform .2s,box-shadow .2s;width:calc(50% - 8px);min-width:280px}
+.pick-card:hover{-webkit-transform:translateY(-2px);transform:translateY(-2px);-webkit-box-shadow:0 8px 32px rgba(0,0,0,.5);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+@media(max-width:680px){.pick-card{width:100%}}
 
-/* Picks grid */
-.picks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
-.pick-card {
-background:var(–card-bg); border:1px solid var(–card-border); border-radius:12px;
-overflow:hidden; transition:transform .2s, box-shadow .2s;
-}
-.pick-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.4); }
+/* ── BADGES ── */
+.sport-badge{font-family:‘Bebas Neue’,sans-serif;font-size:.7rem;letter-spacing:.1em;padding:3px 9px;border-radius:4px;display:inline-block}
+.result-badge{font-family:‘Bebas Neue’,sans-serif;font-size:.82rem;letter-spacing:.1em;padding:4px 11px;border-radius:4px}
 
-.sport-badge {
-font-family:‘Bebas Neue’,sans-serif; font-size:.72rem; letter-spacing:.1em;
-padding:3px 10px; border-radius:4px; display:inline-block;
-}
-.result-badge {
-font-family:‘Bebas Neue’,sans-serif; font-size:.85rem; letter-spacing:.1em;
-padding:4px 12px; border-radius:4px;
-}
-.stat-box {
-background:#0d1117; border:1px solid #1e2530; border-radius:8px;
-padding:14px 18px; text-align:center;
-}
-.user-row {
-display:flex; align-items:center; justify-content:space-between;
-padding:12px 16px; border-bottom:1px solid #1a2030; flex-wrap:wrap; gap:10px;
-}
-.user-row:last-child { border-bottom:none; }
+/* ── STAT ── */
+.stat-grid{display:-webkit-flex;display:flex;gap:12px;margin-bottom:28px}
+.stat-box{background:#0d1117;border:1px solid var(–border);border-radius:8px;padding:14px;text-align:center;-webkit-flex:1;flex:1}
 
-/* Scrollbar */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:#0d1117; }
-::-webkit-scrollbar-thumb { background:#2a3344; border-radius:3px; }
+/* ── ADMIN LAYOUT ── */
+.two-col{display:-webkit-flex;display:flex;gap:24px;-webkit-flex-wrap:wrap;flex-wrap:wrap}
+.two-col > div{-webkit-flex:1;flex:1;min-width:280px}
+.grid2{display:-webkit-flex;display:flex;gap:12px}
+.grid2 > div{-webkit-flex:1;flex:1}
+.grid3{display:-webkit-flex;display:flex;gap:10px}
+.grid3 > div{-webkit-flex:1;flex:1}
 
-/* Header */
-#app-header {
-background:rgba(10,12,14,.95); border-bottom:1px solid #1e2530;
-backdrop-filter:blur(12px); position:sticky; top:0; z-index:100;
-}
-.header-inner {
-max-width:1200px; margin:0 auto; padding:14px 20px;
-display:flex; align-items:center; justify-content:space-between;
-}
-.logo-wrap { cursor:pointer; }
-.double-arrow { height:3px; position:relative; margin:3px auto 2px; width:160px; }
-.double-arrow::before, .double-arrow::after {
-content:’’; position:absolute; top:50%; transform:translateY(-50%);
-height:2px; background:var(–neon-blue); box-shadow:var(–glow-blue);
-}
-.double-arrow::before { left:8px; right:8px; }
-.arrow-left, .arrow-right {
-position:absolute; top:50%; transform:translateY(-50%);
-color:var(–neon-blue); font-size:10px; text-shadow:var(–glow-blue); line-height:1;
-}
-.arrow-left  { left:0; margin-top:-1px; }
-.arrow-right { right:0; margin-top:-1px; }
+/* ── USERS ── */
+.user-row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1a2030;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px}
+.user-row:last-child{border-bottom:none}
 
-/* Pages */
-.page { display:none; }
-.page.active { display:block; }
+/* ── ALERTS ── */
+.err-box{color:#ff4444;font-size:.83rem;background:rgba(255,68,68,.1);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,68,68,.25)}
+.warn-box{color:#f0c040;font-size:.8rem;background:rgba(240,192,64,.08);padding:8px 12px;border-radius:6px;border:1px solid rgba(240,192,64,.2)}
+.ok-box{color:var(–green);font-size:.85rem;text-align:center;padding:6px}
 
-/* Admin grid */
-.admin-two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
-.form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.form-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-
-/* Error */
-.error-box { color:#ff4444; font-size:.85rem; background:rgba(255,68,68,.1); padding:8px 12px; border-radius:6px; border:1px solid rgba(255,68,68,.2); }
-.warn-box  { color:#f0c040; font-size:.8rem; background:rgba(240,192,64,.08); padding:8px 12px; border-radius:6px; }
-.success-box { color:var(–neon-green); font-size:.85rem; text-align:center; }
-
-/* Demo hint */
-.demo-hint { margin-top:16px; padding:12px; background:#0d1117; border-radius:8px; font-size:.75rem; color:var(–text-muted); }
-
-/* Footer */
-footer { border-top:1px solid #1e2530; padding:20px; text-align:center; margin-top:40px; }
-
-@media(max-width:700px) {
-.admin-two-col { grid-template-columns:1fr; }
-.form-grid-3   { grid-template-columns:1fr 1fr; }
-.picks-grid    { grid-template-columns:1fr; }
-.neon-title-lg { font-size:2.2rem !important; }
-}
+/* ── MISC ── */
+.sport-tabs{display:-webkit-flex;display:flex;gap:4px;overflow-x:auto;margin-bottom:22px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.sport-tabs::-webkit-scrollbar{height:4px}
+.sport-tabs::-webkit-scrollbar-track{background:#0d1117}
+.sport-tabs::-webkit-scrollbar-thumb{background:#2a3344;border-radius:2px}
+.game-list-scroll{max-height:320px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+footer{border-top:1px solid var(–border);padding:20px;text-align:center;margin-top:40px}
+.demo-hint{margin-top:14px;padding:11px;background:#0d1117;border-radius:7px;font-size:.74rem;color:var(–muted)}
+.logo-wrap{cursor:pointer}
 </style>
 
 </head>
 <body>
-
-<!-- ── APP ROOT ── -->
-
-<div id="app" style="min-height:100vh;background:#0a0c0e;"></div>
+<div id="app"></div>
 
 <script>
-// ══════════════════════════════════════════════════════
-//  DATA STORE
-// ══════════════════════════════════════════════════════
-let users = [
-  { id:1, username:'admin',       password:'admin123', role:'admin', active:true,  email:'admin@sharpselections.com', joined:'2024-01-01' },
-  { id:2, username:'john_doe',    password:'pass123',  role:'user',  active:true,  email:'john@example.com',          joined:'2024-03-01' },
-  { id:3, username:'jane_smith',  password:'pass123',  role:'user',  active:false, email:'jane@example.com',          joined:'2024-03-10' },
+(function(){
+"use strict";
+
+/* ── DATA ── */
+var users = [
+  {id:1,username:"admin",     password:"admin123",role:"admin",active:true, email:"admin@sharpselections.com",joined:"2024-01-01"},
+  {id:2,username:"john_doe",  password:"pass123", role:"user", active:true, email:"john@example.com",         joined:"2024-03-01"},
+  {id:3,username:"jane_smith",password:"pass123", role:"user", active:false,email:"jane@example.com",         joined:"2024-03-10"}
+];
+var picks = [
+  {id:1,sport:"NBA",date:"2026-03-06",homeTeam:"Los Angeles Lakers",awayTeam:"Boston Celtics",
+   pick:"Boston Celtics -3.5",betType:"Spread",odds:"-110",
+   analysis:"Celtics have won 8 straight and Lakers are short-handed. Fade the home chalk.",
+   result:"WIN",gameTime:"7:30 PM ET",active:true},
+  {id:2,sport:"NHL",date:"2026-03-06",homeTeam:"Colorado Avalanche",awayTeam:"Vegas Golden Knights",
+   pick:"Over 6.5",betType:"Total",odds:"-115",
+   analysis:"Both teams averaging 4+ goals at home this month. Expect a shootout tonight.",
+   result:"PENDING",gameTime:"9:00 PM ET",active:true},
+  {id:3,sport:"NFL",date:"2026-03-06",homeTeam:"Kansas City Chiefs",awayTeam:"Buffalo Bills",
+   pick:"Kansas City Chiefs ML",betType:"Moneyline",odds:"-130",
+   analysis:"Chiefs at home in the playoffs? Automatic. Mahomes elevates in big spots.",
+   result:"WIN",gameTime:"4:25 PM ET",active:true}
 ];
 
-let picks = [
-  { id:1, sport:'NBA', date:'2026-03-06', homeTeam:'Los Angeles Lakers', awayTeam:'Boston Celtics',
-    pick:'Boston Celtics -3.5', betType:'Spread', odds:'-110',
-    analysis:'Celtics have won 8 straight and Lakers missing LeBron. Fade the home chalk.',
-    result:'WIN', gameTime:'7:30 PM ET', active:true },
-  { id:2, sport:'NHL', date:'2026-03-06', homeTeam:'Colorado Avalanche', awayTeam:'Vegas Golden Knights',
-    pick:'Over 6.5', betType:'Total', odds:'-115',
-    analysis:'Both teams averaging 4+ goals at home. Expect a shootout tonight.',
-    result:'PENDING', gameTime:'9:00 PM ET', active:true },
-  { id:3, sport:'NFL', date:'2026-03-06', homeTeam:'Kansas City Chiefs', awayTeam:'Buffalo Bills',
-    pick:'Kansas City Chiefs ML', betType:'Moneyline', odds:'-130',
-    analysis:'Chiefs at home in January? Automatic. Mahomes thrives in big spots.',
-    result:'WIN', gameTime:'4:25 PM ET', active:true },
-];
-
-let currentUser = null;
-let currentPage = 'picks'; // picks | admin
-let adminTab    = 'add';   // add | manage | users
-let sportFilter = 'ALL';
-
-// ESPN
-const ESPN_MAP = {
-  NFL:   { sport:'football',    league:'nfl' },
-  NBA:   { sport:'basketball',  league:'nba' },
-  NHL:   { sport:'hockey',      league:'nhl' },
-  MLB:   { sport:'baseball',    league:'mlb' },
-  NCAAF: { sport:'football',    league:'college-football' },
-  NCAAM: { sport:'basketball',  league:'mens-college-basketball' },
+var ESPN_MAP = {
+  NFL:  {sport:"football",  league:"nfl"},
+  NBA:  {sport:"basketball",league:"nba"},
+  NHL:  {sport:"hockey",    league:"nhl"},
+  MLB:  {sport:"baseball",  league:"mlb"},
+  NCAAF:{sport:"football",  league:"college-football"},
+  NCAAM:{sport:"basketball",league:"mens-college-basketball"}
 };
+var SC = {NFL:"#d4380d",NBA:"#c41230",NHL:"#1560bd",MLB:"#003087",NCAAF:"#bf5700",NCAAM:"#4b0082"};
 
-const SPORT_COLORS = {
-  NFL:'#d4380d', NBA:'#c41230', NHL:'#003087',
-  MLB:'#002D72', NCAAF:'#bf5700', NCAAM:'#4b0082'
-};
+var currentUser = null;
+var currentPage = "picks";
+var adminTab    = "add";
+var sportFilter = "ALL";
+var authMode    = "login";
 
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-function resultColor(r){ return r==='WIN'?'#39ff14':r==='LOSS'?'#ff3b3b':'#f0c040'; }
+/* ── UTILS ── */
+function esc(s){
+  return String(s==null?"":s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function todayStr(){ return new Date().toISOString().split("T")[0]; }
+function rc(r){ return r==="WIN"?"#39ff14":r==="LOSS"?"#ff3b3b":"#f0c040"; }
+function ge(id){ return document.getElementById(id); }
+function val(id){ var el=ge(id); return el?el.value.trim():""; }
+function sv(id,v){ var el=ge(id); if(el) el.value=v; }
+function on(id,ev,fn){ var el=ge(id); if(el) el.addEventListener(ev,fn); }
+function qsa(sel){ return document.querySelectorAll(sel); }
 
-// ══════════════════════════════════════════════════════
-//  ESPN FETCH
-// ══════════════════════════════════════════════════════
-async function fetchESPN(sport, date) {
-  const map = ESPN_MAP[sport]; if(!map) return [];
-  const ds = date.replace(/-/g,'');
-  const url = `https://site.api.espn.com/apis/site/v2/sports/${map.sport}/${map.league}/scoreboard?dates=${ds}`;
-  try {
-    const r = await fetch(url);
-    const d = await r.json();
-    return (d.events||[]).map(e=>{
-      const c = e.competitions?.[0];
-      const home = c?.competitors?.find(x=>x.homeAway==='home');
-      const away = c?.competitors?.find(x=>x.homeAway==='away');
-      const t = c?.date ? new Date(c.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '';
-      return {
-        id: e.id,
-        homeTeam: home?.team?.displayName||'Home',
-        awayTeam: away?.team?.displayName||'Away',
-        gameTime: t,
-        venue: c?.venue?.fullName||''
-      };
-    });
-  } catch(e){ console.error(e); return []; }
+/* ── ESPN XHR (no fetch, avoids Safari CORS edge cases) ── */
+function espnFetch(sport, date, cb){
+  var map = ESPN_MAP[sport];
+  if(!map){ cb([]); return; }
+  var ds  = date.replace(/-/g,"");
+  var url = "https://site.api.espn.com/apis/site/v2/sports/"+map.sport+"/"+map.league+"/scoreboard?dates="+ds;
+  var x = new XMLHttpRequest();
+  x.open("GET", url, true);
+  x.timeout = 9000;
+  x.onreadystatechange = function(){
+    if(x.readyState !== 4) return;
+    if(x.status >= 200 && x.status < 300){
+      try{
+        var d = JSON.parse(x.responseText);
+        var out = (d.events||[]).map(function(e){
+          var comp = (e.competitions||[])[0] || {};
+          var competitors = comp.competitors || [];
+          var home=null, away=null;
+          for(var i=0;i<competitors.length;i++){
+            if(competitors[i].homeAway==="home") home=competitors[i];
+            else away=competitors[i];
+          }
+          var t="";
+          if(comp.date){
+            try{ t=new Date(comp.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}); }catch(ignored){}
+          }
+          return {
+            id: e.id||("g"+Math.random()),
+            homeTeam:(home&&home.team&&home.team.displayName)||"Home",
+            awayTeam:(away&&away.team&&away.team.displayName)||"Away",
+            gameTime:t,
+            venue:(comp.venue&&comp.venue.fullName)||""
+          };
+        });
+        cb(out);
+      }catch(err){ cb([]); }
+    } else { cb([]); }
+  };
+  x.onerror   = function(){ cb([]); };
+  x.ontimeout = function(){ cb([]); };
+  try{ x.send(); }catch(e){ cb([]); }
 }
 
-// ══════════════════════════════════════════════════════
-//  RENDER ENGINE
-// ══════════════════════════════════════════════════════
-function render() {
-  const app = document.getElementById('app');
-  app.innerHTML = currentUser ? renderApp() : renderAuth();
-  bindEvents();
+/* ── LOGO ── */
+function logo(sz, sub){
+  sz  = sz  || "1.6rem";
+  sub = sub || "0.55rem";
+  return "<div class='logo-wrap' id='logo-home'>"
+    +"<div class='neon-title' style='font-size:"+sz+";line-height:1'>$harp $elections</div>"
+    +"<div class='deco-row'><div class='deco-line'></div>"
+    +"<span class='deco-arrow'>&#9664;</span>"
+    +"<div class='deco-line' style='-webkit-flex:3;flex:3'></div>"
+    +"<span class='deco-arrow'>&#9654;</span>"
+    +"<div class='deco-line'></div></div>"
+    +"<div style='color:var(--green);font-family:Bebas Neue,sans-serif;letter-spacing:.25em;text-align:center;font-size:"+sub+";margin-top:1px'>BET $HARP</div>"
+    +"</div>";
 }
 
-// ── LOGO HTML (reusable) ──────────────────────────────
-function logoHTML(size='1.6rem', subtitleSize='0.55rem') {
-  return `
-    <div class="logo-wrap" id="logo-home">
-      <div class="neon-title" style="font-size:${size};line-height:1;">$harp $elections</div>
-      <div class="double-arrow"><span class="arrow-left">◄</span><span class="arrow-right">►</span></div>
-      <div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;letter-spacing:.25em;text-align:center;font-size:${subtitleSize};margin-top:2px;">BET $HARP</div>
-    </div>`;
+/* ══════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════ */
+function render(){
+  var app = ge("app");
+  if(!app) return;
+  app.innerHTML = currentUser ? appHTML() : authHTML();
+  bind();
 }
 
-// ── AUTH ──────────────────────────────────────────────
-let authMode = 'login';
-function renderAuth() {
-  return `
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0a0c0e;">
-    <div class="fade-in" style="width:100%;max-width:420px;">
-      <div style="text-align:center;margin-bottom:32px;">
-        ${logoHTML('3rem','0.9rem')}
-      </div>
-      <div class="card" style="border:1px solid #2a3344;">
-        <div style="display:flex;border-bottom:1px solid #1e2530;margin-bottom:24px;">
-          <button class="tab-btn ${authMode==='login'?'active':''}" id="tab-login">LOGIN</button>
-          <button class="tab-btn ${authMode==='register'?'active':''}" id="tab-register">REGISTER</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div><label>Username</label><input class="input-field" id="auth-username" placeholder="Enter username" /></div>
-          ${authMode==='register'?'<div><label>Email</label><input class="input-field" id="auth-email" type="email" placeholder="Enter email" /></div>':''}
-          <div><label>Password</label><input class="input-field" id="auth-password" type="password" placeholder="Enter password" /></div>
-          ${authMode==='register'?'<div><label>Confirm Password</label><input class="input-field" id="auth-confirm" type="password" placeholder="Confirm password" /></div>':''}
-          <div id="auth-error"></div>
-          <button class="btn-primary" id="auth-submit" style="margin-top:4px;font-size:1.1rem;padding:12px;">
-            ${authMode==='login'?'LOGIN':'CREATE ACCOUNT'}
-          </button>
-        </div>
-        ${authMode==='login'?'<div class="demo-hint"><strong style="color:var(--neon-green);">Demo:</strong> admin / admin123</div>':''}
-      </div>
-    </div>
-  </div>`;
+/* ── AUTH ── */
+function authHTML(){
+  var r = authMode==="register";
+  return "<div style='min-height:100vh;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;padding:20px;background:#0a0c0e'>"
+    +"<div class='fade-in' style='width:100%;max-width:420px'>"
+    +"<div style='text-align:center;margin-bottom:30px'>"+logo("3rem","0.9rem")+"</div>"
+    +"<div class='card' style='border-color:#2a3344'>"
+    +"<div style='display:-webkit-flex;display:flex;border-bottom:1px solid var(--border);margin-bottom:22px'>"
+    +"<button class='tab-btn"+(authMode==="login"?" active":"")+"' id='t-login'>LOGIN</button>"
+    +"<button class='tab-btn"+(r?" active":"")+"' id='t-reg'>REGISTER</button>"
+    +"</div>"
+    +"<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:14px'>"
+    +"<div><label>Username</label><input class='input-field' id='a-user' placeholder='Enter username' autocomplete='username'></div>"
+    +(r?"<div><label>Email</label><input class='input-field' id='a-email' type='email' placeholder='Enter email' autocomplete='email'></div>":"")
+    +"<div><label>Password</label><input class='input-field' id='a-pass' type='password' placeholder='Enter password' autocomplete='current-password'></div>"
+    +(r?"<div><label>Confirm Password</label><input class='input-field' id='a-conf' type='password' placeholder='Confirm password'></div>":"")
+    +"<div id='a-err'></div>"
+    +"<button class='btn-primary' id='a-sub' style='margin-top:4px;font-size:1.1rem;padding:12px'>"+(authMode==="login"?"LOGIN":"CREATE ACCOUNT")+"</button>"
+    +"</div>"
+    +(!r?"<div class='demo-hint'><strong style='color:var(--green)'>Demo:</strong> admin / admin123</div>":"")
+    +"</div></div></div>";
 }
 
-// ── MAIN APP ──────────────────────────────────────────
-function renderApp() {
-  return `
-    ${renderHeader()}
-    <main id="main-content">${currentPage==='admin' && currentUser.role==='admin' ? renderAdmin() : renderPicks()}</main>
-    <footer>
-      <div class="neon-title" style="font-size:1rem;display:inline;">$harp $elections</div>
-      <div style="color:var(--text-muted);font-size:.7rem;margin-top:6px;">Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div>
-    </footer>`;
+/* ── APP ── */
+function appHTML(){
+  return headerHTML()
+    +"<main id='main'>"+(currentPage==="admin"&&currentUser.role==="admin"?adminHTML():picksHTML())+"</main>"
+    +"<footer>"
+    +"<div class='neon-title' style='font-size:.95rem;display:inline'>$harp $elections</div>"
+    +"<div style='color:var(--muted);font-size:.68rem;margin-top:6px'>Gambling can be addictive. Please bet responsibly. Must be 21+ to wager.</div>"
+    +"</footer>";
 }
 
-function renderHeader() {
-  return `
-  <header id="app-header">
-    <div class="header-inner">
-      ${logoHTML('1.6rem','0.55rem')}
-      <div style="display:flex;align-items:center;gap:12px;">
-        ${currentUser.role==='admin'?`<button class="tab-btn ${currentPage==='admin'?'active':''}" id="nav-admin" style="font-size:.85rem;">⚙ ADMIN</button>`:''}
-        <button class="tab-btn ${currentPage==='picks'?'active':''}" id="nav-picks" style="font-size:.85rem;">PICKS</button>
-        <div style="text-align:right;">
-          <div style="font-size:.7rem;color:var(--text-muted);">Logged in as</div>
-          <div style="font-size:.9rem;color:var(--neon-green);font-weight:600;">${esc(currentUser.username)}</div>
-        </div>
-        <button class="btn-secondary" id="btn-logout">LOGOUT</button>
-      </div>
-    </div>
-  </header>`;
+function headerHTML(){
+  return "<header id='hdr'><div class='hdr-inner'>"
+    +logo("1.55rem","0.54rem")
+    +"<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;-webkit-flex-wrap:wrap;flex-wrap:wrap'>"
+    +(currentUser.role==="admin"?"<button class='tab-btn"+(currentPage==="admin"?" active":"")+"' id='nav-admin' style='font-size:.82rem'>&#9881; ADMIN</button>":"")
+    +"<button class='tab-btn"+(currentPage==="picks"?" active":"")+"' id='nav-picks' style='font-size:.82rem'>PICKS</button>"
+    +"<div style='text-align:right'>"
+    +"<div style='font-size:.68rem;color:var(--muted)'>Logged in as</div>"
+    +"<div style='font-size:.88rem;color:var(--green);font-weight:600'>"+esc(currentUser.username)+"</div>"
+    +"</div>"
+    +"<button class='btn-secondary' id='btn-logout'>LOGOUT</button>"
+    +"</div></div></header>";
 }
 
-// ── PICKS PAGE ─────────────────────────────────────────
-function renderPicks() {
-  const sports = ['ALL','NFL','NBA','NHL','MLB','NCAAF','NCAAM'];
-  const active = picks.filter(p=>p.active);
-  const filtered = sportFilter==='ALL' ? active : active.filter(p=>p.sport===sportFilter);
-  const wins = active.filter(p=>p.result==='WIN').length;
-  const losses = active.filter(p=>p.result==='LOSS').length;
-  const pending = active.filter(p=>p.result==='PENDING').length;
+/* ── PICKS PAGE ── */
+function picksHTML(){
+  var sports=["ALL","NFL","NBA","NHL","MLB","NCAAF","NCAAM"];
+  var active=picks.filter(function(p){return p.active;});
+  var shown=sportFilter==="ALL"?active:active.filter(function(p){return p.sport===sportFilter;});
+  var w=0,l=0,pd=0;
+  active.forEach(function(p){if(p.result==="WIN")w++;else if(p.result==="LOSS")l++;else pd++;});
 
-  return `
-  <div style="max-width:1200px;margin:0 auto;padding:24px 20px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
-      <div class="stat-box"><div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;font-size:2rem;">${wins}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">WINS</div></div>
-      <div class="stat-box"><div style="color:#ff4444;font-family:'Bebas Neue',sans-serif;font-size:2rem;">${losses}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">LOSSES</div></div>
-      <div class="stat-box"><div style="color:#f0c040;font-family:'Bebas Neue',sans-serif;font-size:2rem;">${pending}</div><div style="color:var(--text-muted);font-size:.75rem;letter-spacing:.08em;">PENDING</div></div>
-    </div>
-    <div style="display:flex;gap:4px;overflow-x:auto;margin-bottom:24px;padding-bottom:4px;">
-      ${sports.map(s=>`<button class="tab-btn sport-filter ${sportFilter===s?'active':''}" data-sport="${s}" style="font-size:.85rem;">${s}</button>`).join('')}
-    </div>
-    <div style="margin-bottom:16px;display:flex;align-items:baseline;gap:12px;">
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.08em;">TODAY'S PICKS</h2>
-      <span style="color:var(--text-muted);font-size:.85rem;">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</span>
-    </div>
-    ${filtered.length===0
-      ? `<div style="text-align:center;padding:60px 20px;color:var(--text-muted);">
-           <div style="font-size:3rem;margin-bottom:12px;">📋</div>
-           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;">NO PICKS AVAILABLE</div>
-           <div style="font-size:.85rem;margin-top:8px;">Check back soon for today's sharp selections.</div>
-         </div>`
-      : `<div class="picks-grid">${filtered.map((p,i)=>pickCardHTML(p,i)).join('')}</div>`
-    }
-  </div>`;
+  var h="<div style='max-width:1200px;margin:0 auto;padding:24px 20px'>"
+    +"<div class='stat-grid'>"
+    +"<div class='stat-box'><div style='color:var(--green);font-family:Bebas Neue,sans-serif;font-size:2rem'>"+w+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>WINS</div></div>"
+    +"<div class='stat-box'><div style='color:#ff4444;font-family:Bebas Neue,sans-serif;font-size:2rem'>"+l+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>LOSSES</div></div>"
+    +"<div class='stat-box'><div style='color:#f0c040;font-family:Bebas Neue,sans-serif;font-size:2rem'>"+pd+"</div><div style='color:var(--muted);font-size:.72rem;letter-spacing:.08em'>PENDING</div></div>"
+    +"</div>"
+    +"<div class='sport-tabs'>";
+  sports.forEach(function(s){
+    h+="<button class='tab-btn sf"+(sportFilter===s?" active":"")+"' data-s='"+s+"' style='font-size:.83rem'>"+s+"</button>";
+  });
+  h+="</div>"
+    +"<div style='display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;gap:12px;margin-bottom:16px'>"
+    +"<h2 style='font-family:Bebas Neue,sans-serif;font-size:1.55rem;letter-spacing:.08em'>TODAY'S PICKS</h2>"
+    +"<span style='color:var(--muted);font-size:.84rem'>"+new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})+"</span>"
+    +"</div>";
+
+  if(!shown.length){
+    h+="<div style='text-align:center;padding:60px 20px;color:var(--muted)'>"
+      +"<div style='font-size:3rem;margin-bottom:12px'>&#128203;</div>"
+      +"<div style='font-family:Bebas Neue,sans-serif;font-size:1.4rem;letter-spacing:.08em'>NO PICKS AVAILABLE</div>"
+      +"<div style='font-size:.84rem;margin-top:8px'>Check back soon for today's sharp selections.</div></div>";
+  } else {
+    h+="<div class='picks-grid'>";
+    shown.forEach(function(p,i){ h+=pickCard(p,i); });
+    h+="</div>";
+  }
+  return h+"</div>";
 }
 
-function pickCardHTML(p, i) {
-  const sc = SPORT_COLORS[p.sport]||'#6b7a8d';
-  const rc = resultColor(p.result);
-  const rbg = p.result==='WIN'?'rgba(57,255,20,.12)':p.result==='LOSS'?'rgba(255,60,60,.12)':'rgba(240,192,64,.12)';
-  const rbd = p.result==='WIN'?'#39ff14':p.result==='LOSS'?'#ff3b3b':'#f0c040';
-  const cardBorder = p.result==='WIN'?'rgba(57,255,20,.2)':p.result==='LOSS'?'rgba(255,60,60,.2)':'var(--card-border)';
-  return `
-  <div class="pick-card fade-in" style="animation-delay:${i*60}ms;border-color:${cardBorder};">
-    <div style="height:3px;background:linear-gradient(90deg,${sc},transparent);"></div>
-    <div style="padding:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-        <span class="sport-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">${esc(p.sport)}</span>
-        <span class="result-badge" style="background:${rbg};color:${rc};border:1px solid ${rbd}55;">${esc(p.result)}</span>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px;">${esc(p.gameTime)}</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.04em;line-height:1.3;">${esc(p.awayTeam)} <span style="color:var(--text-muted);font-size:.8rem;">@</span> ${esc(p.homeTeam)}</div>
-      </div>
-      <div style="background:rgba(200,245,53,.06);border:1px solid rgba(200,245,53,.15);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
-        <div style="font-size:.7rem;color:var(--text-muted);letter-spacing:.08em;margin-bottom:4px;">SHARP PICK</div>
-        <div style="color:var(--neon-green);font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.04em;">${esc(p.pick)}</div>
-        <div style="display:flex;gap:12px;margin-top:4px;">
-          <span style="font-size:.75rem;color:var(--text-muted);">${esc(p.betType)}</span>
-          <span style="font-size:.75rem;color:var(--neon-blue);">${esc(p.odds)}</span>
-        </div>
-      </div>
-      <p style="font-size:.82rem;color:#8a9ab0;line-height:1.5;">${esc(p.analysis)}</p>
-    </div>
-  </div>`;
+function pickCard(p,i){
+  var color = SC[p.sport]||"#6b7a8d";
+  var col   = rc(p.result);
+  var rbg   = p.result==="WIN"?"rgba(57,255,20,.12)":p.result==="LOSS"?"rgba(255,60,60,.12)":"rgba(240,192,64,.12)";
+  var rbd   = p.result==="WIN"?"#39ff14":p.result==="LOSS"?"#ff3b3b":"#f0c040";
+  var cbrdr = p.result==="WIN"?"rgba(57,255,20,.22)":p.result==="LOSS"?"rgba(255,60,60,.22)":"var(--border)";
+  return "<div class='pick-card fade-in' style='-webkit-animation-delay:"+i*55+"ms;animation-delay:"+i*55+"ms;border-color:"+cbrdr+"'>"
+    +"<div style='height:3px;background:-webkit-linear-gradient(left,"+color+",transparent);background:linear-gradient(90deg,"+color+",transparent)'></div>"
+    +"<div style='padding:16px'>"
+    +"<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:flex-start;align-items:flex-start;margin-bottom:11px'>"
+    +"<span class='sport-badge' style='background:"+color+"22;color:"+color+";border:1px solid "+color+"55'>"+esc(p.sport)+"</span>"
+    +"<span class='result-badge' style='background:"+rbg+";color:"+col+";border:1px solid "+rbd+"55'>"+esc(p.result)+"</span>"
+    +"</div>"
+    +"<div style='margin-bottom:11px'>"
+    +"<div style='font-size:.73rem;color:var(--muted);margin-bottom:3px'>"+esc(p.gameTime)+"</div>"
+    +"<div style='font-family:Bebas Neue,sans-serif;font-size:.98rem;letter-spacing:.04em;line-height:1.3'>"+esc(p.awayTeam)+" <span style='color:var(--muted);font-size:.78rem'>@</span> "+esc(p.homeTeam)+"</div>"
+    +"</div>"
+    +"<div style='background:rgba(200,245,53,.06);border:1px solid rgba(200,245,53,.16);border-radius:8px;padding:10px 13px;margin-bottom:11px'>"
+    +"<div style='font-size:.68rem;color:var(--muted);letter-spacing:.08em;margin-bottom:3px'>SHARP PICK</div>"
+    +"<div style='color:var(--green);font-family:Bebas Neue,sans-serif;font-size:1.18rem;letter-spacing:.04em'>"+esc(p.pick)+"</div>"
+    +"<div style='display:-webkit-flex;display:flex;gap:12px;margin-top:4px'>"
+    +"<span style='font-size:.73rem;color:var(--muted)'>"+esc(p.betType)+"</span>"
+    +"<span style='font-size:.73rem;color:var(--blue)'>"+esc(p.odds)+"</span>"
+    +"</div></div>"
+    +"<p style='font-size:.81rem;color:#8a9ab0;line-height:1.55'>"+esc(p.analysis)+"</p>"
+    +"</div></div>";
 }
 
-// ── ADMIN PANEL ────────────────────────────────────────
-function renderAdmin() {
-  return `
-  <div style="max-width:1200px;margin:0 auto;padding:24px 20px;">
-    <div style="margin-bottom:24px;">
-      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.1em;color:var(--neon-green);">ADMIN PANEL</h1>
-      <p style="color:var(--text-muted);font-size:.85rem;">Manage picks, users, and settings</p>
-    </div>
-    <div style="display:flex;gap:4px;border-bottom:1px solid #1e2530;margin-bottom:28px;">
-      <button class="tab-btn admin-tab ${adminTab==='add'?'active':''}" data-tab="add">ADD PICKS</button>
-      <button class="tab-btn admin-tab ${adminTab==='manage'?'active':''}" data-tab="manage">MANAGE PICKS</button>
-      <button class="tab-btn admin-tab ${adminTab==='users'?'active':''}" data-tab="users">USERS</button>
-    </div>
-    <div id="admin-content">
-      ${adminTab==='add'    ? renderAddPick()    : ''}
-      ${adminTab==='manage' ? renderManagePicks(): ''}
-      ${adminTab==='users'  ? renderManageUsers(): ''}
-    </div>
-  </div>`;
+/* ── ADMIN ── */
+function adminHTML(){
+  return "<div style='max-width:1200px;margin:0 auto;padding:24px 20px'>"
+    +"<div style='margin-bottom:22px'>"
+    +"<h1 style='font-family:Bebas Neue,sans-serif;font-size:2rem;letter-spacing:.1em;color:var(--green)'>ADMIN PANEL</h1>"
+    +"<p style='color:var(--muted);font-size:.84rem'>Manage picks, users, and settings</p></div>"
+    +"<div style='display:-webkit-flex;display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:26px'>"
+    +"<button class='tab-btn at"+(adminTab==="add"?" active":"")+"' data-t='add'>ADD PICKS</button>"
+    +"<button class='tab-btn at"+(adminTab==="manage"?" active":"")+"' data-t='manage'>MANAGE PICKS</button>"
+    +"<button class='tab-btn at"+(adminTab==="users"?" active":"")+"' data-t='users'>USERS</button>"
+    +"</div>"
+    +"<div id='ac'>"+(adminTab==="add"?addPickHTML():adminTab==="manage"?managePicksHTML():manageUsersHTML())+"</div>"
+    +"</div>";
 }
 
-// ── ADD PICK ───────────────────────────────────────────
-function renderAddPick() {
-  return `
-  <div class="admin-two-col">
-    <div>
-      <div class="card" style="margin-bottom:16px;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-blue);">1. SELECT SPORT &amp; DATE</h3>
-        <div class="form-grid-2" style="margin-bottom:16px;">
-          <div>
-            <label>Sport</label>
-            <select class="input-field" id="pick-sport">
-              ${['NFL','NBA','NHL','MLB','NCAAF','NCAAM'].map(s=>`<option>${s}</option>`).join('')}
-            </select>
-          </div>
-          <div>
-            <label>Date</label>
-            <input class="input-field" type="date" id="pick-date" value="${todayStr()}" />
-          </div>
-        </div>
-        <button class="btn-primary" id="btn-load-games">🔄 LOAD GAMES</button>
-        <div id="games-error" style="margin-top:12px;"></div>
-      </div>
-      <div class="card" id="games-list-card" style="display:none;">
-        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.08em;margin-bottom:12px;color:var(--neon-blue);">2. SELECT GAME</h3>
-        <div id="games-list" style="max-height:340px;overflow-y:auto;"></div>
-      </div>
-    </div>
-    <div class="card">
-      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-green);">3. PICK DETAILS</h3>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="form-grid-2">
-          <div><label>Away Team</label><input class="input-field" id="pick-away" placeholder="Away team" /></div>
-          <div><label>Home Team</label><input class="input-field" id="pick-home" placeholder="Home team" /></div>
-        </div>
-        <div><label>Your Pick</label><input class="input-field" id="pick-pick" placeholder="e.g. Boston Celtics -3.5" /></div>
-        <div class="form-grid-3">
-          <div><label>Bet Type</label>
-            <select class="input-field" id="pick-bettype">
-              ${['Spread','Moneyline','Total','Prop','Parlay'].map(b=>`<option>${b}</option>`).join('')}
-            </select>
-          </div>
-          <div><label>Odds</label><input class="input-field" id="pick-odds" value="-110" /></div>
-          <div><label>Result</label>
-            <select class="input-field" id="pick-result">
-              ${['PENDING','WIN','LOSS','PUSH'].map(r=>`<option>${r}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div><label>Game Time</label><input class="input-field" id="pick-gametime" placeholder="e.g. 7:30 PM ET" /></div>
-        <div><label>Analysis</label><textarea class="input-field" id="pick-analysis" rows="4" placeholder="Write your pick analysis..."></textarea></div>
+function addPickHTML(){
+  return "<div class='two-col'>"
+    +"<div>"
+    +"<div class='card' style='margin-bottom:15px'>"
+    +"<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--blue)'>1. SELECT SPORT &amp; DATE</h3>"
+    +"<div class='grid2' style='margin-bottom:15px'>"
+    +"<div><label>Sport</label><select class='input-field' id='p-sport'>"+["NFL","NBA","NHL","MLB","NCAAF","NCAAM"].map(function(s){return "<option>"+s+"</option>";}).join("")+"</select></div>"
+    +"<div><label>Date</label><input class='input-field' type='date' id='p-date' value='"+todayStr()+"'></div>"
+    +"</div>"
+    +"<button class='btn-primary' id='btn-load'>&#128260; LOAD GAMES</button>"
+    +"<div id='g-err' style='margin-top:11px'></div>"
+    +"</div>"
+    +"<div class='card' id='g-card' style='display:none'>"
+    +"<h3 id='g-title' style='font-family:Bebas Neue,sans-serif;font-size:1.05rem;letter-spacing:.08em;margin-bottom:11px;color:var(--blue)'>2. SELECT GAME</h3>"
+    +"<div id='g-list' class='game-list-scroll'></div>"
+    +"</div></div>"
+    +"<div class='card'>"
+    +"<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--green)'>3. PICK DETAILS</h3>"
+    +"<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:13px'>"
+    +"<div class='grid2'><div><label>Away Team</label><input class='input-field' id='p-away' placeholder='Away team'></div><div><label>Home Team</label><input class='input-field' id='p-home' placeholder='Home team'></div></div>"
+    +"<div><label>Your Pick</label><input class='input-field' id='p-pick' placeholder='e.g. Boston Celtics -3.5'></div>"
+    +"<div class='grid3'>"
+    +"<div><label>Bet Type</label><select class='input-field' id='p-btype'>"+["Spread","Moneyline","Total","Prop","Parlay"].map(function(b){return "<option>"+b+"</option>";}).join("")+"</select></div>"
+    +"<div><label>Odds</label><input class='input-field' id='p-odds' value='-110'></div>"
+    +"<div><label>Result</label><select class='input-field' id='p-result'>"+["PENDING","WIN","LOSS","PUSH"].map(function(r){return "<option>"+r+"</option>";}).join("")+"</select></div>"
+    +"</div>"
+    +"<div><label>Game Time</label><input class='input-field' id='p-gtime' placeholder='e.g. 7:30 PM ET'></div>"
+    +"<div><label>Analysis</label><textarea class='input-field' id='p-analysis' rows='4' placeholder='Write your analysis...'></textarea></div>"
 
 ```
-    <button class="btn-primary" id="btn-publish-pick" style="padding:14px;font-size:1.1rem;">PUBLISH PICK</button>
-    <div id="pick-saved"></div>
-  </div>
-</div>
++"<button class='btn-primary' id='btn-pub' style='padding:13px;font-size:1.08rem'>PUBLISH PICK</button>"
++"<div id='p-saved'></div>"
++"</div></div></div>";
 ```
 
-  </div>`;
 }
 
-// ── MANAGE PICKS ───────────────────────────────────────
-function renderManagePicks() {
-const sorted = […picks].reverse();
-return `
-
-  <div class="card">
-    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;margin-bottom:16px;color:var(--neon-green);">ALL PICKS (${picks.length})</h3>
-    ${picks.length===0
-      ? `<div style="color:var(--text-muted);text-align:center;padding:32px;">No picks yet.</div>`
-      : `<div style="display:flex;flex-direction:column;gap:8px;">
-          ${sorted.map(p=>{
-            const sc = SPORT_COLORS[p.sport]||'#555';
-            return `
-            <div style="background:#0d1117;border:1px solid #1e2530;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-              <span class="sport-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;font-size:.7rem;">${esc(p.sport)}</span>
-              <div style="flex:1;min-width:160px;">
-                <div style="font-size:.85rem;font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;">${esc(p.awayTeam)} @ ${esc(p.homeTeam)}</div>
-                <div style="font-size:.75rem;color:var(--neon-green);">${esc(p.pick)}</div>
-                <div style="font-size:.7rem;color:var(--text-muted);">${esc(p.date)}</div>
-              </div>
-              <select class="input-field" data-pick-result="${p.id}" style="width:110px;font-size:.8rem;padding:6px 8px;color:${resultColor(p.result)};">
-                ${['PENDING','WIN','LOSS','PUSH'].map(r=>`<option ${p.result===r?'selected':''}>${r}</option>`).join('')}
-              </select>
-              <button class="${p.active?'btn-danger':'btn-success'}" data-toggle-pick="${p.id}">${p.active?'DEACTIVATE':'ACTIVATE'}</button>
-              <button class="btn-danger" data-delete-pick="${p.id}">DELETE</button>
-            </div>`;
-          }).join('')}
-        </div>`
-    }
-  </div>`;
+function managePicksHTML(){
+var sorted=picks.slice().reverse();
+var rows=sorted.map(function(p){
+var c=SC[p.sport]||”#555”;
+return “<div style='background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;-webkit-flex-wrap:wrap;flex-wrap:wrap'>”
++”<span class='sport-badge' style='background:"+c+"22;color:"+c+";border:1px solid "+c+"44;font-size:.68rem'>”+esc(p.sport)+”</span>”
++”<div style='-webkit-flex:1;flex:1;min-width:150px'>”
++”<div style='font-size:.83rem;font-family:Bebas Neue,sans-serif;letter-spacing:.04em'>”+esc(p.awayTeam)+” @ “+esc(p.homeTeam)+”</div>”
++”<div style='font-size:.73rem;color:var(--green)'>”+esc(p.pick)+”</div>”
++”<div style='font-size:.68rem;color:var(--muted)'>”+esc(p.date)+”</div>”
++”</div>”
++”<select class='input-field' data-pr='"+p.id+"' style='width:105px;font-size:.78rem;padding:5px 8px;color:"+rc(p.result)+"'>”
++[“PENDING”,“WIN”,“LOSS”,“PUSH”].map(function(r){return “<option”+(p.result===r?” selected”:””)+”>”+r+”</option>”;}).join(””)
++”</select>”
++”<button class='"+(p.active?"btn-danger":"btn-success")+"' data-tp='"+p.id+"'>”+(p.active?“DEACTIVATE”:“ACTIVATE”)+”</button>”
++”<button class='btn-danger' data-dp='"+p.id+"'>DELETE</button>”
++”</div>”;
+});
+return “<div class='card'>”
++”<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;margin-bottom:15px;color:var(--green)'>ALL PICKS (”+picks.length+”)</h3>”
++(picks.length?”<div style='display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;gap:7px'>”+rows.join(””)+”</div>”
+:”<div style='color:var(--muted);text-align:center;padding:32px'>No picks yet.</div>”)
++”</div>”;
 }
 
-// ── MANAGE USERS ───────────────────────────────────────
-function renderManageUsers() {
-const nonAdmin = users.filter(u=>u.role!==‘admin’);
-const activeCount = nonAdmin.filter(u=>u.active).length;
-return `
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <h3 style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.08em;color:var(--neon-green);">REGISTERED USERS (${nonAdmin.length})</h3>
-      <div style="display:flex;gap:16px;font-size:.8rem;">
-        <span style="color:var(--neon-green);">● ${activeCount} Active</span>
-        <span style="color:#ff4444;">● ${nonAdmin.length-activeCount} Inactive</span>
-      </div>
-    </div>
-    ${nonAdmin.length===0
-      ? `<div style="color:var(--text-muted);text-align:center;padding:40px;">No registered users.</div>`
-      : nonAdmin.map(u=>`
-        <div class="user-row">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:${u.active?'rgba(200,245,53,.1)':'rgba(255,68,68,.1)'};border:2px solid ${u.active?'var(--neon-green)':'#ff4444'};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${u.active?'var(--neon-green)':'#ff4444'};">
-              ${esc(u.username[0].toUpperCase())}
-            </div>
-            <div>
-              <div style="font-weight:600;font-size:.95rem;">${esc(u.username)}</div>
-              <div style="font-size:.75rem;color:var(--text-muted);">${esc(u.email)} · Joined ${esc(u.joined)}</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:.75rem;color:${u.active?'var(--neon-green)':'#ff4444'};background:${u.active?'rgba(200,245,53,.08)':'rgba(255,68,68,.08)'};padding:3px 10px;border-radius:4px;border:1px solid ${u.active?'rgba(200,245,53,.2)':'rgba(255,68,68,.2)'};font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;">
-              ${u.active?'ACTIVE':'INACTIVE'}
-            </span>
-            <button class="${u.active?'btn-danger':'btn-success'}" data-toggle-user="${u.id}">${u.active?'DEACTIVATE':'ACTIVATE'}</button>
-          </div>
-        </div>`).join('')
-    }
-    <div style="margin-top:20px;padding:12px 16px;background:rgba(59,130,246,.05);border:1px dashed rgba(59,130,246,.2);border-radius:8px;">
-      <div style="font-size:.75rem;color:var(--neon-blue);font-family:'Bebas Neue',sans-serif;letter-spacing:.06em;margin-bottom:4px;">🔮 COMING SOON</div>
-      <div style="font-size:.8rem;color:var(--text-muted);">Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>
-    </div>
-  </div>`;
+function manageUsersHTML(){
+var na=users.filter(function(u){return u.role!==“admin”;});
+var act=na.filter(function(u){return u.active;}).length;
+var rows=na.map(function(u){
+return “<div class='user-row'>”
++”<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:11px'>”
++”<div style='width:35px;height:35px;border-radius:50%;background:"+(u.active?"rgba(200,245,53,.1)":"rgba(255,68,68,.1)")+";border:2px solid "+(u.active?"var(--green)":"#ff4444")+";display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:.95rem;color:"+(u.active?"var(--green)":"#ff4444")+"'>”+esc(u.username[0].toUpperCase())+”</div>”
++”<div><div style='font-weight:600;font-size:.93rem'>”+esc(u.username)+”</div>”
++”<div style='font-size:.72rem;color:var(--muted)'>”+esc(u.email)+” · Joined “+esc(u.joined)+”</div></div></div>”
++”<div style='display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px'>”
++”<span style='font-size:.72rem;color:"+(u.active?"var(--green)":"#ff4444")+";background:"+(u.active?"rgba(200,245,53,.08)":"rgba(255,68,68,.08)")+";padding:3px 9px;border-radius:4px;border:1px solid "+(u.active?"rgba(200,245,53,.22)":"rgba(255,68,68,.22)")+";font-family:Bebas Neue,sans-serif;letter-spacing:.05em'>”+(u.active?“ACTIVE”:“INACTIVE”)+”</span>”
++”<button class='"+(u.active?"btn-danger":"btn-success")+"' data-tu='"+u.id+"'>”+(u.active?“DEACTIVATE”:“ACTIVATE”)+”</button>”
++”</div></div>”;
+});
+return “<div class='card'>”
++”<div style='display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;margin-bottom:15px;-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:10px'>”
++”<h3 style='font-family:Bebas Neue,sans-serif;font-size:1.15rem;letter-spacing:.08em;color:var(--green)'>REGISTERED USERS (”+na.length+”)</h3>”
++”<div style='display:-webkit-flex;display:flex;gap:14px;font-size:.78rem'><span style='color:var(--green)'>● “+act+” Active</span><span style='color:#ff4444'>● “+(na.length-act)+” Inactive</span></div>”
++”</div>”
++(na.length?rows.join(””):”<div style='color:var(--muted);text-align:center;padding:40px'>No registered users.</div>”)
++”<div style='margin-top:18px;padding:12px 15px;background:rgba(59,130,246,.05);border:1px dashed rgba(59,130,246,.25);border-radius:8px'>”
++”<div style='font-size:.72rem;color:var(--blue);font-family:Bebas Neue,sans-serif;letter-spacing:.06em;margin-bottom:4px'>🔮 COMING SOON</div>”
++”<div style='font-size:.78rem;color:var(--muted)'>Subscription management, pricing tiers, and promo code discounts will be added in the next build.</div>”
++”</div></div>”;
 }
 
-// ══════════════════════════════════════════════════════
-//  EVENT BINDING
-// ══════════════════════════════════════════════════════
-function bindEvents() {
-// Auth mode switch
-on(‘tab-login’,    ‘click’, ()=>{ authMode=‘login’;    render(); });
-on(‘tab-register’, ‘click’, ()=>{ authMode=‘register’; render(); });
-on(‘auth-submit’,  ‘click’, handleAuth);
-// Enter key on auth
-document.querySelectorAll(’.input-field’).forEach(el=>{
-el.addEventListener(‘keydown’, e=>{ if(e.key===‘Enter’) { const s=document.getElementById(‘auth-submit’); if(s) s.click(); }});
-});
-
-// Header nav
-on(‘logo-home’,  ‘click’, ()=>{ currentPage=‘picks’; render(); });
-on(‘nav-picks’,  ‘click’, ()=>{ currentPage=‘picks’; render(); });
-on(‘nav-admin’,  ‘click’, ()=>{ currentPage=‘admin’; adminTab=‘add’; render(); });
-on(‘btn-logout’, ‘click’, ()=>{ currentUser=null; authMode=‘login’; render(); });
-
-// Sport filter
-document.querySelectorAll(’.sport-filter’).forEach(btn=>{
-btn.addEventListener(‘click’, ()=>{ sportFilter=btn.dataset.sport; render(); });
-});
-
-// Admin tabs
-document.querySelectorAll(’.admin-tab’).forEach(btn=>{
-btn.addEventListener(‘click’, ()=>{ adminTab=btn.dataset.tab; render(); });
-});
-
-// Load games
-on(‘btn-load-games’, ‘click’, handleLoadGames);
-
-// Publish pick
-on(‘btn-publish-pick’, ‘click’, handlePublishPick);
-
-// Manage picks: result change, toggle, delete
-document.querySelectorAll(’[data-pick-result]’).forEach(sel=>{
-sel.addEventListener(‘change’, ()=>{
-const id = +sel.dataset.pickResult;
-picks = picks.map(p=>p.id===id?{…p,result:sel.value}:p);
-// re-render just admin content
-reRenderAdminContent();
-});
-});
-document.querySelectorAll(’[data-toggle-pick]’).forEach(btn=>{
-btn.addEventListener(‘click’, ()=>{
-const id = +btn.dataset.togglePick;
-picks = picks.map(p=>p.id===id?{…p,active:!p.active}:p);
-reRenderAdminContent();
-});
-});
-document.querySelectorAll(’[data-delete-pick]’).forEach(btn=>{
-btn.addEventListener(‘click’, ()=>{
-const id = +btn.dataset.deletePick;
-picks = picks.filter(p=>p.id!==id);
-reRenderAdminContent();
-});
-});
-
-// Manage users: toggle
-document.querySelectorAll(’[data-toggle-user]’).forEach(btn=>{
-btn.addEventListener(‘click’, ()=>{
-const id = +btn.dataset.toggleUser;
-users = users.map(u=>u.id===id?{…u,active:!u.active}:u);
-reRenderAdminContent();
-});
-});
+/* ══════════════════════════════════════════════
+EVENT BINDING
+══════════════════════════════════════════════ */
+function bind(){
+on(“t-login”,“click”,function(){ authMode=“login”;    render(); });
+on(“t-reg”,  “click”,function(){ authMode=“register”; render(); });
+on(“a-sub”,  “click”, doAuth);
+var fs=qsa(”.input-field”);
+for(var i=0;i<fs.length;i++){
+fs[i].addEventListener(“keydown”,function(e){ if(e.key===“Enter”){ var s=ge(“a-sub”); if(s) s.click(); }});
+}
+on(“logo-home”,“click”,function(){ currentPage=“picks”; render(); });
+on(“nav-picks”,“click”,function(){ currentPage=“picks”; render(); });
+on(“nav-admin”,“click”,function(){ currentPage=“admin”; adminTab=“add”; render(); });
+on(“btn-logout”,“click”,function(){ currentUser=null; authMode=“login”; render(); });
+var sfs=qsa(”.sf”);
+for(var i=0;i<sfs.length;i++){
+(function(b){ b.addEventListener(“click”,function(){ sportFilter=b.getAttribute(“data-s”); render(); }); })(sfs[i]);
+}
+var ats=qsa(”.at”);
+for(var i=0;i<ats.length;i++){
+(function(b){ b.addEventListener(“click”,function(){ adminTab=b.getAttribute(“data-t”); refreshAC(); }); })(ats[i]);
+}
+bindAC();
 }
 
-function on(id, ev, fn) {
-const el = document.getElementById(id);
-if(el) el.addEventListener(ev, fn);
+function bindAC(){
+on(“btn-load”,“click”,doLoadGames);
+on(“btn-pub”, “click”,doPublish);
+var prs=qsa(”[data-pr]”);
+for(var i=0;i<prs.length;i++){
+(function(s){
+s.addEventListener(“change”,function(){
+var id=+s.getAttribute(“data-pr”);
+for(var j=0;j<picks.length;j++){ if(picks[j].id===id){ picks[j].result=s.value; break; }}
+refreshAC();
+});
+})(prs[i]);
+}
+var tps=qsa(”[data-tp]”);
+for(var i=0;i<tps.length;i++){
+(function(b){
+b.addEventListener(“click”,function(){
+var id=+b.getAttribute(“data-tp”);
+for(var j=0;j<picks.length;j++){ if(picks[j].id===id){ picks[j].active=!picks[j].active; break; }}
+refreshAC();
+});
+})(tps[i]);
+}
+var dps=qsa(”[data-dp]”);
+for(var i=0;i<dps.length;i++){
+(function(b){
+b.addEventListener(“click”,function(){
+var id=+b.getAttribute(“data-dp”);
+picks=picks.filter(function(p){ return p.id!==id; });
+refreshAC();
+});
+})(dps[i]);
+}
+var tus=qsa(”[data-tu]”);
+for(var i=0;i<tus.length;i++){
+(function(b){
+b.addEventListener(“click”,function(){
+var id=+b.getAttribute(“data-tu”);
+for(var j=0;j<users.length;j++){ if(users[j].id===id){ users[j].active=!users[j].active; break; }}
+refreshAC();
+});
+})(tus[i]);
+}
 }
 
-function reRenderAdminContent() {
-const el = document.getElementById(‘admin-content’);
-if(!el) return;
-el.innerHTML = adminTab===‘add’ ? renderAddPick() : adminTab===‘manage’ ? renderManagePicks() : renderManageUsers();
-bindAdminContentEvents();
+function refreshAC(){
+var ac=ge(“ac”);
+if(!ac) return;
+ac.innerHTML=adminTab===“add”?addPickHTML():adminTab===“manage”?managePicksHTML():manageUsersHTML();
+bindAC();
 }
 
-function bindAdminContentEvents() {
-on(‘btn-load-games’,    ‘click’, handleLoadGames);
-on(‘btn-publish-pick’,  ‘click’, handlePublishPick);
-document.querySelectorAll(’[data-pick-result]’).forEach(sel=>{
-sel.addEventListener(‘change’, ()=>{
-const id=+sel.dataset.pickResult;
-picks=picks.map(p=>p.id===id?{…p,result:sel.value}:p);
-reRenderAdminContent();
-});
-});
-document.querySelectorAll(’[data-toggle-pick]’).forEach(btn=>{
-btn.addEventListener(‘click’,()=>{
-const id=+btn.dataset.togglePick;
-picks=picks.map(p=>p.id===id?{…p,active:!p.active}:p);
-reRenderAdminContent();
-});
-});
-document.querySelectorAll(’[data-delete-pick]’).forEach(btn=>{
-btn.addEventListener(‘click’,()=>{
-const id=+btn.dataset.deletePick;
-picks=picks.filter(p=>p.id!==id);
-reRenderAdminContent();
-});
-});
-document.querySelectorAll(’[data-toggle-user]’).forEach(btn=>{
-btn.addEventListener(‘click’,()=>{
-const id=+btn.dataset.toggleUser;
-users=users.map(u=>u.id===id?{…u,active:!u.active}:u);
-reRenderAdminContent();
-});
-});
+/* ── AUTH LOGIC ── */
+function doAuth(){
+var errEl=ge(“a-err”);
+if(errEl) errEl.innerHTML=””;
+var username=val(“a-user”), password=val(“a-pass”);
+if(authMode===“login”){
+var found=null;
+for(var i=0;i<users.length;i++){
+if(users[i].username===username&&users[i].password===password){found=users[i];break;}
 }
-
-// ── AUTH HANDLER ───────────────────────────────────────
-function handleAuth() {
-const errBox = document.getElementById(‘auth-error’);
-errBox.innerHTML=’’;
-const username = val(‘auth-username’);
-const password = val(‘auth-password’);
-
-if(authMode===‘login’){
-const u = users.find(u=>u.username===username && u.password===password);
-if(!u) return showErr(errBox,‘Invalid username or password.’);
-if(!u.active) return showErr(errBox,‘Your account has been deactivated. Please contact support.’);
-currentUser=u; currentPage=‘picks’; render();
+if(!found){ showErr(errEl,“Invalid username or password.”); return; }
+if(!found.active){ showErr(errEl,“Your account has been deactivated. Please contact support.”); return; }
+currentUser=found; currentPage=“picks”; render();
 } else {
-const email   = val(‘auth-email’);
-const confirm = val(‘auth-confirm’);
-if(!username||!email||!password) return showErr(errBox,‘All fields are required.’);
-if(password!==confirm) return showErr(errBox,‘Passwords do not match.’);
-if(users.find(u=>u.username===username)) return showErr(errBox,‘Username already taken.’);
-const newUser={id:Date.now(),username,email,password,role:‘user’,active:true,joined:todayStr()};
-users.push(newUser);
-currentUser=newUser; currentPage=‘picks’; render();
+var email=val(“a-email”), confirm=val(“a-conf”);
+if(!username||!email||!password){ showErr(errEl,“All fields are required.”); return; }
+if(password!==confirm){ showErr(errEl,“Passwords do not match.”); return; }
+for(var i=0;i<users.length;i++){
+if(users[i].username===username){ showErr(errEl,“Username already taken.”); return; }
+}
+var nu={id:Date.now(),username:username,email:email,password:password,role:“user”,active:true,joined:todayStr()};
+users.push(nu);
+currentUser=nu; currentPage=“picks”; render();
 }
 }
 
-// ── LOAD GAMES ─────────────────────────────────────────
-async function handleLoadGames() {
-const btn  = document.getElementById(‘btn-load-games’);
-const errEl= document.getElementById(‘games-error’);
-const card = document.getElementById(‘games-list-card’);
-const list = document.getElementById(‘games-list’);
-if(!btn||!errEl||!card||!list) return;
-
-const sport = val(‘pick-sport’);
-const date  = val(‘pick-date’);
-
+/* ── LOAD GAMES ── */
+function doLoadGames(){
+var btn=ge(“btn-load”), errEl=ge(“g-err”), card=ge(“g-card”), list=ge(“g-list”), title=ge(“g-title”);
+if(!btn) return;
+var sport=val(“p-sport”)||“NBA”, date=val(“p-date”)||todayStr();
 btn.disabled=true;
-btn.innerHTML=’<span class="spinner"></span>LOADING GAMES…’;
-errEl.innerHTML=’’;
-card.style.display=‘none’;
+btn.innerHTML=”<span class='spinner'></span>LOADING…”;
+if(errEl) errEl.innerHTML=””;
+if(card)  card.style.display=“none”;
 
-const games = await fetchESPN(sport, date);
+espnFetch(sport, date, function(games){
 btn.disabled=false;
-btn.innerHTML=‘🔄 LOAD GAMES’;
-
-if(games.length===0){
-errEl.innerHTML=`<div class="warn-box">No ${sport} games found for ${date}. ESPN may not have data yet.</div>`;
+btn.innerHTML=”🔄 LOAD GAMES”;
+if(!games.length){
+if(errEl) errEl.innerHTML=”<div class='warn-box'>No “+esc(sport)+” games found for “+esc(date)+”. Try a different date or sport.</div>”;
 return;
 }
-
-card.style.display=‘block’;
-const h3 = card.querySelector(‘h3’);
-if(h3) h3.textContent=`2. SELECT GAME (${games.length})`;
-
-list.innerHTML = games.map(g=>` <div class="game-row" data-home="${esc(g.homeTeam)}" data-away="${esc(g.awayTeam)}" data-time="${esc(g.gameTime)}" style="padding:10px 12px;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1117;border:1px solid #1e2530;transition:all .15s;"> <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.04em;">${esc(g.awayTeam)} @ ${esc(g.homeTeam)}</div> <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">${esc(g.gameTime)}${g.venue?' · '+esc(g.venue):''}</div> </div>`).join(’’);
-
-list.querySelectorAll(’.game-row’).forEach(row=>{
-row.addEventListener(‘click’,()=>{
-list.querySelectorAll(’.game-row’).forEach(r=>{ r.style.background=’#0d1117’; r.style.borderColor=’#1e2530’; });
-row.style.background=‘rgba(200,245,53,.08)’; row.style.borderColor=‘rgba(200,245,53,.3)’;
-setVal(‘pick-home’, row.dataset.home);
-setVal(‘pick-away’, row.dataset.away);
-setVal(‘pick-gametime’, row.dataset.time);
+if(card)  card.style.display=“block”;
+if(title) title.textContent=“2. SELECT GAME (”+games.length+”)”;
+if(!list) return;
+var h=””;
+games.forEach(function(g){
+h+=”<div class=‘grow’ data-home=’”+esc(g.homeTeam)+”’ data-away=’”+esc(g.awayTeam)+”’ data-time=’”+esc(g.gameTime)+”’”
++” style=‘padding:10px 12px;border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0d1117;border:1px solid var(–border)’>”
++”<div style='font-family:Bebas Neue,sans-serif;font-size:.93rem;letter-spacing:.04em'>”+esc(g.awayTeam)+” @ “+esc(g.homeTeam)+”</div>”
++”<div style='font-size:.68rem;color:var(--muted);margin-top:2px'>”+esc(g.gameTime)+(g.venue?” · “+esc(g.venue):””)+”</div>”
++”</div>”;
 });
+list.innerHTML=h;
+var rows=list.querySelectorAll(”.grow”);
+for(var i=0;i<rows.length;i++){
+(function(row){
+row.addEventListener(“click”,function(){
+for(var j=0;j<rows.length;j++){rows[j].style.background=”#0d1117”;rows[j].style.borderColor=“var(–border)”;}
+row.style.background=“rgba(200,245,53,.08)”;row.style.borderColor=“rgba(200,245,53,.35)”;
+sv(“p-home”,row.getAttribute(“data-home”));
+sv(“p-away”,row.getAttribute(“data-away”));
+sv(“p-gtime”,row.getAttribute(“data-time”));
+});
+})(rows[i]);
+}
 });
 }
 
-// ── PUBLISH PICK ───────────────────────────────────────
-function handlePublishPick() {
-const home     = val(‘pick-home’);
-const away     = val(‘pick-away’);
-const pick     = val(‘pick-pick’);
-const betType  = val(‘pick-bettype’);
-const odds     = val(‘pick-odds’);
-const result   = val(‘pick-result’);
-const gameTime = val(‘pick-gametime’);
-const analysis = val(‘pick-analysis’);
-const sport    = val(‘pick-sport’);
-const date     = val(‘pick-date’);
-const savedEl  = document.getElementById(‘pick-saved’);
-
-if(!home||!away||!pick){ if(savedEl) savedEl.innerHTML=’<div class="error-box">Away team, home team, and pick are required.</div>’; return; }
-
-picks.push({ id:Date.now(), sport, date, homeTeam:home, awayTeam:away, pick, betType, odds, result, gameTime, analysis, active:true });
-
-// Clear form
-[‘pick-home’,‘pick-away’,‘pick-pick’,‘pick-odds’,‘pick-gametime’,‘pick-analysis’].forEach(id=>setVal(id,’’));
-setVal(‘pick-result’,‘PENDING’);
-const card=document.getElementById(‘games-list-card’); if(card) card.style.display=‘none’;
-if(savedEl) { savedEl.innerHTML=’<div class="success-box">✓ Pick published successfully!</div>’; setTimeout(()=>{ if(savedEl) savedEl.innerHTML=’’; },2500); }
+/* ── PUBLISH PICK ── */
+function doPublish(){
+var home=val(“p-home”),away=val(“p-away”),pick=val(“p-pick”),savedEl=ge(“p-saved”);
+if(!home||!away||!pick){ if(savedEl) savedEl.innerHTML=”<div class='err-box'>Away team, home team, and pick are required.</div>”; return; }
+picks.push({
+id:Date.now(),sport:val(“p-sport”)||“NBA”,date:val(“p-date”)||todayStr(),
+homeTeam:home,awayTeam:away,pick:pick,
+betType:val(“p-btype”)||“Spread”,odds:val(“p-odds”)||”-110”,
+result:val(“p-result”)||“PENDING”,gameTime:val(“p-gtime”),
+analysis:val(“p-analysis”),active:true
+});
+[“p-home”,“p-away”,“p-pick”,“p-odds”,“p-gtime”,“p-analysis”].forEach(function(id){ sv(id,””); });
+sv(“p-result”,“PENDING”);
+var gc=ge(“g-card”); if(gc) gc.style.display=“none”;
+var gl=ge(“g-list”);  if(gl) gl.innerHTML=””;
+if(savedEl){
+savedEl.innerHTML=”<div class='ok-box'>✓ Pick published successfully!</div>”;
+setTimeout(function(){ if(ge(“p-saved”)) ge(“p-saved”).innerHTML=””; },2500);
+}
 }
 
-// ══════════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════════
-function esc(s){ return String(s||’’).replace(/&/g,’&’).replace(/</g,’<’).replace(/>/g,’>’).replace(/”/g,’"’); }
-function val(id){ const el=document.getElementById(id); return el?el.value.trim():’’; }
-function setVal(id,v){ const el=document.getElementById(id); if(el) el.value=v; }
-function showErr(el,msg){ el.innerHTML=`<div class="error-box">${esc(msg)}</div>`; }
+function showErr(el,msg){ if(el) el.innerHTML=”<div class='err-box'>”+esc(msg)+”</div>”; }
 
-// ══════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════
+/* ── BOOT ── */
+if(document.readyState===“loading”){
+document.addEventListener(“DOMContentLoaded”,render);
+} else {
 render();
+}
+
+})();
 </script>
 
 </body>
